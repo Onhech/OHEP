@@ -1,0 +1,4 @@
+"scenario","score","score_delta","detractors_pct","passives_pct","promoters_pct","html_file","data_file"
+"01_enps_baseline",34,12,14,38,48,"01_enps_baseline.html","01_enps_baseline_data.csv"
+"02_enps_lower_score",12,-4,31,36,33,"02_enps_lower_score.html","02_enps_lower_score_data.csv"
+"03_enps_high_promoter",56,9,10,28,62,"03_enps_high_promoter.html","03_enps_high_promoter_data.csv"

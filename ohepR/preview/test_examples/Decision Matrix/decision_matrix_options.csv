@@ -1,0 +1,3 @@
+"order","slug","label","x_metric","y_metric","x_split_mode","y_split_mode"
+1,"change_vs_last_year_by_impact","Option 1: Change vs Last Year by Impact","prior_delta","impact","zero","median"
+4,"relative_benchmark_by_impact","Option 4: Relative Benchmark by Impact","benchmark_delta","impact","zero","median"

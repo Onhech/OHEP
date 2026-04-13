@@ -1,0 +1,7 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^preview$
+^tools$
+^inst/displayr$
+^ohepR\.Rcheck$
+^.*\.tar\.gz$

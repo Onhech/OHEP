@@ -1,0 +1,297 @@
+<style>#ohep-preview-model-page, #ohep-preview-model-page * { box-sizing: border-box; }
+#ohep-preview-model-page.ohep-model-root {
+  --model-slide-bg: #F8FAFC;
+  --model-card-bg: #FFFFFF;
+  --model-card-border: #E2E8F0;
+  --model-card-shadow: rgba(0,0,0,0.05);
+  --model-header-accent: #0F172A;
+  --model-title: #0F172A;
+  --model-subtitle: #64748B;
+  --model-section-title: #0F172A;
+  --model-section-rule: #F1F5F9;
+  --model-metric-header: #94A3B8;
+  --model-label: #334155;
+  --model-track-bg: #E2E8F0;
+  --model-stem: #CBD5E1;
+  --model-line: #94A3B8;
+  --model-line-baseline: #334155;
+  --model-line-label: #64748B;
+  --model-metric-raw: #0F172A;
+  --model-delta-pos: #15803D;
+  --model-delta-neg: #EB7161;
+  --model-delta-neu: #64748B;
+  --model-zone-ni: #F59E0B;
+  --model-zone-is: #16A34A;
+  --model-zone-as: #059669;
+  --model-zone-il: #0D9488;
+  --model-point-border: #FFFFFF;
+  --model-point-ghost-bg: #FFFFFF;
+  --model-point-ghost-border: #94A3B8;
+  --model-legend-text-on: #FFFFFF;
+  width: 1280px;
+  min-height: 760px;
+  background: var(--model-slide-bg);
+  padding: 28px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  display: flex;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+#ohep-preview-model-page .model-card {
+  width: 1150px;
+  background: var(--model-card-bg);
+  border: 1px solid var(--model-card-border);
+  border-radius: 16px;
+  box-shadow: 0 10px 25px var(--model-card-shadow);
+  padding: 34px;
+}
+#ohep-preview-model-page .model-header { margin-bottom: 12px; border-left: 4px solid var(--model-header-accent); padding-left: 16px; }
+#ohep-preview-model-page .model-title { margin: 0 0 6px; font-size: 26px; font-weight: 800; color: var(--model-title); }
+#ohep-preview-model-page .model-subtitle { margin: 0; font-size: 14px; color: var(--model-subtitle); }
+#ohep-preview-model-page .model-block { position: relative; margin-top: 32px; margin-bottom: 28px; padding-top: 24px; }
+#ohep-preview-model-page .model-block:last-of-type { margin-bottom: 10px; }
+#ohep-preview-model-page .model-section-head { display: flex; align-items: flex-end; border-bottom: 2px solid var(--model-section-rule); padding-bottom: 10px; margin-bottom: 0; position: absolute; top: -32px; left: 0; right: 0; }
+#ohep-preview-model-page .model-section-title { width: 80%; font-size: 15px; font-weight: 800; color: var(--model-section-title); text-transform: uppercase; letter-spacing: 1px; }
+#ohep-preview-model-page .model-metric-head { width: 20%; display: flex; justify-content: flex-end; gap: 24px; padding-right: 14px; color: var(--model-metric-header); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; }
+#ohep-preview-model-page .model-metric-head span { width: 54px; text-align: right; }
+#ohep-preview-model-page .model-zones, #ohep-preview-model-page .model-lines { position: absolute; left: 25%; width: 55%; }
+#ohep-preview-model-page .model-zones { top: 24px; bottom: 0; display: grid; grid-template-columns: 35fr 30fr 25fr 10fr; border-radius: 12px; overflow: hidden; z-index: 0; }
+#ohep-preview-model-page .model-zone { opacity: 1; }
+#ohep-preview-model-page .model-zone-ni { background: var(--model-zone-ni); }
+#ohep-preview-model-page .model-zone-is { background: var(--model-zone-is); }
+#ohep-preview-model-page .model-zone-as { background: var(--model-zone-as); }
+#ohep-preview-model-page .model-zone-il { background: var(--model-zone-il); }
+#ohep-preview-model-page .model-lines { top: 0; bottom: 0; z-index: 1; }
+#ohep-preview-model-page .model-line { position: absolute; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); background: var(--model-line); opacity: .35; }
+#ohep-preview-model-page .model-line-baseline { background: var(--model-line-baseline); opacity: 1; z-index: 3; }
+#ohep-preview-model-page .model-line-label { position: absolute; top: 0; transform: translateX(-50%); background: var(--model-card-bg); padding: 0 4px; color: var(--model-line-label); font-size: 11px; font-weight: 800; }
+#ohep-preview-model-page .model-line-baseline .model-line-label { color: var(--model-line-baseline); }
+#ohep-preview-model-page .model-row-wrap { position: relative; z-index: 2; padding-top: 14px; padding-bottom: 12px; }
+#ohep-preview-model-page .model-row { display: flex; align-items: center; margin-bottom: 12px; }
+#ohep-preview-model-page .model-row:last-child { margin-bottom: 0; }
+#ohep-preview-model-page .model-label { width: 25%; text-align: right; padding-right: 30px; color: var(--model-label); font-size: 14px; font-weight: 600; }
+#ohep-preview-model-page .model-track-wrap { width: 55%; position: relative; height: 24px; }
+#ohep-preview-model-page .model-track { position: absolute; top: 50%; transform: translateY(-50%); width: 100%; height: 4px; border-radius: 2px; background: var(--model-track-bg); }
+#ohep-preview-model-page .model-stem { position: absolute; top: 50%; transform: translateY(-50%); height: 4px; border-radius: 2px; background: var(--model-stem); }
+#ohep-preview-model-page .model-point { position: absolute; top: 50%; transform: translate(-50%, -50%); z-index: 4; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+#ohep-preview-model-page .model-point-circle { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--model-point-border); }
+#ohep-preview-model-page .model-point-diamond { width: 14px; height: 14px; transform: translate(-50%, -50%) rotate(45deg); border: 2px solid var(--model-point-border); }
+#ohep-preview-model-page .model-point-ghost-circle { width: 12px; height: 12px; border-radius: 50%; background: var(--model-point-ghost-bg); border: 2px solid var(--model-point-ghost-border); box-shadow: none; z-index: 3; }
+#ohep-preview-model-page .model-point-ghost-diamond { width: 10px; height: 10px; transform: translate(-50%, -50%) rotate(45deg); background: var(--model-point-ghost-bg); border: 2px solid var(--model-point-ghost-border); box-shadow: none; z-index: 3; }
+#ohep-preview-model-page .model-zone-bg-ni { background: var(--model-zone-ni); }
+#ohep-preview-model-page .model-zone-bg-is { background: var(--model-zone-is); }
+#ohep-preview-model-page .model-zone-bg-as { background: var(--model-zone-as); }
+#ohep-preview-model-page .model-zone-bg-il { background: var(--model-zone-il); }
+#ohep-preview-model-page .model-metrics { width: 20%; display: flex; justify-content: flex-end; align-items: center; gap: 24px; padding-right: 14px; }
+#ohep-preview-model-page .model-metric-raw { width: 54px; text-align: right; color: var(--model-metric-raw); font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
+#ohep-preview-model-page .model-metric-delta { width: 54px; text-align: right; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+#ohep-preview-model-page .model-delta-pos { color: var(--model-delta-pos); }
+#ohep-preview-model-page .model-delta-neg { color: var(--model-delta-neg); }
+#ohep-preview-model-page .model-delta-neu { color: var(--model-delta-neu); }
+#ohep-preview-model-page .model-legend { display: grid; grid-template-columns: 35fr 30fr 25fr 10fr; gap: 4px; margin-left: 25%; width: 55%; margin-top: 12px; }
+#ohep-preview-model-page .model-legend-card { border-radius: 6px; padding: 10px 4px; text-align: center; color: var(--model-legend-text-on); text-transform: uppercase; letter-spacing: .5px; line-height: 1.2; font-size: 10px; font-weight: 800; }
+#ohep-preview-model-page .model-legend-ni { background: var(--model-zone-ni); }
+#ohep-preview-model-page .model-legend-is { background: var(--model-zone-is); }
+#ohep-preview-model-page .model-legend-as { background: var(--model-zone-as); }
+#ohep-preview-model-page .model-legend-il { background: var(--model-zone-il); }</style>
+<div id="ohep-preview-model-page" class="ohep-model-root">
+  <div class="model-card">
+    <div class="model-header">
+      <h1 class="model-title">Health Diagnostics</h1>
+      
+    </div>
+    <div class="model-block">
+  <div class="model-section-head">
+    <div class="model-section-title">&nbsp;</div>
+    <div class="model-metric-head"><span>Raw Avg</span><span>vs '24</span></div>
+  </div>
+  <div class="model-zones">
+    <div class="model-zone model-zone-ni"></div>
+    <div class="model-zone model-zone-is"></div>
+    <div class="model-zone model-zone-as"></div>
+    <div class="model-zone model-zone-il"></div>
+  </div>
+  <div class="model-lines">
+    <div class="model-line" style="left:35%;"><div class="model-line-label">35th</div></div>
+    <div class="model-line model-line-baseline" style="left:50%;"><div class="model-line-label">50th</div></div>
+    <div class="model-line" style="left:65%;"><div class="model-line-label">65th</div></div>
+    <div class="model-line" style="left:90%;"><div class="model-line-label">90th</div></div>
+  </div>
+  <div class="model-row-wrap">
+    <div class="model-row">
+  <div class="model-label">Purpose</div>
+  <div class="model-track-wrap">
+    <div class="model-track"></div>
+    <div class="model-stem" style="left:60.0%; width:12.0%;"></div>
+    <div class="model-point model-point-ghost-circle" style="left:60.0%;"></div>
+    <div class="model-point model-point-circle model-zone-bg-as" style="left:72.0%;"></div>
+  </div>
+  <div class="model-metrics">
+    <div class="model-metric-raw">4.12</div>
+    <div class="model-metric-delta model-delta-pos">+0.14</div>
+  </div>
+</div><div class="model-row">
+  <div class="model-label">Strategy</div>
+  <div class="model-track-wrap">
+    <div class="model-track"></div>
+    <div class="model-stem" style="left:32.0%; width:13.0%;"></div>
+    <div class="model-point model-point-ghost-circle" style="left:32.0%;"></div>
+    <div class="model-point model-point-circle model-zone-bg-is" style="left:45.0%;"></div>
+  </div>
+  <div class="model-metrics">
+    <div class="model-metric-raw">3.83</div>
+    <div class="model-metric-delta model-delta-neg">-0.08</div>
+  </div>
+</div><div class="model-row">
+  <div class="model-label">Communication</div>
+  <div class="model-track-wrap">
+    <div class="model-track"></div>
+    <div class="model-stem" style="left:58.0%; width:11.0%;"></div>
+    <div class="model-point model-point-ghost-circle" style="left:58.0%;"></div>
+    <div class="model-point model-point-circle model-zone-bg-as" style="left:69.0%;"></div>
+  </div>
+  <div class="model-metrics">
+    <div class="model-metric-raw">4.03</div>
+    <div class="model-metric-delta model-delta-pos">+0.10</div>
+  </div>
+</div><div class="model-row">
+  <div class="model-label">Leadership</div>
+  <div class="model-track-wrap">
+    <div class="model-track"></div>
+    <div class="model-stem" style="left:71.0%; width:7.0%;"></div>
+    <div class="model-point model-point-ghost-circle" style="left:71.0%;"></div>
+    <div class="model-point model-point-circle model-zone-bg-as" style="left:78.0%;"></div>
+  </div>
+  <div class="model-metrics">
+    <div class="model-metric-raw">4.18</div>
+    <div class="model-metric-delta model-delta-pos">+0.07</div>
+  </div>
+</div><div class="model-row">
+  <div class="model-label">Learning &amp; Innovation</div>
+  <div class="model-track-wrap">
+    <div class="model-track"></div>
+    <div class="model-stem" style="left:76.0%; width:6.0%;"></div>
+    <div class="model-point model-point-ghost-circle" style="left:76.0%;"></div>
+    <div class="model-point model-point-circle model-zone-bg-as" style="left:82.0%;"></div>
+  </div>
+  <div class="model-metrics">
+    <div class="model-metric-raw">4.26</div>
+    <div class="model-metric-delta model-delta-pos">+0.06</div>
+  </div>
+</div><div class="model-row">
+  <div class="model-label">Respect, Care &amp; Trust</div>
+  <div class="model-track-wrap">
+    <div class="model-track"></div>
+    <div class="model-stem" style="left:55.0%; width:5.0%;"></div>
+    <div class="model-point model-point-ghost-circle" style="left:55.0%;"></div>
+    <div class="model-point model-point-circle model-zone-bg-is" style="left:60.0%;"></div>
+  </div>
+  <div class="model-metrics">
+    <div class="model-metric-raw">3.99</div>
+    <div class="model-metric-delta model-delta-pos">+0.03</div>
+  </div>
+</div><div class="model-row">
+  <div class="model-label">Performance Development</div>
+  <div class="model-track-wrap">
+    <div class="model-track"></div>
+    <div class="model-stem" style="left:66.0%; width:8.0%;"></div>
+    <div class="model-point model-point-ghost-circle" style="left:66.0%;"></div>
+    <div class="model-point model-point-circle model-zone-bg-as" style="left:74.0%;"></div>
+  </div>
+  <div class="model-metrics">
+    <div class="model-metric-raw">4.08</div>
+    <div class="model-metric-delta model-delta-pos">+0.11</div>
+  </div>
+</div>
+  </div>
+</div>
+    <div class="model-block">
+  <div class="model-section-head">
+    <div class="model-section-title">Business Outcomes</div>
+    <div class="model-metric-head"><span></span><span></span></div>
+  </div>
+  <div class="model-zones">
+    <div class="model-zone model-zone-ni"></div>
+    <div class="model-zone model-zone-is"></div>
+    <div class="model-zone model-zone-as"></div>
+    <div class="model-zone model-zone-il"></div>
+  </div>
+  <div class="model-lines">
+    <div class="model-line" style="left:35%;"><div class="model-line-label">35th</div></div>
+    <div class="model-line model-line-baseline" style="left:50%;"><div class="model-line-label">50th</div></div>
+    <div class="model-line" style="left:65%;"><div class="model-line-label">65th</div></div>
+    <div class="model-line" style="left:90%;"><div class="model-line-label">90th</div></div>
+  </div>
+  <div class="model-row-wrap">
+    <div class="model-row">
+  <div class="model-label">Overall OHEP Score</div>
+  <div class="model-track-wrap">
+    <div class="model-track"></div>
+    <div class="model-stem" style="left:58.0%; width:6.0%;"></div>
+    <div class="model-point model-point-ghost-diamond" style="left:58.0%;"></div>
+    <div class="model-point model-point-diamond model-zone-bg-is" style="left:64.0%;"></div>
+  </div>
+  <div class="model-metrics">
+    <div class="model-metric-raw">-</div>
+    <div class="model-metric-delta model-delta-neu">-</div>
+  </div>
+</div><div class="model-row">
+  <div class="model-label">Employee Engagement</div>
+  <div class="model-track-wrap">
+    <div class="model-track"></div>
+    <div class="model-stem" style="left:63.0%; width:5.0%;"></div>
+    <div class="model-point model-point-ghost-diamond" style="left:63.0%;"></div>
+    <div class="model-point model-point-diamond model-zone-bg-as" style="left:68.0%;"></div>
+  </div>
+  <div class="model-metrics">
+    <div class="model-metric-raw">-</div>
+    <div class="model-metric-delta model-delta-neu">-</div>
+  </div>
+</div><div class="model-row">
+  <div class="model-label">Burnout</div>
+  <div class="model-track-wrap">
+    <div class="model-track"></div>
+    <div class="model-stem" style="left:38.0%; width:3.0%;"></div>
+    <div class="model-point model-point-ghost-diamond" style="left:41.0%;"></div>
+    <div class="model-point model-point-diamond model-zone-bg-is" style="left:38.0%;"></div>
+  </div>
+  <div class="model-metrics">
+    <div class="model-metric-raw">-</div>
+    <div class="model-metric-delta model-delta-neu">-</div>
+  </div>
+</div><div class="model-row">
+  <div class="model-label">Work Satisfaction</div>
+  <div class="model-track-wrap">
+    <div class="model-track"></div>
+    <div class="model-stem" style="left:65.0%; width:5.0%;"></div>
+    <div class="model-point model-point-ghost-diamond" style="left:65.0%;"></div>
+    <div class="model-point model-point-diamond model-zone-bg-as" style="left:70.0%;"></div>
+  </div>
+  <div class="model-metrics">
+    <div class="model-metric-raw">-</div>
+    <div class="model-metric-delta model-delta-neu">-</div>
+  </div>
+</div><div class="model-row">
+  <div class="model-label">eNPS</div>
+  <div class="model-track-wrap">
+    <div class="model-track"></div>
+    <div class="model-stem" style="left:72.0%; width:4.0%;"></div>
+    <div class="model-point model-point-ghost-diamond" style="left:72.0%;"></div>
+    <div class="model-point model-point-diamond model-zone-bg-as" style="left:76.0%;"></div>
+  </div>
+  <div class="model-metrics">
+    <div class="model-metric-raw">-</div>
+    <div class="model-metric-delta model-delta-neu">-</div>
+  </div>
+</div>
+  </div>
+</div>
+    <div class="model-legend">
+      <div class="model-legend-card model-legend-ni">Needs Improvement</div>
+      <div class="model-legend-card model-legend-is">Industry Standard</div>
+      <div class="model-legend-card model-legend-as">Above Standard</div>
+      <div class="model-legend-card model-legend-il">Industry Leader</div>
+    </div>
+  </div>
+</div>

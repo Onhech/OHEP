@@ -1,0 +1,20 @@
+"label","count","pct","slot","panel_type","panel_title","category","value","short_label"
+"Office HQ",75,67,"tl","bipolar_split","Operational Deployment Split",NA,NA,NA
+"Field Sites",37,33,"tl","bipolar_split","Operational Deployment Split",NA,NA,NA
+NA,NA,NA,"tr","categorical_bar","Department Headcount","Field Operations",35,NA
+NA,NA,NA,"tr","categorical_bar","Department Headcount","Operations Accounting",20,NA
+NA,NA,NA,"tr","categorical_bar","Department Headcount","Land & BD",17,NA
+NA,NA,NA,"tr","categorical_bar","Department Headcount","Engineering",15,NA
+NA,NA,NA,"tr","categorical_bar","Department Headcount","Corporate Services",14,NA
+NA,NA,NA,"tr","categorical_bar","Department Headcount","Geoscience",11,NA
+NA,NA,NA,"bl","categorical_tree","Allocation Footprint","Field",35,"Field"
+NA,NA,NA,"bl","categorical_tree","Allocation Footprint","Accounting",20,"Accounting"
+NA,NA,NA,"bl","categorical_tree","Allocation Footprint","Land & BD",17,"Land & BD"
+NA,NA,NA,"bl","categorical_tree","Allocation Footprint","Engineering",15,"Eng."
+NA,NA,NA,"bl","categorical_tree","Allocation Footprint","Corporate",14,"Corp."
+NA,NA,NA,"bl","categorical_tree","Allocation Footprint","Geoscience",11,"Geo."
+"< 1 Year",NA,8,"br","ordinal_bar","Employee Tenure Distribution",NA,NA,NA
+"1 - 3 Years",NA,30,"br","ordinal_bar","Employee Tenure Distribution",NA,NA,NA
+"3 - 5 Years",NA,22,"br","ordinal_bar","Employee Tenure Distribution",NA,NA,NA
+"5 - 10 Years",NA,11,"br","ordinal_bar","Employee Tenure Distribution",NA,NA,NA
+"10+ Years",NA,29,"br","ordinal_bar","Employee Tenure Distribution",NA,NA,NA

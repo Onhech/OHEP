@@ -1,0 +1,49 @@
+"Fundamental","Outcome","subset","strength","strength_ci_low","strength_ci_high","type","direction","significant","N"
+"OHEP","Engagement","All",0.701787861263292,0.68459804857093,0.718977673955655,"composite","positive",TRUE,6602
+"OHEP","Burnout","All",-0.59059399918178,-0.612598083575538,-0.568589914788021,"composite","negative",TRUE,5171
+"OHEP","Work Satisfaction","All",0.716072939636108,0.698940253219427,0.733205626052788,"composite","positive",TRUE,6381
+"OHEP","Turnover Intentions","All",-0.150590169149827,-0.187649807923698,-0.113530530375956,"composite","negative",TRUE,2738
+"OHEP","Outcomes","All",0.399391457788135,0.377779536186788,0.421003379389483,"composite","positive",TRUE,6917
+"OHEP","eNPS","All",0.4608172837619,0.417911230035622,0.503723337488178,"composite","positive",TRUE,1648
+"Purpose","Outcomes","All",0.235244561382186,0.198353715832712,0.272135406931659,"fundamental","positive",TRUE,5363
+"Strategy","Outcomes","All",0.124256169970231,0.0807115446234307,0.167800795317031,"fundamental","positive",TRUE,5363
+"Leadership","Outcomes","All",0.0942181213401617,0.045216102252568,0.143220140427755,"fundamental","positive",TRUE,5363
+"Communication","Outcomes","All",-0.0983137173862539,-0.143361316480492,-0.0532661182920161,"fundamental","negative",TRUE,5363
+"Learning & innovation","Outcomes","All",0.0421293197138183,0.00178257928004748,0.0824760601475892,"fundamental","positive",TRUE,5363
+"Performance development","Outcomes","All",0.225489105993073,0.184807308645077,0.26617090334107,"fundamental","positive",TRUE,5363
+"Respect, care, and trust","Outcomes","All",-0.0329908317579592,-0.0694761638163408,0.00349450030042243,"fundamental","negative",FALSE,5363
+"Purpose","Engagement","All",0.276503709937992,0.245622850197448,0.307384569678536,"fundamental","positive",TRUE,5359
+"Strategy","Engagement","All",0.037624849108682,0.00115831582949249,0.0740913823878715,"fundamental","positive",TRUE,5359
+"Leadership","Engagement","All",0.128755207174524,0.0877240122348647,0.169786402114183,"fundamental","positive",TRUE,5359
+"Communication","Engagement","All",0.0108485474089585,-0.0268765897151946,0.0485736845331116,"fundamental","positive",FALSE,5359
+"Learning & innovation","Engagement","All",0.107606578264714,0.0738325541955539,0.141380602333875,"fundamental","positive",TRUE,5359
+"Performance development","Engagement","All",0.118996357633013,0.0849460123128667,0.153046702953159,"fundamental","positive",TRUE,5359
+"Respect, care, and trust","Engagement","All",0.132589772095318,0.102051837128548,0.163127707062087,"fundamental","positive",TRUE,5359
+"Purpose","Burnout","All",-0.255924800826772,-0.297329547600301,-0.214520054053242,"fundamental","negative",TRUE,3741
+"Strategy","Burnout","All",-0.0105985586691557,-0.060114144977526,0.0389170276392146,"fundamental","negative",FALSE,3741
+"Leadership","Burnout","All",-0.0711957455089178,-0.126277887138094,-0.0161136038797418,"fundamental","negative",TRUE,3741
+"Communication","Burnout","All",-0.0559254213377767,-0.107765104060308,-0.00408573861524525,"fundamental","negative",TRUE,3741
+"Learning & innovation","Burnout","All",-0.0257105555573404,-0.0720934621874579,0.020672351072777,"fundamental","negative",FALSE,3741
+"Performance development","Burnout","All",-0.1147444749567,-0.160216597786175,-0.0692723521272258,"fundamental","negative",TRUE,3741
+"Respect, care, and trust","Burnout","All",-0.160399240294002,-0.201636699355695,-0.11916178123231,"fundamental","negative",TRUE,3741
+"Purpose","Work Satisfaction","All",0.233420458671137,0.202637411205733,0.264203506136542,"fundamental","positive",TRUE,5349
+"Strategy","Work Satisfaction","All",0.0682094391713949,0.0317826196429114,0.104636258699878,"fundamental","positive",TRUE,5349
+"Leadership","Work Satisfaction","All",0.144414535895427,0.103519128237899,0.185309943552956,"fundamental","positive",TRUE,5349
+"Communication","Work Satisfaction","All",0.0541837401466235,0.0165841743352088,0.0917833059580382,"fundamental","positive",TRUE,5349
+"Learning & innovation","Work Satisfaction","All",0.056720777351911,0.0230490043290018,0.0903925503748203,"fundamental","positive",TRUE,5349
+"Performance development","Work Satisfaction","All",0.167661792297479,0.133709055072973,0.201614529521984,"fundamental","positive",TRUE,5349
+"Respect, care, and trust","Work Satisfaction","All",0.0901084470652984,0.059691207566506,0.120525686564091,"fundamental","positive",TRUE,5349
+"Purpose","Turnover Intentions","All",0.0899006698963626,0.0247746475623872,0.155026692230338,"fundamental","positive",TRUE,2286
+"Strategy","Turnover Intentions","All",-0.059212895917813,-0.137471138334269,0.0190453464986433,"fundamental","negative",FALSE,2286
+"Leadership","Turnover Intentions","All",-0.0102130135574183,-0.0989950245923675,0.0785689974775308,"fundamental","negative",FALSE,2286
+"Communication","Turnover Intentions","All",-0.0164274211439619,-0.101322366522932,0.0684675242350081,"fundamental","negative",FALSE,2286
+"Learning & innovation","Turnover Intentions","All",0.043328749704006,-0.0287442472490022,0.115401746657014,"fundamental","positive",FALSE,2286
+"Performance development","Turnover Intentions","All",-0.140285637419187,-0.212522670977282,-0.0680486038610917,"fundamental","negative",TRUE,2286
+"Respect, care, and trust","Turnover Intentions","All",-0.0614294719179179,-0.126472165048653,0.00361322121281722,"fundamental","negative",FALSE,2286
+"Purpose","eNPS","All",0.268275387111171,0.199305904411152,0.33724486981119,"fundamental","positive",TRUE,1541
+"Strategy","eNPS","All",0.0406323968556305,-0.0457111003944091,0.12697589410567,"fundamental","positive",FALSE,1541
+"Leadership","eNPS","All",0.0193084290713203,-0.0827155974713083,0.121332455613949,"fundamental","positive",FALSE,1541
+"Communication","eNPS","All",-0.00439729343970586,-0.097143030194768,0.0883484433153563,"fundamental","negative",FALSE,1541
+"Learning & innovation","eNPS","All",-0.0979591753399497,-0.178293571303202,-0.0176247793766974,"fundamental","negative",TRUE,1541
+"Performance development","eNPS","All",0.150920916764887,0.0710904665155216,0.230751367014251,"fundamental","positive",TRUE,1541
+"Respect, care, and trust","eNPS","All",0.136544103649772,0.0668312766972128,0.206256930602331,"fundamental","positive",TRUE,1541

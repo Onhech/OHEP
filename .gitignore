@@ -1,0 +1,9 @@
+.DS_Store
+**/.DS_Store
+
+# R build/check artifacts
+*.tar.gz
+*.Rcheck/
+
+# RStudio
+.Rproj.user/

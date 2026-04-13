@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<style>body{background-color:white;}</style>
+
+
+</head>
+<body>
+<style>#ohep-preview-enps-2, #ohep-preview-enps-2 * { box-sizing: border-box; }
+#ohep-preview-enps-2.ohep-enps-root {
+  --enps-shell-bg: #E2E8F0;
+  --enps-slide-bg: #F8FAFC;
+  --enps-card-bg: #FFFFFF;
+  --enps-card-border: #E2E8F0;
+  --enps-card-shadow: rgba(15,23,42,0.04);
+  --enps-title: #0F172A;
+  --enps-subtitle: #64748B;
+  --enps-score-value: #0F172A;
+  --enps-score-label: #64748B;
+  --enps-delta-bg: #DCFCE7;
+  --enps-delta-text: #16A34A;
+  --enps-axis-baseline: #334155;
+  --enps-axis-baseline-label: #94A3B8;
+  --enps-tug-detractor-bg: #E11D48;
+  --enps-tug-passive-bg: #94A3B8;
+  --enps-tug-promoter-bg: #0D9488;
+  --enps-tug-text-on: #FFFFFF;
+  --enps-divider: #F1F5F9;
+  --enps-dist-axis: #E2E8F0;
+  --enps-dist-label: #64748B;
+  --enps-det-text: #E11D48;
+  --enps-pas-text: #94A3B8;
+  --enps-pro-text: #0D9488;
+  width: 1280px;
+  height: 720px;
+  background: var(--enps-slide-bg);
+  padding: 34px 42px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  display: flex;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+#ohep-preview-enps-2 .enps-card {
+  width: 100%;
+  border: 1px solid var(--enps-card-border);
+  border-radius: 16px;
+  background: var(--enps-card-bg);
+  box-shadow: 0 10px 25px var(--enps-card-shadow);
+  padding: 34px 40px;
+  display: flex;
+  flex-direction: column;
+}
+#ohep-preview-enps-2 .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 34px; }
+#ohep-preview-enps-2 .title-group { display: flex; flex-direction: column; gap: 6px; }
+#ohep-preview-enps-2 .card-title { margin: 0; font-size: 26px; font-weight: 900; color: var(--enps-title); letter-spacing: -0.3px; }
+#ohep-preview-enps-2 .card-sub { margin: 0; font-size: 14px; color: var(--enps-subtitle); font-weight: 600; }
+#ohep-preview-enps-2 .score-display { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+#ohep-preview-enps-2 .score-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .8px; color: var(--enps-score-label); }
+#ohep-preview-enps-2 .big-score { font-size: 64px; line-height: 1; margin: 0; font-weight: 900; color: var(--enps-score-value); letter-spacing: -2px; }
+#ohep-preview-enps-2 .delta-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; letter-spacing: .3px; background: var(--enps-delta-bg); color: var(--enps-delta-text); }
+#ohep-preview-enps-2 .tug-wrap { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
+#ohep-preview-enps-2 .tug-axis { position: relative; height: 58px; }
+#ohep-preview-enps-2 .tug-mid { position: absolute; top: -8px; left: 50%; width: 2px; height: 74px; transform: translateX(-50%); background: var(--enps-axis-baseline); z-index: 2; }
+#ohep-preview-enps-2 .tug-mid-label { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; letter-spacing: .5px; color: var(--enps-axis-baseline-label); text-transform: uppercase; }
+#ohep-preview-enps-2 .tug-left, #ohep-preview-enps-2 .tug-right { position: absolute; top: 5px; height: 48px; display: flex; align-items: center; font-size: 17px; font-weight: 900; color: var(--enps-tug-text-on); }
+#ohep-preview-enps-2 .tug-left { right: 50%; justify-content: flex-end; padding-right: 14px; border-radius: 8px 0 0 8px; background: var(--enps-tug-detractor-bg); }
+#ohep-preview-enps-2 .tug-right { left: 50%; justify-content: flex-start; padding-left: 14px; border-radius: 0 8px 8px 0; background: var(--enps-tug-promoter-bg); }
+#ohep-preview-enps-2 .tug-labels { display: flex; justify-content: space-between; align-items: center; }
+#ohep-preview-enps-2 .t-group { display: flex; flex-direction: column; gap: 2px; }
+#ohep-preview-enps-2 .t-group.left { align-items: flex-start; }
+#ohep-preview-enps-2 .t-group.right { align-items: flex-end; }
+#ohep-preview-enps-2 .t-title { font-size: 13px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
+#ohep-preview-enps-2 .t-title.det { color: var(--enps-det-text); }
+#ohep-preview-enps-2 .t-title.pro { color: var(--enps-pro-text); }
+#ohep-preview-enps-2 .t-math { font-size: 20px; font-weight: 900; color: var(--enps-score-value); letter-spacing: -0.4px; }
+#ohep-preview-enps-2 .section-divider { border: 0; border-top: 1px solid var(--enps-divider); margin: 10px 0 20px 0; }
+#ohep-preview-enps-2 .dist-title { margin: 0 0 4px 0; font-size: 14px; font-weight: 800; color: var(--enps-title); text-transform: uppercase; letter-spacing: .5px; }
+#ohep-preview-enps-2 .dist-sub { margin: 0 0 14px 0; font-size: 12px; color: var(--enps-subtitle); }
+#ohep-preview-enps-2 .dist-bars { display: flex; align-items: flex-end; justify-content: space-between; height: 140px; border-bottom: 2px solid var(--enps-dist-axis); }
+#ohep-preview-enps-2 .d-group { display: flex; align-items: flex-end; height: 100%; }
+#ohep-preview-enps-2 .d-group.det { width: 56%; justify-content: space-between; }
+#ohep-preview-enps-2 .d-group.pas { width: 18%; justify-content: space-around; }
+#ohep-preview-enps-2 .d-group.pro { width: 18%; justify-content: space-around; }
+#ohep-preview-enps-2 .d-bar { width: 38px; border-radius: 4px 4px 0 0; }
+#ohep-preview-enps-2 .d-bar.det { background: var(--enps-tug-detractor-bg); }
+#ohep-preview-enps-2 .d-bar.pas { background: var(--enps-tug-passive-bg); }
+#ohep-preview-enps-2 .d-bar.pro { background: var(--enps-tug-promoter-bg); }
+#ohep-preview-enps-2 .dist-labels { display: flex; align-items: flex-start; justify-content: space-between; margin-top: 10px; }
+#ohep-preview-enps-2 .l-group { display: flex; align-items: flex-start; gap: 6px; }
+#ohep-preview-enps-2 .l-group.det { width: 56%; justify-content: space-between; }
+#ohep-preview-enps-2 .l-group.pas { width: 18%; justify-content: space-around; }
+#ohep-preview-enps-2 .l-group.pro { width: 18%; justify-content: space-around; }
+#ohep-preview-enps-2 .d-label { width: 38px; text-align: center; font-size: 12px; font-weight: 800; color: var(--enps-dist-label); }
+#ohep-preview-enps-2 .dist-brackets { display: flex; justify-content: space-between; margin-top: 20px; }
+#ohep-preview-enps-2 .bracket { font-size: 12px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }
+#ohep-preview-enps-2 .bracket.det { width: 56%; text-align: left; color: var(--enps-det-text); }
+#ohep-preview-enps-2 .bracket.pas { width: 18%; text-align: center; color: var(--enps-pas-text); }
+#ohep-preview-enps-2 .bracket.pro { width: 18%; text-align: right; color: var(--enps-pro-text); }</style>
+<div id="ohep-preview-enps-2" class="ohep-enps-root">
+  <div class="enps-card">
+    <div class="card-header">
+      <div class="title-group">
+        <h2 class="card-title">Employee Net Promoter Score (eNPS)</h2>
+        <p class="card-sub">Calculated difference between promoters and detractors.</p>
+      </div>
+      <div class="score-display">
+        <span class="score-label">Net Score</span>
+        <span class="big-score">+12</span>
+        <span class="delta-pill">- 4 vs Industry</span>
+      </div>
+    </div>
+
+    <div class="tug-wrap">
+      <div class="tug-axis">
+        <div class="tug-mid"><span class="tug-mid-label">Baseline</span></div>
+        <div class="tug-left" style="width:43.2%;">31%</div>
+        <div class="tug-right" style="width:46.0%;">33%</div>
+      </div>
+      <div class="tug-labels">
+        <div class="t-group left">
+          <span class="t-title det">Detractors</span>
+          <span class="t-math">- 31</span>
+        </div>
+        <div class="t-group right">
+          <span class="t-title pro">Promoters</span>
+          <span class="t-math">+ 33</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider" />
+
+    <h3 class="dist-title">Population Distribution</h3>
+    <p class="dist-sub">Detailed breakdown of the 0-10 rating scale</p>
+
+    <div class="dist-bars">
+      <div class="d-group det"><div class="d-bar det" style="height:16.7%;"></div><div class="d-bar det" style="height:16.7%;"></div><div class="d-bar det" style="height:16.7%;"></div><div class="d-bar det" style="height:22.2%;"></div><div class="d-bar det" style="height:27.8%;"></div><div class="d-bar det" style="height:33.3%;"></div><div class="d-bar det" style="height:38.9%;"></div></div>
+      <div class="d-group pas"><div class="d-bar pas" style="height:100.0%;"></div><div class="d-bar pas" style="height:100.0%;"></div></div>
+      <div class="d-group pro"><div class="d-bar pro" style="height:94.4%;"></div><div class="d-bar pro" style="height:88.9%;"></div></div>
+    </div>
+    <div class="dist-labels">
+      <div class="l-group det"><span class="d-label det">0</span><span class="d-label det">1</span><span class="d-label det">2</span><span class="d-label det">3</span><span class="d-label det">4</span><span class="d-label det">5</span><span class="d-label det">6</span></div>
+      <div class="l-group pas"><span class="d-label pas">7</span><span class="d-label pas">8</span></div>
+      <div class="l-group pro"><span class="d-label pro">9</span><span class="d-label pro">10</span></div>
+    </div>
+    <div class="dist-brackets">
+      <div class="bracket det">Detractors (31%)</div>
+      <div class="bracket pas">Passives (36%)</div>
+      <div class="bracket pro">Promoters (33%)</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+section,color_name,hex,rgb,cmyk,canonical_monark,use_case,notes,sort_order,
+Primary,Midnight Teal 400,#395966,"57,89,102","80,55,46,24",TRUE,Core brand primary,From Monark Brand Identity Guidelines,1,
+Primary,White 400,#FFFFFF,"255,255,255","0,0,0,0",TRUE,Core brand primary,From Monark Brand Identity Guidelines,2,
+Primary,Muted Teal 400,#81BBC2,"129,187,194","49,11,22,0",TRUE,Core brand primary,From Monark Brand Identity Guidelines,3,
+Primary,Ocean Teal 400,#A0CBCB,"160,203,203","37,7,20,0",TRUE,Core brand primary,From Monark Brand Identity Guidelines,4,
+Secondary,Watermelon 400,#EC7161,"236,113,97","3,70,60,0",TRUE,Secondary accent,From Monark Brand Identity Guidelines,5,
+Secondary,Peach 400,#FFA37A,"255,163,122","0,44,52,0",TRUE,Secondary accent,From Monark Brand Identity Guidelines,6,
+Secondary,Golden Yellow 400,#FCBE1F,"252,190,31","1,27,97,0",TRUE,Secondary accent,From Monark Brand Identity Guidelines,7,
+Tints & Shades,Teal 500,#007F8F,,,,TRUE,Tint/shade support,From Monark Brand Identity Guidelines,8
+Tints & Shades,Teal 400,#0396A8,,,,TRUE,Tint/shade support,From Monark Brand Identity Guidelines,9
+Tints & Shades,Muted Teal 300,#B3D6DA,,,,TRUE,Tint/shade support,From Monark Brand Identity Guidelines,10
+Tints & Shades,Muted Teal 250,#C1DEE1,,,,TRUE,Tint/shade support,From Monark Brand Identity Guidelines,11
+Tints & Shades,Muted Teal 200,#D1E6E9,,,,TRUE,Tint/shade support,From Monark Brand Identity Guidelines,12
+Tints & Shades,Muted Teal 100,#E1EFEF,,,,TRUE,Tint/shade support,From Monark Brand Identity Guidelines,13
+Tints & Shades,Muted Teal 50,#F1F7F7,,,,TRUE,Tint/shade support,From Monark Brand Identity Guidelines,14
+Tints & Shades,Yellow 300,#FFD25E,,,,TRUE,Tint/shade support,From Monark Brand Identity Guidelines,15
+Tints & Shades,Yellow 200,#FFDD9C,,,,TRUE,Tint/shade support,From Monark Brand Identity Guidelines,16
+Tints & Shades,Yellow 100,#FFEBC4,,,,TRUE,Tint/shade support,From Monark Brand Identity Guidelines,17
+Tints & Shades,Yellow 50,#FFF9EE,,,,TRUE,Tint/shade support,From Monark Brand Identity Guidelines,18
+Custom,Signal Green 500,#16A34A,,,,FALSE,Positive deltas and heatmap positive,Non-canonical utility color,19
+Custom,Signal Red 500,#DC2626,,,,FALSE,Negative deltas and heatmap negative,Non-canonical utility color,20

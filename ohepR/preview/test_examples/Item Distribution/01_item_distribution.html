@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<style>body{background-color:white;}</style>
+
+
+</head>
+<body>
+<style>#ohep-preview-item-distribution, #ohep-preview-item-distribution * { box-sizing: border-box; }
+#ohep-preview-item-distribution.ohep-itemdist-root {
+  --itemdist-slide-bg: #F8FAFC;
+  --itemdist-card-bg: #FFFFFF;
+  --itemdist-card-border: #E2E8F0;
+  --itemdist-card-shadow: rgba(0,0,0,0.04);
+  --itemdist-title: #0F172A;
+  --itemdist-subtitle: #64748B;
+  --itemdist-legend-text: #64748B;
+  --itemdist-header-label: #94A3B8;
+  --itemdist-row-label: #334155;
+  --itemdist-row-border: #F1F5F9;
+  --itemdist-mean-text: #0F172A;
+  --itemdist-stack-bg: #F1F5F9;
+  --itemdist-agree: #0096A7;
+  --itemdist-neutral: #94A3B8;
+  --itemdist-disagree: #EB7161;
+  --itemdist-delta-pos-bg: #DCFCE7;
+  --itemdist-delta-pos-text: #15803D;
+  --itemdist-delta-neg-bg: #FEE2E2;
+  --itemdist-delta-neg-text: #EB7161;
+  --itemdist-delta-neu-bg: #F1F5F9;
+  --itemdist-delta-neu-text: #64748B;
+  width: 1280px;
+  min-height: 720px;
+  background: var(--itemdist-slide-bg);
+  padding: 34px 36px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+#ohep-preview-item-distribution .itemdist-card {
+  width: 1150px;
+  background: var(--itemdist-card-bg);
+  border: 1px solid var(--itemdist-card-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px var(--itemdist-card-shadow);
+  padding: 36px 38px;
+}
+#ohep-preview-item-distribution .itemdist-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; gap: 10px; }
+#ohep-preview-item-distribution .itemdist-title { margin: 0; font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.4px; color: var(--itemdist-title); }
+#ohep-preview-item-distribution .itemdist-subtitle { margin: 4px 0 0; font-size: 13px; color: var(--itemdist-subtitle); }
+#ohep-preview-item-distribution .itemdist-legend { display: flex; gap: 16px; font-size: 11px; font-weight: 700; color: var(--itemdist-legend-text); text-transform: uppercase; }
+#ohep-preview-item-distribution .itemdist-leg-item { display: flex; align-items: center; gap: 6px; }
+#ohep-preview-item-distribution .itemdist-leg-dot { width: 10px; height: 10px; border-radius: 2px; }
+#ohep-preview-item-distribution .itemdist-leg-agree { background: var(--itemdist-agree); }
+#ohep-preview-item-distribution .itemdist-leg-neutral { background: var(--itemdist-neutral); }
+#ohep-preview-item-distribution .itemdist-leg-disagree { background: var(--itemdist-disagree); }
+#ohep-preview-item-distribution .itemdist-header-row, #ohep-preview-item-distribution .itemdist-row {
+  display: grid;
+  grid-template-columns: 280px 80px 1fr 100px 100px;
+  gap: 20px;
+  align-items: center;
+}
+#ohep-preview-item-distribution .itemdist-header-row { padding-bottom: 12px; border-bottom: 2px solid var(--itemdist-card-border); margin-bottom: 8px; }
+#ohep-preview-item-distribution .itemdist-h-lbl { font-size: 11px; font-weight: 800; color: var(--itemdist-header-label); text-transform: uppercase; letter-spacing: 1px; text-align: center; }
+#ohep-preview-item-distribution .itemdist-h-lbl:first-child { text-align: left; }
+#ohep-preview-item-distribution .itemdist-row { padding: 14px 0; border-bottom: 1px solid var(--itemdist-row-border); }
+#ohep-preview-item-distribution .itemdist-row:last-child { border-bottom: none; }
+#ohep-preview-item-distribution .itemdist-label { font-size: 13px; line-height: 1.35; color: var(--itemdist-row-label); font-weight: 600; }
+#ohep-preview-item-distribution .itemdist-mean { font-size: 15px; font-weight: 800; color: var(--itemdist-mean-text); text-align: center; }
+#ohep-preview-item-distribution .itemdist-stack { height: 32px; display: flex; border-radius: 6px; overflow: hidden; background: var(--itemdist-stack-bg); }
+#ohep-preview-item-distribution .itemdist-segment { display: flex; align-items: center; justify-content: center; color: #FFFFFF; font-size: 11px; font-weight: 800; }
+#ohep-preview-item-distribution .itemdist-disagree { background: var(--itemdist-disagree); }
+#ohep-preview-item-distribution .itemdist-neutral { background: var(--itemdist-neutral); }
+#ohep-preview-item-distribution .itemdist-agree { background: var(--itemdist-agree); }
+#ohep-preview-item-distribution .itemdist-delta-wrap { display: flex; justify-content: center; }
+#ohep-preview-item-distribution .itemdist-delta { display: inline-flex; align-items: center; justify-content: center; width: 65px; padding: 6px 0; border-radius: 6px; font-size: 11px; font-weight: 800; }
+#ohep-preview-item-distribution .itemdist-dp-pos { background: var(--itemdist-delta-pos-bg); color: var(--itemdist-delta-pos-text); }
+#ohep-preview-item-distribution .itemdist-dp-neg { background: var(--itemdist-delta-neg-bg); color: var(--itemdist-delta-neg-text); }
+#ohep-preview-item-distribution .itemdist-dp-neu { background: var(--itemdist-delta-neu-bg); color: var(--itemdist-delta-neu-text); }</style>
+<div id="ohep-preview-item-distribution" class="ohep-itemdist-root">
+  <div class="itemdist-card">
+    <div class="itemdist-header">
+      <div>
+        <h2 class="itemdist-title">Safety</h2>
+        <p class="itemdist-subtitle">Here goes the safety definition.</p>
+      </div>
+      <div class="itemdist-legend">
+        <div class="itemdist-leg-item"><span class="itemdist-leg-dot itemdist-leg-disagree"></span>Disagree</div>
+        <div class="itemdist-leg-item"><span class="itemdist-leg-dot itemdist-leg-neutral"></span>Neutral</div>
+        <div class="itemdist-leg-item"><span class="itemdist-leg-dot itemdist-leg-agree"></span>Agree</div>
+      </div>
+    </div>
+    <div class="itemdist-header-row">
+      <div class="itemdist-h-lbl">Survey Item</div>
+      <div class="itemdist-h-lbl">Mean</div>
+      <div class="itemdist-h-lbl">Sentiment Distribution</div>
+      <div class="itemdist-h-lbl">vs Industry</div>
+      <div class="itemdist-h-lbl">vs 2025</div>
+    </div>
+    <div class="itemdist-row">
+  <div class="itemdist-label">I believe my workplace is safe.</div>
+  <div class="itemdist-mean">4.82</div>
+  <div class="itemdist-stack">
+    <div class="itemdist-segment itemdist-disagree" style="width:1%;"></div>
+    <div class="itemdist-segment itemdist-neutral" style="width:3%;"></div>
+    <div class="itemdist-segment itemdist-agree" style="width:96%;">96%</div>
+  </div>
+  <div class="itemdist-delta-wrap"><span class="itemdist-delta itemdist-dp-pos">+4%</span></div>
+  <div class="itemdist-delta-wrap"><span class="itemdist-delta itemdist-dp-pos">+2%</span></div>
+</div><div class="itemdist-row">
+  <div class="itemdist-label">We have a strong safety culture at Surge.</div>
+  <div class="itemdist-mean">4.41</div>
+  <div class="itemdist-stack">
+    <div class="itemdist-segment itemdist-disagree" style="width:1%;"></div>
+    <div class="itemdist-segment itemdist-neutral" style="width:10%;">10%</div>
+    <div class="itemdist-segment itemdist-agree" style="width:89%;">89%</div>
+  </div>
+  <div class="itemdist-delta-wrap"><span class="itemdist-delta itemdist-dp-pos">+2%</span></div>
+  <div class="itemdist-delta-wrap"><span class="itemdist-delta itemdist-dp-neg">-1%</span></div>
+</div><div class="itemdist-row">
+  <div class="itemdist-label">I feel empowered and engaged to improve safety.</div>
+  <div class="itemdist-mean">4.12</div>
+  <div class="itemdist-stack">
+    <div class="itemdist-segment itemdist-disagree" style="width:2%;"></div>
+    <div class="itemdist-segment itemdist-neutral" style="width:23%;">23%</div>
+    <div class="itemdist-segment itemdist-agree" style="width:75%;">75%</div>
+  </div>
+  <div class="itemdist-delta-wrap"><span class="itemdist-delta itemdist-dp-neg">-12%</span></div>
+  <div class="itemdist-delta-wrap"><span class="itemdist-delta itemdist-dp-pos">+5%</span></div>
+</div><div class="itemdist-row">
+  <div class="itemdist-label">Leadership prioritizes health and safety.</div>
+  <div class="itemdist-mean">4.48</div>
+  <div class="itemdist-stack">
+    <div class="itemdist-segment itemdist-disagree" style="width:1%;"></div>
+    <div class="itemdist-segment itemdist-neutral" style="width:12%;">12%</div>
+    <div class="itemdist-segment itemdist-agree" style="width:87%;">87%</div>
+  </div>
+  <div class="itemdist-delta-wrap"><span class="itemdist-delta itemdist-dp-neu">0%</span></div>
+  <div class="itemdist-delta-wrap"><span class="itemdist-delta itemdist-dp-neg">-3%</span></div>
+</div><div class="itemdist-row">
+  <div class="itemdist-label">We have the right safety systems and programs.</div>
+  <div class="itemdist-mean">4.25</div>
+  <div class="itemdist-stack">
+    <div class="itemdist-segment itemdist-disagree" style="width:1%;"></div>
+    <div class="itemdist-segment itemdist-neutral" style="width:19%;">19%</div>
+    <div class="itemdist-segment itemdist-agree" style="width:80%;">80%</div>
+  </div>
+  <div class="itemdist-delta-wrap"><span class="itemdist-delta itemdist-dp-neg">-5%</span></div>
+  <div class="itemdist-delta-wrap"><span class="itemdist-delta itemdist-dp-neu">0%</span></div>
+</div>
+  </div>
+</div>
+</body>
+</html>

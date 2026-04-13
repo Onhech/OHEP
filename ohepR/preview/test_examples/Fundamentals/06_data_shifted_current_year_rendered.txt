@@ -1,0 +1,359 @@
+<style>#ohep-preview-06_data_shifted_current_year, #ohep-preview-06_data_shifted_current_year * { box-sizing: border-box; }
+#ohep-preview-06_data_shifted_current_year.ohep-root {
+  --bg-canvas: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --bg-secondary: #F1F5F9;
+  --border-light: #F1F5F9;
+  --border-default: #E2E8F0;
+  --border-band: #E5E7EB;
+  --border-dark: #CBD5E1;
+  --text-primary: #0F172A;
+  --text-secondary: #334155;
+  --text-tertiary: #475569;
+  --text-muted: #64748B;
+  --text-faint: #94A3B8;
+  --text-decorative: #CBD5E1;
+  --text-accent: #0D9488;
+  --text-on-dark: #FFFFFF;
+  --percentile-z1-core: #FCD34D;
+  --percentile-z1-text: #968548;
+  --percentile-z1-chip: #FFEBC4;
+  --percentile-z2-core: #B3D6DA;
+  --percentile-z2-text: #9DB3B7;
+  --percentile-z2-chip: #D3FDFF;
+  --percentile-z3-core: #0096A7;
+  --percentile-z3-text: #0096A7;
+  --percentile-z3-chip: #BBF5FF;
+  --percentile-z4-core: #395966;
+  --percentile-z4-text: #395966;
+  --percentile-z4-chip: #C8F0F1;
+  --delta-pos-text: #15803D;
+  --delta-pos-bg: #DCFCE7;
+  --delta-neg-text: #EB7161;
+  --delta-neg-bg: #FEE2E2;
+  --delta-neu-text: #64748B;
+  --delta-neu-bg: #F1F5F9;
+  --favorability-agree: #0096A7;
+  --favorability-neutral: #94A3B8;
+  --favorability-disagree: #EB7161;
+  --band-tick: #0F172A2E;
+  --band-tick-label: #64748B;
+  --band-midpoint: #94A3B8;
+  --band-marker: #111827;
+  --privacy-item-label: #94A3B8;
+  --privacy-overlay-bg: rgba(255,255,255,0.85);
+  --privacy-overlay-border: #CBD5E1;
+  --privacy-overlay-text: #475569;
+  --privacy-overlay-shadow: rgba(15,23,42,0.06);
+  width: 1280px;
+  height: 720px;
+  background: var(--bg-canvas);
+  padding: 24px 32px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+#ohep-preview-06_data_shifted_current_year .top-row { display: flex; gap: 20px; height: 310px; flex-shrink: 0; }
+#ohep-preview-06_data_shifted_current_year .bottom-row { flex: 1; display: flex; min-height: 0; }
+#ohep-preview-06_data_shifted_current_year .card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(15,23,42,.03);
+  display: flex;
+  flex-direction: column;
+}
+#ohep-preview-06_data_shifted_current_year .fundamental-card { flex: 1.2; }
+#ohep-preview-06_data_shifted_current_year .outcomes-card { flex: 1; }
+#ohep-preview-06_data_shifted_current_year .item-card { width: 100%; padding: 20px 24px; }
+#ohep-preview-06_data_shifted_current_year .title-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+#ohep-preview-06_data_shifted_current_year .card-title { font-size: 22px; font-weight: 900; color: var(--text-primary); margin: 0; text-transform: uppercase; letter-spacing: -0.5px; }
+#ohep-preview-06_data_shifted_current_year .status-pill { font-size: 11px; font-weight: 800; padding: 6px 12px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+#ohep-preview-06_data_shifted_current_year .status-risk { background: var(--percentile-z1-chip); color: var(--percentile-z1-text); }
+#ohep-preview-06_data_shifted_current_year .status-watch { background: var(--percentile-z2-chip); color: var(--percentile-z2-text); }
+#ohep-preview-06_data_shifted_current_year .status-good { background: var(--percentile-z3-chip); color: var(--percentile-z3-text); }
+#ohep-preview-06_data_shifted_current_year .status-leader { background: var(--percentile-z4-chip); color: var(--percentile-z4-text); }
+#ohep-preview-06_data_shifted_current_year .color-risk { color: var(--percentile-z1-text); }
+#ohep-preview-06_data_shifted_current_year .color-watch { color: var(--percentile-z2-text); }
+#ohep-preview-06_data_shifted_current_year .color-good { color: var(--percentile-z3-text); }
+#ohep-preview-06_data_shifted_current_year .metrics-container { display: flex; flex-direction: column; margin-bottom: 16px; }
+#ohep-preview-06_data_shifted_current_year .hero-row { display: flex; align-items: flex-start; gap: 20px; }
+#ohep-preview-06_data_shifted_current_year .hero-label { font-size: 11px; font-weight: 800; color: var(--text-accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+#ohep-preview-06_data_shifted_current_year .hero-value { font-size: 48px; font-weight: 900; color: var(--text-primary); line-height: 1; letter-spacing: -1px; }
+#ohep-preview-06_data_shifted_current_year .delta-block { display: flex; align-items: center; gap: 6px; margin-top: 16px; }
+#ohep-preview-06_data_shifted_current_year .delta-block.positive { color: var(--delta-pos-text); }
+#ohep-preview-06_data_shifted_current_year .delta-block.negative { color: var(--delta-neg-text); }
+#ohep-preview-06_data_shifted_current_year .delta-block.neutral { color: var(--text-muted); }
+#ohep-preview-06_data_shifted_current_year .delta-icon { font-size: 20px; line-height: 1; }
+#ohep-preview-06_data_shifted_current_year .delta-details { display: flex; flex-direction: column; justify-content: center; }
+#ohep-preview-06_data_shifted_current_year .delta-value { font-size: 14px; font-weight: 800; line-height: 1.1; }
+#ohep-preview-06_data_shifted_current_year .delta-year { font-size: 10px; color: var(--text-faint); font-weight: 700; text-transform: uppercase; margin-top: 2px; }
+#ohep-preview-06_data_shifted_current_year .sub-context { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-top: 12px; }
+#ohep-preview-06_data_shifted_current_year .sub-context strong { color: var(--text-primary); font-weight: 800; }
+#ohep-preview-06_data_shifted_current_year .sub-delta { color: var(--delta-pos-text); font-weight: 800; }
+#ohep-preview-06_data_shifted_current_year .band-wrap { position: relative; margin-top: auto; padding-top: 16px; }
+#ohep-preview-06_data_shifted_current_year .band { position: relative; height: 26px; border-radius: 999px; overflow: hidden; display: flex; border: 1px solid var(--border-band); }
+#ohep-preview-06_data_shifted_current_year .z1 { width: 40%; background: var(--percentile-z1-core); }
+#ohep-preview-06_data_shifted_current_year .z2 { width: 20%; background: var(--percentile-z2-core); }
+#ohep-preview-06_data_shifted_current_year .z3 { width: 25%; background: var(--percentile-z3-core); }
+#ohep-preview-06_data_shifted_current_year .z4 { width: 15%; background: var(--percentile-z4-core); }
+#ohep-preview-06_data_shifted_current_year .tick { position: absolute; top: 0; width: 2px; height: 26px; background: var(--band-tick); z-index: 2; transform: translateX(-50%); }
+#ohep-preview-06_data_shifted_current_year .tick-label { position: absolute; top: 12px; transform: translate(-50%, -100%); font-size: 11px; font-weight: 800; color: var(--band-tick-label); }
+#ohep-preview-06_data_shifted_current_year .midpoint { position: absolute; top: 29px; left: 50%; width: 2px; height: 32px; background: var(--band-midpoint); transform: translate(-50%, -50%); z-index: 3; }
+#ohep-preview-06_data_shifted_current_year .marker { position: absolute; top: 29px; width: 4px; height: 38px; background: var(--band-marker); transform: translate(-50%, -50%); border-radius: 4px; z-index: 5; }
+#ohep-preview-06_data_shifted_current_year .labels { display: flex; align-items: center; font-size: 11px; font-weight: 600; color: var(--text-muted); margin-top: 10px; }
+#ohep-preview-06_data_shifted_current_year .labels span { display: flex; justify-content: center; text-align: center; }
+#ohep-preview-06_data_shifted_current_year .labels span:nth-child(1) { width: 40%; }
+#ohep-preview-06_data_shifted_current_year .labels span:nth-child(2) { width: 20%; font-weight: 800; color: var(--percentile-z2-text); }
+#ohep-preview-06_data_shifted_current_year .labels span:nth-child(3) { width: 25%; }
+#ohep-preview-06_data_shifted_current_year .labels span:nth-child(4) { width: 15%; }
+#ohep-preview-06_data_shifted_current_year .table-outcomes { width: 100%; border-collapse: collapse; margin-top: auto; }
+#ohep-preview-06_data_shifted_current_year .table-outcomes th {
+  text-align: left; padding-bottom: 10px; font-size: 10px; font-weight: 800; color: var(--text-faint);
+  text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border-default);
+}
+#ohep-preview-06_data_shifted_current_year .table-outcomes th.right-align { text-align: right; }
+#ohep-preview-06_data_shifted_current_year .table-outcomes td { padding: 14px 0; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+#ohep-preview-06_data_shifted_current_year .table-outcomes tr:last-child td { border-bottom: none; padding-bottom: 0; }
+#ohep-preview-06_data_shifted_current_year .row-rank { font-size: 22px; font-weight: 800; color: var(--text-decorative); margin-right: 12px; }
+#ohep-preview-06_data_shifted_current_year .row-name { font-size: 15px; font-weight: 800; color: var(--text-primary); }
+#ohep-preview-06_data_shifted_current_year .company-score-stack { display: flex; flex-direction: column; align-items: flex-end; }
+#ohep-preview-06_data_shifted_current_year .row-score-val { font-size: 15px; font-weight: 800; line-height: 1; }
+#ohep-preview-06_data_shifted_current_year .row-status { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 4px; }
+#ohep-preview-06_data_shifted_current_year .item-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+#ohep-preview-06_data_shifted_current_year .legend-group { display: flex; gap: 16px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+#ohep-preview-06_data_shifted_current_year .leg-item { display: flex; align-items: center; gap: 6px; }
+#ohep-preview-06_data_shifted_current_year .leg-dot { width: 10px; height: 10px; border-radius: 2px; }
+#ohep-preview-06_data_shifted_current_year .bg-agree { background: var(--favorability-agree); }
+#ohep-preview-06_data_shifted_current_year .bg-neutral { background: var(--favorability-neutral); }
+#ohep-preview-06_data_shifted_current_year .bg-disagree { background: var(--favorability-disagree); }
+#ohep-preview-06_data_shifted_current_year .item-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; flex: 1; }
+#ohep-preview-06_data_shifted_current_year .item-column { display: flex; flex-direction: column; }
+#ohep-preview-06_data_shifted_current_year .header-row, #ohep-preview-06_data_shifted_current_year .item-row { display: grid; grid-template-columns: minmax(180px, 2fr) 40px 3fr 50px 50px; gap: 12px; align-items: center; }
+#ohep-preview-06_data_shifted_current_year .header-row { padding-bottom: 8px; border-bottom: 2px solid var(--border-default); }
+#ohep-preview-06_data_shifted_current_year .h-lbl { font-size: 9px; font-weight: 800; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+#ohep-preview-06_data_shifted_current_year .h-lbl:first-child { text-align: left; }
+#ohep-preview-06_data_shifted_current_year .sub-cat { grid-column: 1 / -1; background: var(--bg-secondary); font-size: 11px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; padding: 6px 12px; border-radius: 4px; margin: 8px 0; }
+#ohep-preview-06_data_shifted_current_year .item-row { padding: 6px 0; border-bottom: 1px solid var(--border-light); }
+#ohep-preview-06_data_shifted_current_year .item-row:last-child { border-bottom: none; }
+#ohep-preview-06_data_shifted_current_year .item-row > .item-label { grid-column: 1; }
+#ohep-preview-06_data_shifted_current_year .item-row > .cell-score { grid-column: 2; }
+#ohep-preview-06_data_shifted_current_year .item-row > .sentiment-stack { grid-column: 3; }
+#ohep-preview-06_data_shifted_current_year .item-row > .sentiment-privacy-stack { grid-column: 3; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#ohep-preview-06_data_shifted_current_year .item-row > .sentiment-privacy-stack > .sentiment-stack { width: 100%; }
+#ohep-preview-06_data_shifted_current_year .item-row > .delta-industry { grid-column: 4; }
+#ohep-preview-06_data_shifted_current_year .item-row > .delta-prior { grid-column: 5; }
+#ohep-preview-06_data_shifted_current_year .item-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); line-height: 1.3; padding-right: 8px; }
+#ohep-preview-06_data_shifted_current_year .cell-score { font-size: 13px; font-weight: 800; color: var(--text-primary); text-align: center; }
+#ohep-preview-06_data_shifted_current_year .sentiment-stack { height: 22px; display: flex; border-radius: 4px; overflow: hidden; background: var(--bg-secondary); }
+#ohep-preview-06_data_shifted_current_year .segment { display: flex; align-items: center; justify-content: center; color: var(--text-on-dark); font-size: 10px; font-weight: 800; }
+#ohep-preview-06_data_shifted_current_year .delta-container { display: flex; justify-content: center; }
+#ohep-preview-06_data_shifted_current_year .delta-pill { display: inline-flex; align-items: center; justify-content: center; width: 48px; padding: 4px 0; border-radius: 4px; font-size: 10px; font-weight: 800; }
+#ohep-preview-06_data_shifted_current_year .dp-pos { background: var(--delta-pos-bg); color: var(--delta-pos-text); }
+#ohep-preview-06_data_shifted_current_year .dp-neg { background: var(--delta-neg-bg); color: var(--delta-neg-text); }
+#ohep-preview-06_data_shifted_current_year .dp-neu { background: var(--delta-neu-bg); color: var(--delta-neu-text); }
+#ohep-preview-06_data_shifted_current_year .privacy-row { position: relative; }
+#ohep-preview-06_data_shifted_current_year .privacy-row .item-label { color: var(--privacy-item-label); }
+#ohep-preview-06_data_shifted_current_year .privacy-row > .cell-score,
+#ohep-preview-06_data_shifted_current_year .privacy-row > .delta-container,
+#ohep-preview-06_data_shifted_current_year .privacy-row > .sentiment-stack,
+#ohep-preview-06_data_shifted_current_year .privacy-row > .sentiment-privacy-stack > .sentiment-stack { filter: blur(4px) grayscale(60%); opacity: 0.25; pointer-events: none; user-select: none; }
+#ohep-preview-06_data_shifted_current_year .privacy-overlay {
+  position: relative;
+  z-index: 3;
+  background: var(--privacy-overlay-bg);
+  backdrop-filter: blur(2px);
+  border: 1px solid var(--privacy-overlay-border);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--privacy-overlay-text);
+  letter-spacing: 0.2px;
+  box-shadow: 0 2px 6px var(--privacy-overlay-shadow);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}</style>
+<div id="ohep-preview-06_data_shifted_current_year" class="ohep-root">
+  <div class="top-row">
+    <div class="card fundamental-card">
+  <div class="title-bar">
+    <h2 class="card-title">Purpose</h2>
+    <span class="status-pill status-leader">Industry Leader</span>
+  </div>
+  <div class="metrics-container">
+    <div class="hero-row">
+      <div>
+        <div class="hero-label">Percentile</div>
+        <div class="hero-value">100th</div>
+      </div>
+      <div class="delta-block positive">
+        <div class="delta-icon">&#9650;</div>
+        <div class="delta-details">
+          <div class="delta-value">+15 pts</div>
+          <div class="delta-year">vs. 2023</div>
+        </div>
+      </div>
+    </div>
+    <div class="sub-context">
+      Score: <strong>4.86</strong>
+      <span class="sub-delta">(+0.57)</span>
+    </div>
+  </div>
+  <div class="band-wrap">
+    <div class="tick-label" style="left:40%;">40</div>
+    <div class="tick-label" style="left:50%;">50</div>
+    <div class="tick-label" style="left:60%;">60</div>
+    <div class="tick-label" style="left:85%;">85</div>
+    <div class="band">
+      <div class="z1"></div><div class="z2"></div><div class="z3"></div><div class="z4"></div>
+      <div class="tick" style="left:40%;"></div><div class="tick" style="left:60%;"></div><div class="tick" style="left:85%;"></div>
+    </div>
+    <div class="midpoint"></div>
+    <div class="marker" style="left:99.9605322797127%;"></div>
+  </div>
+  <div class="labels">
+    <span>Area for Growth</span>
+    <span>Industry standard</span>
+    <span>Above standard</span>
+    <span>Industry leader</span>
+  </div>
+</div>
+    <div class="card outcomes-card">
+  <div class="title-bar">
+    <h2 class="card-title">Purpose drives</h2>
+  </div>
+  <table class="table-outcomes">
+    <thead>
+      <tr>
+        <th>Outcome</th>
+        <th class="right-align">Your Company</th>
+      </tr>
+    </thead>
+    <tbody><tr>
+  <td>
+    <span class="row-rank">1</span>
+    <span class="row-name">Engagement</span>
+  </td>
+  <td>
+    <div class="company-score-stack">
+      <span class="row-score-val color-risk">28th Percentile</span>
+      <span class="row-status color-risk">Area for Growth</span>
+    </div>
+  </td>
+</tr><tr>
+  <td>
+    <span class="row-rank">2</span>
+    <span class="row-name">Burnout</span>
+  </td>
+  <td>
+    <div class="company-score-stack">
+      <span class="row-score-val color-risk">26th Percentile</span>
+      <span class="row-status color-risk">Area for Growth</span>
+    </div>
+  </td>
+</tr><tr>
+  <td>
+    <span class="row-rank">3</span>
+    <span class="row-name">Work Satisfaction</span>
+  </td>
+  <td>
+    <div class="company-score-stack">
+      <span class="row-score-val color-risk">23rd Percentile</span>
+      <span class="row-status color-risk">Area for Growth</span>
+    </div>
+  </td>
+</tr></tbody>
+  </table>
+</div>
+  </div>
+  <div class="bottom-row">
+    <div class="card item-card">
+      <div class="item-title-row">
+        <h2 class="card-title">Item-Level Breakdown</h2>
+        <div class="legend-group">
+          <div class="leg-item"><div class="leg-dot bg-disagree"></div> Disagree</div>
+          <div class="leg-item"><div class="leg-dot bg-neutral"></div> Neutral</div>
+          <div class="leg-item"><div class="leg-dot bg-agree"></div> Agree</div>
+        </div>
+      </div>
+      <div class="item-grid-2col">
+        <div class="item-column"><div class="header-row" style="grid-template-columns:minmax(180px, 2fr) 40px 3fr 50px 50px 50px;">
+  <div class="h-lbl">Survey Item</div><div class="h-lbl">Mean</div><div class="h-lbl">Sentiment Distribution</div><div class="h-lbl h-lbl-benchmark">vs Co.</div><div class="h-lbl h-lbl-benchmark">vs Ind.</div><div class="h-lbl h-lbl-benchmark">vs '24</div>
+</div><div class="sub-cat">Purpose</div><div class="item-row" style="grid-template-columns:minmax(180px, 2fr) 40px 3fr 50px 50px 50px;">
+  <div class="item-label">Our organization creates value in the community in which it operates.</div>
+  <div class="cell-score">4.96</div>
+  <div class="sentiment-stack">
+        <div class="segment bg-disagree" style="width: 0%;"></div>
+        <div class="segment bg-neutral" style="width: 0%;"></div>
+        <div class="segment bg-agree" style="width: 100%;">100%</div>
+      </div>
+  <div class="delta-container delta-company" style="grid-column:4;"><span class="delta-pill dp-pos">+34%</span></div><div class="delta-container delta-industry" style="grid-column:5;"><span class="delta-pill dp-pos">+29%</span></div><div class="delta-container delta-prior" style="grid-column:6;"><span class="delta-pill dp-pos">+19%</span></div>
+</div><div class="item-row" style="grid-template-columns:minmax(180px, 2fr) 40px 3fr 50px 50px 50px;">
+  <div class="item-label">Our organization builds and maintains quality relationships with all stakeholders.</div>
+  <div class="cell-score">4.87</div>
+  <div class="sentiment-stack">
+        <div class="segment bg-disagree" style="width: 0%;"></div>
+        <div class="segment bg-neutral" style="width: 0%;"></div>
+        <div class="segment bg-agree" style="width: 100%;">100%</div>
+      </div>
+  <div class="delta-container delta-company" style="grid-column:4;"><span class="delta-pill dp-pos">+38%</span></div><div class="delta-container delta-industry" style="grid-column:5;"><span class="delta-pill dp-pos">+28%</span></div><div class="delta-container delta-prior" style="grid-column:6;"><span class="delta-pill dp-pos">+20%</span></div>
+</div><div class="item-row privacy-row" style="grid-template-columns:minmax(180px, 2fr) 40px 3fr 50px 50px 50px;">
+  <div class="item-label">Our organization considers the needs of the community and society.</div>
+  <div class="cell-score">-</div>
+  <div class="sentiment-privacy-stack">
+        <div class="privacy-overlay">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        Insufficient responses
+        </div>
+        <div class="sentiment-stack">
+        <div class="segment bg-disagree" style="width: 0%;"></div>
+        <div class="segment bg-neutral" style="width: 100%;">100%</div>
+        <div class="segment bg-agree" style="width: 0%;"></div>
+      </div>
+      </div>
+  <div class="delta-container delta-company" style="grid-column:4;"><span class="delta-pill dp-neu" title="Insufficient responses">-</span></div><div class="delta-container delta-industry" style="grid-column:5;"><span class="delta-pill dp-neu" title="Insufficient responses">-</span></div><div class="delta-container delta-prior" style="grid-column:6;"><span class="delta-pill dp-neu" title="Insufficient responses">-</span></div>
+</div></div>
+        <div class="item-column"><div class="header-row" style="grid-template-columns:minmax(180px, 2fr) 40px 3fr 50px 50px 50px;">
+  <div class="h-lbl">Survey Item</div><div class="h-lbl">Mean</div><div class="h-lbl">Sentiment Distribution</div><div class="h-lbl h-lbl-benchmark">vs Co.</div><div class="h-lbl h-lbl-benchmark">vs Ind.</div><div class="h-lbl h-lbl-benchmark">vs '24</div>
+</div><div class="sub-cat">Purpose</div><div class="item-row" style="grid-template-columns:minmax(180px, 2fr) 40px 3fr 50px 50px 50px;">
+  <div class="item-label">Our organization's purpose/mission makes me feel that my work is meaningful.</div>
+  <div class="cell-score">4.75</div>
+  <div class="sentiment-stack">
+        <div class="segment bg-disagree" style="width: 3%;"></div>
+        <div class="segment bg-neutral" style="width: 0%;"></div>
+        <div class="segment bg-agree" style="width: 97%;">97%</div>
+      </div>
+  <div class="delta-container delta-company" style="grid-column:4;"><span class="delta-pill dp-pos">+38%</span></div><div class="delta-container delta-industry" style="grid-column:5;"><span class="delta-pill dp-pos">+25%</span></div><div class="delta-container delta-prior" style="grid-column:6;"><span class="delta-pill dp-pos">+21%</span></div>
+</div><div class="item-row" style="grid-template-columns:minmax(180px, 2fr) 40px 3fr 50px 50px 50px;">
+  <div class="item-label">I am proud to work for this organization.</div>
+  <div class="cell-score">4.95</div>
+  <div class="sentiment-stack">
+        <div class="segment bg-disagree" style="width: 0%;"></div>
+        <div class="segment bg-neutral" style="width: 0%;"></div>
+        <div class="segment bg-agree" style="width: 100%;">100%</div>
+      </div>
+  <div class="delta-container delta-company" style="grid-column:4;"><span class="delta-pill dp-pos">+28%</span></div><div class="delta-container delta-industry" style="grid-column:5;"><span class="delta-pill dp-pos">+24%</span></div><div class="delta-container delta-prior" style="grid-column:6;"><span class="delta-pill dp-pos">+21%</span></div>
+</div><div class="item-row" style="grid-template-columns:minmax(180px, 2fr) 40px 3fr 50px 50px 50px;">
+  <div class="item-label">It is clear to me how my work connects to our broader organizational purpose.</div>
+  <div class="cell-score">4.78</div>
+  <div class="sentiment-stack">
+        <div class="segment bg-disagree" style="width: 1%;"></div>
+        <div class="segment bg-neutral" style="width: 1%;"></div>
+        <div class="segment bg-agree" style="width: 98%;">98%</div>
+      </div>
+  <div class="delta-container delta-company" style="grid-column:4;"><span class="delta-pill dp-pos">+36%</span></div><div class="delta-container delta-industry" style="grid-column:5;"><span class="delta-pill dp-pos">+23%</span></div><div class="delta-container delta-prior" style="grid-column:6;"><span class="delta-pill dp-pos">+24%</span></div>
+</div></div>
+      </div>
+    </div>
+  </div>
+</div>

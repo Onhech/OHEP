@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verbatim Feedback Gallery - High Density</title>
+
+<style>
+  * { box-sizing: border-box; }
+
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    background: #E2E8F0; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    min-height: 100vh;
+    margin: 0; 
+  }
+
+  /* --- STRICT 16:9 SLIDE CONTAINER --- */
+  .slide-container {
+    width: 1280px; 
+    height: 720px; /* Locked height */
+    background: #FFFFFF; /* Switched to pure white for better text contrast */
+    padding: 36px 48px; 
+    border-radius: 8px; 
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1); 
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+  }
+
+  /* --- HEADER SECTION --- */
+  .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 2px solid #0D9488;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+  }
+
+  .title-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .theme-kicker { 
+    font-size: 14px; 
+    font-weight: 800; 
+    color: #0D9488; 
+    text-transform: uppercase; 
+    letter-spacing: 1.5px; 
+    margin-bottom: 4px; 
+  }
+
+  .theme-title { 
+    font-size: 32px; 
+    font-weight: 900; 
+    color: #0F172A; 
+    margin: 0 0 4px 0; 
+    letter-spacing: -0.5px; 
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .page-tag {
+    font-size: 14px;
+    font-weight: 700;
+    background: #F1F5F9;
+    color: #475569;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+  }
+
+  .theme-intro {
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 600;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* --- HIGH-DENSITY TEXT COLUMNS --- */
+  .dense-grid {
+    column-count: 4; /* 4 columns for maximum density */
+    column-gap: 36px; /* Generous gap so columns don't bleed together */
+    column-rule: 1px solid #E2E8F0; /* Subtle vertical divider line */
+    flex: 1; 
+    min-height: 0; 
+    width: 100%;
+    overflow: hidden;
+  }
+
+  /* --- MINIMALIST QUOTE BLOCK --- */
+  .quote-block {
+    break-inside: avoid; /* Keeps comments from splitting across columns */
+    page-break-inside: avoid;
+    margin-bottom: 16px; /* Tight vertical spacing */
+    position: relative;
+    padding-left: 16px; /* Space for the quotation mark */
+  }
+
+  /* Minimalist Quotation Mark Anchor */
+  .quote-block::before {
+    content: "“";
+    position: absolute;
+    left: 0;
+    top: -4px;
+    font-size: 26px;
+    color: #0D9488; /* Teal accent */
+    font-family: Georgia, serif;
+    font-weight: bold;
+    line-height: 1;
+  }
+
+  .quote-text {
+    font-size: 11.5px; /* Highly compact but legible font size */
+    line-height: 1.45;
+    color: #334155;
+    margin: 0;
+    text-align: left;
+  }
+
+  /* --- FOOTER --- */
+  .footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    flex-shrink: 0;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #F1F5F9;
+  }
+  
+  .brand {
+    font-size: 18px;
+    font-weight: 800;
+    color: #334155;
+    letter-spacing: -0.5px;
+  }
+  .brand-dot { color: #0EA5E9; }
+
+</style>
+</head>
+<body>
+
+<div class="slide-container">
+
+  <div class="header-section">
+    <div class="title-group">
+      <div class="theme-kicker">Qualitative Feedback</div>
+      <h1 class="theme-title">Purpose <span class="page-tag">continued</span></h1>
+      <p class="theme-intro">Verbatim & Unedited Employee Comments</p>
+    </div>
+  </div>
+
+  <div class="dense-grid">
+
+    <div class="quote-block">
+      <p class="quote-text">There is room for improvement in how the strategy is communicated across all levels of staff. Greater transparency and more frequent communication from leadership would help improve alignment and engagement.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Some people rely on others to do their jobs/if some tasks need to get done quickly, others may need to do it because they're waiting to get things completed.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">In general, the Surge strategy is great. However, some decisions on inventory development are often swayed by a single datapoint or dip in commodity prices without discussion between leadership and the asset teams - leading to last minute changes often causing limited appraisal location development. These changes limit land delineation and future development strategy.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Surge strategy is always calculated, organized, well planned, to work to the advantage of the organization and its employees.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">More communication on corporate objectives would be useful to ensure all people are aligned and working towards the same goal.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Poor / conflicting communication on Surge's strategy</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">I feel there is inconsistency in our strategy and I see lack of alignment at the Executive level - some days we are selling assets, other days we are buying. There is a lot of pressure on the evaluating teams to push for value to get a deal done.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">I don't know much about Surge's strategy, other than the high level information that is presented at occasional townhalls and trying to read the corporate presentation, which I don't really understand. Everything else seems to be kept under lock and key and is "need to know" only.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Lack of clear strategy. Strategy shifts often & quickly. No singular focus or goal.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Surge’s actions do not reflect a concise strategy. BD is all over the map and look at the same thing multiple times. Lack of strategy wastes resources.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Governance and guidance targets are relayed and opinions of how to achieve these are collected and acted upon</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">We seem to overreact when there are changes in the market.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Management could do a better job of trusting the talented people that do the work. People are not held accountable to obtain their goals. Goals are outlined very well.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Strategies are communicated clearly and effectively.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Strategy needs to be communicated alot better down to the field level.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Sometimes communication of things to everyone could be better, occasionally not everyone gets the same messages. One area gets a message and it just gets overlooked to pass it onto other area's.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Struggle with communication at Surge. We either communicate too much or we communicate too little. Hallway conversations are all too common and not sending email to ALL concerned if also common. We try but we still struggle with it.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">There is a need for more consistent and transparent communication from leadership. Employees often feel out of the loop regarding key decisions and strategic shifts. Cross-department communication can also be lacking at times.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Sometimes I feel my manager is too busy and manages too many people/things</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Sometimes communication between teams and leaders is lacking - not always clear why we are doing something/what the purpose is. Sometimes certain groups and people are kept out of the loop and without their input/expertise, things are done incorrectly or last minute.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Communication is good, but it does tend to get siloed at times (certain groups hear things, but others don't)</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">- conflicting / unclear / zero communication from top management</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">Communication is ok at times and lacking at others. Lack of focused strategy inhibits clear communication.</p>
+    </div>
+
+    <div class="quote-block">
+      <p class="quote-text">inconsistent messaging between groups inconsistent recognition of achievements between operations teams and administrative teams difficult to trust messaging from executive team as its inconsistent</p>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="brand"><span class="brand-dot">•</span> monark</div>
+  </div>
+
+</div>
+
+</body>
+</html>

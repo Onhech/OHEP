@@ -1,0 +1,8 @@
+"scenario","mode","min_n","filtered_rows","current_n","page_suppressed","total_item_rows","suppressed_rows","suppressed_vs_industry","suppressed_vs_prior","description"
+"01_unfiltered_marts_baseline","unfiltered",3,NA,NA,FALSE,5,0,0,0,"Mart-based baseline (no respondent filter)."
+"02_filtered_baseline","filtered",3,360,283,FALSE,6,1,1,1,"Filtered respondent-level baseline (current + prior rows)."
+"03_page_suppressed_n_below_min","filtered",3,2,2,TRUE,5,0,0,0,"Page-level privacy suppression when subset n is below min_n."
+"04_row_suppressed_item_n_below_min","filtered",3,360,283,FALSE,6,2,2,1,"Row-level suppression by masking 'purpose_1' item responses."
+"05_prior_only_suppressed","filtered",3,360,283,FALSE,6,1,1,2,"Comparison-only suppression by reducing prior n for 'purpose_1'."
+"06_data_shifted_current_year","filtered",3,360,283,FALSE,6,1,1,1,"Current-year item responses shifted upward (+1 capped at 5)."
+"07_filtered_baseline_min_n_5","filtered",5,360,283,FALSE,6,1,1,1,"Same filtered baseline but stricter threshold min_n = 5."

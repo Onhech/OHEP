@@ -1,0 +1,95 @@
+"item_id","item_text","fundamental_id","facet_id","is_reverse_scored","response_scale_min","response_scale_max","item_order","facet_order","fundamental_order"
+"vision_1","Our vision is clearly communicated throughout the company.","Vision","Vision",FALSE,1,5,1,1,1
+"vision_2","Our vision is inspiring.","Vision","Vision",FALSE,1,5,2,1,1
+"vision_3","Our vision challenges those who work here to continuously improve.","Vision","Vision",FALSE,1,5,3,1,1
+"vision_4","Our vision is long-term oriented.","Vision","Vision",FALSE,1,5,4,1,1
+"purpose_1","Our organization creates value in the community in which it operates.","Purpose","Purpose",FALSE,1,5,1,2,2
+"purpose_2","Our organization builds and maintains quality relationships with all stakeholders.","Purpose","Purpose",FALSE,1,5,2,2,2
+"purpose_3","Our organization considers the needs of the community and society.","Purpose","Purpose",FALSE,1,5,3,2,2
+"purpose_4","Our organization's purpose/mission makes me feel that my work is meaningful.","Purpose","Purpose",FALSE,1,5,4,2,2
+"purpose_5","I am proud to work for this organization.","Purpose","Purpose",FALSE,1,5,5,2,2
+"purpose_6","It is clear to me how my work connects to our broader organizational purpose.","Purpose","Purpose",FALSE,1,5,6,2,2
+"strategy_1","People here have clarity on which decisions fall within their jurisdiction.","Strategy","Strategy",FALSE,1,5,1,3,3
+"strategy_2","People feel trusted and empowered to make decisions that are within their authority.","Strategy","Strategy",FALSE,1,5,2,3,3
+"strategy_3","Our policies and practices are aligned with our strategic objectives.","Strategy","Strategy",FALSE,1,5,3,3,3
+"strategy_4","New organizational processes are rolled out rather seamlessly.","Strategy","Strategy",FALSE,1,5,4,3,3
+"strategy_5","Management are nimble in responding to changes in our market and environment.","Strategy","Strategy",FALSE,1,5,5,3,3
+"strategy_6","Our organization's progress toward strategic objectives is tracked and communicated widely.","Strategy","Strategy",FALSE,1,5,6,3,3
+"strategy_7","People are held accountable to their role in achieving organizational goals.","Strategy","Strategy",FALSE,1,5,7,3,3
+"strategy_8","I know and understand our organization's strategy.","Strategy","Strategy",FALSE,1,5,8,3,3
+"strategy_9","It is clear to me how my work integrates into our overall strategy.","Strategy","Strategy",FALSE,1,5,9,3,3
+"communication_1","I can speak openly with my supervisor.","Communication","Communication",FALSE,1,5,1,4,4
+"communication_2","I am content with the way my supervisor communicates information to me.","Communication","Communication",FALSE,1,5,2,4,4
+"communication_3","I can speak openly with members of my group/unit.","Communication","Communication",FALSE,1,5,3,4,4
+"communication_4","In general, information is readily shared amongst employees in this organization.","Communication","Communication",FALSE,1,5,4,4,4
+"communication_5","I am content with the way information is communicated between my group/unit and other areas of the organization.","Communication","Communication",FALSE,1,5,5,4,4
+"communication_6","Top management is communicative about issues of importance.","Communication","Communication",FALSE,1,5,6,4,4
+"leadership_1","My direct supervisor encourages me to approach problems in new ways.","Leadership","Leadership",FALSE,1,5,1,5,5
+"leadership_2","My direct supervisor acknowledges my individual needs and encourages my personal development.","Leadership","Leadership",FALSE,1,5,2,5,5
+"leadership_3","My direct supervisor articulates a compelling vision for the future of our group/unit.","Leadership","Leadership",FALSE,1,5,3,5,5
+"leadership_4","The person I directly report to is effective at setting expectations and holding the team accountable.","Leadership","Leadership",FALSE,1,5,4,5,5
+"leadership_5","My direct supervisor instills pride and confidence in our group/unit.","Leadership","Leadership",FALSE,1,5,5,5,5
+"leadership_6","I am confident in our organization's top management team.","Leadership","Leadership",FALSE,1,5,6,5,5
+"leadership_7","Top management clarifies priorities and regularly reinforces what is important.","Leadership","Leadership",FALSE,1,5,7,5,5
+"leadership_8","Our top management team treats all employees with respect.","Leadership","Leadership",FALSE,1,5,8,5,5
+"leadership_9","Our organization’s values are reflected in senior leadership’s behaviours and decisions.","Leadership","Leadership",FALSE,1,5,9,5,5
+"learning_1","At this organization, time is made for reflection and exploration of new ideas.","Learning & innovation","Learning & innovation",FALSE,1,5,1,6,6
+"learning_2","At this organization, learning from clients, customers and/or stakeholders is valued.","Learning & innovation","Learning & innovation",FALSE,1,5,2,6,6
+"learning_3","Knowledge and information are organized and documented in the form of manuals, databases, or otherwise; and these are widely accessible and updated regularly.","Learning & innovation","Learning & innovation",FALSE,1,5,3,6,6
+"learning_4","We treat mistakes as an opportunity for growth.","Learning & innovation","Learning & innovation",FALSE,1,5,4,6,6
+"learning_5","People here feel that they can share new or different perspectives.","Learning & innovation","Learning & innovation",FALSE,1,5,5,6,6
+"learning_6","Management are always looking for new ways to improve organizational practices and processes.","Learning & innovation","Learning & innovation",FALSE,1,5,6,6,6
+"learning_7","Employees at this organization are encouraged and given the ability to innovate where possible.","Learning & innovation","Learning & innovation",FALSE,1,5,7,6,6
+"respect_1","Even when there is a disagreement, people still show respect for one another.","Respect, care, and trust","Respect, care, and trust",FALSE,1,5,1,7,7
+"respect_2","People at this company generally like one another./ get along","Respect, care, and trust","Respect, care, and trust",FALSE,1,5,2,7,7
+"respect_3","There is a high level of respect and care within our culture.","Respect, care, and trust","Respect, care, and trust",FALSE,1,5,3,7,7
+"respect_4","People at this organization embrace collaboration when appropriate.","Respect, care, and trust","Respect, care, and trust",FALSE,1,5,4,7,7
+"respect_5","People at this company generally trust one another.","Respect, care, and trust","Respect, care, and trust",FALSE,1,5,5,7,7
+"performance_1","I have set specific, challenging and time-bound goals for myself, in collaboration with the person I report to.","Performance development","Performance development",FALSE,1,5,1,8,8
+"performance_2","I am content with the quality of feedback I receive.","Performance development","Performance development",FALSE,1,5,2,8,8
+"performance_3","I receive feedback on a continual basis.","Performance development","Performance development",FALSE,1,5,3,8,8
+"performance_4","The organization has fair promotion process(es).","Performance development","Performance development",FALSE,1,5,4,8,8
+"performance_5","Performance is tracked and assessed fairly at this organization.","Performance development","Performance development",FALSE,1,5,5,8,8
+"performance_6","Successes and/or achievements are celebrated at this organization.","Performance development","Performance development",FALSE,1,5,6,8,8
+"performance_7","Total compensation at this organization is fair.","Performance development","Performance development",FALSE,1,5,7,8,8
+"performance_8","At this organization, employees are given professional development opportunities in some form.","Performance development","Performance development",FALSE,1,5,8,8,8
+"safety_1","I believe my workplace is safe.","Safety","Safety",FALSE,1,5,1,9,9
+"safety_2","We have a strong safety culture at this organization.","Safety","Safety",FALSE,1,5,2,9,9
+"safety_3","We always report safety incidents when we become aware of them.","Safety","Safety",FALSE,1,5,3,9,9
+"safety_4","I have the opportunity to voice my concerns regarding safety.","Safety","Safety",FALSE,1,5,4,9,9
+"safety_5","My manager communicates and shows their commitment to creating a safe and healthy work environment.","Safety","Safety",FALSE,1,5,5,9,9
+"safety_6","Leadership prioritizes health and safety in our workplace.","Safety","Safety",FALSE,1,5,6,9,9
+"safety_7","We have the right safety systems and programs to create a safe and healthy work environment.","Safety","Safety",FALSE,1,5,7,9,9
+"safety_8","I feel empowered to improve safety at ORGANIZATION, including voicing any concerns.","Safety","Safety",FALSE,1,5,8,9,9
+"safety_9","I am clear on safety expectations within my role.","Safety","Safety",FALSE,1,5,9,9,9
+"inclusion_1","I feel included in most work activities.","Inclusion & belonging","Inclusion & belonging",FALSE,1,5,1,10,10
+"inclusion_2","I feel a sense of belonging at organization.","Inclusion & belonging","Inclusion & belonging",FALSE,1,5,2,10,10
+"inclusion_3","People’s differences are respected and appreciated at organization.","Inclusion & belonging","Inclusion & belonging",FALSE,1,5,3,10,10
+"inclusion_4","I do not feel that I need to sacrifice my principles or beliefs to work at organization.","Inclusion & belonging","Inclusion & belonging",FALSE,1,5,4,10,10
+"wellness_1","Overall, this organization supports me in living a healthy life.","Wellness support","Wellness support",FALSE,1,5,1,11,11
+"wellness_2","Overall, my direct supervisor supports me in living a healthy life.","Wellness support","Wellness support",FALSE,1,5,2,11,11
+"wellness_3","Most employees at organization have healthy habits.","Wellness support","Wellness support",FALSE,1,5,3,11,11
+"wellness_4","This organization supports and encourages me to volunteer in our community.","Wellness support","Wellness support",FALSE,1,5,4,11,11
+"ethics_1","We have clear guidance on what is expected of us in terms of ethical behaviour.","Ethical culture","Ethical culture",FALSE,1,5,1,12,12
+"ethics_2","Management would not bend the rules to get the job done.","Ethical culture","Ethical culture",FALSE,1,5,2,12,12
+"ethics_3","I feel confident that if I raise an ethical concern, it would be dealt with fairly.","Ethical culture","Ethical culture",FALSE,1,5,3,12,12
+"ethics_4","I feel like I can talk freely to my direct supervisor about legal or ethical concerns.","Ethical culture","Ethical culture",FALSE,1,5,4,12,12
+"ethics_5","I believe organization has a strong ethical culture.","Ethical culture","Ethical culture",FALSE,1,5,5,12,12
+"hybrid_1","Overall, I am satisfied with the current hybrid working arrangement set forth by the organization.","Hybrid work satisfaction","Hybrid work satisfaction",FALSE,1,5,1,13,13
+"hybrid_2","The use of digital communication tools is effective among employees.","Hybrid work satisfaction","Hybrid work satisfaction",FALSE,1,5,2,13,13
+"hybrid_3","The current hybrid working arrangement allows me to maximize both productivity and meaningful collaboration.","Hybrid work satisfaction","Hybrid work satisfaction",FALSE,1,5,3,13,13
+"engagement_1","I feel energized at my job.","Engagement","Engagement",FALSE,1,5,1,14,14
+"engagement_2","I feel enthusiastic about my work at this company.","Engagement","Engagement",FALSE,1,5,2,14,14
+"engagement_3","I feel happy when I am challenged in my job.","Engagement","Engagement",FALSE,1,5,3,14,14
+"engagement_4","I often get ""in the zone"" when I'm working.","Engagement","Engagement",FALSE,1,5,4,14,14
+"engagement_5","When faced with a challenge in my job, I always persevere.","Engagement","Engagement",FALSE,1,5,5,14,14
+"burnout_1","I dread going to work in the morning.","Burnout","Burnout",TRUE,1,5,1,15,15
+"burnout_2","I find my work to be exhausting (physically, emotionally, or cognitively).","Burnout","Burnout",TRUE,1,5,2,15,15
+"burnout_3","I find myself ""going through the motions"" at work.","Burnout","Burnout",TRUE,1,5,3,15,15
+"burnout_4","I feel detached from my work.","Burnout","Burnout",TRUE,1,5,4,15,15
+"burnout_5","I feel perpetually pessimistic about my work.","Burnout","Burnout",TRUE,1,5,5,15,15
+"workSat_1","I am satisfied with my job.","Work satisfaction","Work satisfaction",FALSE,1,5,1,16,16
+"workSat_2","I feel happy and fulfilled at ORGANIZATION.","Work satisfaction","Work satisfaction",FALSE,1,5,2,16,16
+"turnover_1","I think I will be working at organization 5 years from now.","Turnover intentions","Turnover intentions",FALSE,1,5,1,17,17
+"turnover_2","I think I will be working at ORGANIZATION 1 year from now.","Turnover intentions","Turnover intentions",FALSE,1,5,2,17,17
+"turnover_3","I often think of quitting my job at ORGANIZATION.","Turnover intentions","Turnover intentions",TRUE,1,5,3,17,17
