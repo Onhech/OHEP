@@ -7,3 +7,8 @@
 
 # RStudio
 .Rproj.user/
+
+# Local R session files
+.Rhistory
+.RData
+.Ruserdata
