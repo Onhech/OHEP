@@ -1,4 +1,0 @@
-"field","value"
-"snapshot_id","20260413T211521Z"
-"generated_at_utc","2026-04-13 21:15:21"
-"marts_tables","snapshot_meta, company_item_year, company_fundamental_year, company_facet_year, benchmark_item_year, predictive_edges, metadata_lookup"

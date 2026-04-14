@@ -1,0 +1,987 @@
+OHEP Function Reference Appendix
+
+Workflow overview
+  1) Load static inputs (`load_example_index_data()` or your own index tables).
+  2) Build static bundle (`build_displayr_static_bundle()`).
+  3) In Displayr, map uploaded tables and compute `snapshot` via `prep_ohep_snapshot()`.
+  4) Render pages (`fundamental_page()`, `decision_matrix_page()`, `demographics_page()`, etc.).
+
+Terminology
+  - static bundle: reusable non-respondent inputs (index, predictive, colors).
+  - snapshot: one computed analytics state for a given data refresh.
+  - marts: derived analytic tables in the snapshot used by renderers.
+  - canonical data: normalized table structures expected by renderer internals.
+
+Groups
+  - Core workflow: data assembly, snapshot prep, payload/bootstrap writers.
+  - Renderers: functions that return HTML chart/page objects.
+  - Panel constructors: typed inputs for composed pages.
+  - Validation and persistence: schema checks and snapshot I/O.
+  - Utilities: small class/color helpers and runtime constructor.
+
+========================================================================================
+Title: Create a Static Bundle for Displayr
+Function: build_displayr_static_bundle
+
+One-sentence purpose
+  Package stable benchmark/configuration tables into one validated object.
+
+Description
+  Use this before report rendering to assemble static inputs that change infrequently.
+  A static bundle usually contains benchmark index tables, predictive edges, and color tokens.
+  This object is later combined with live respondent data to build a snapshot.
+
+Usage
+  build_displayr_static_bundle(index_data, predictive_data = NULL, colors_table = NULL, bundle_id = format(Sys.time(), 
+      "%Y%m%dT%H%M%SZ", tz = "UTC")) 
+
+Arguments
+  - index_data: list, required. Must include `item_data` (data.frame). May include `user_data_key` and `predictive_data`.
+  - predictive_data: data.frame, optional. If NULL, falls back to `index_data$predictive_data` when present.
+  - colors_table: data.frame, optional. Must contain column `variable`. If NULL, loaded from package extdata.
+  - bundle_id: character scalar, optional. Defaults to current UTC timestamp.
+
+Details
+  `static bundle` in this package means the non-respondent data needed across many reports.
+  It is the reusable base for template setup in Displayr.
+
+Value
+  Named list with `bundle_meta`, `index_data`, `predictive_data`, and `colors_table`.
+
+Examples
+  idx <- load_example_index_data()
+  static <- build_displayr_static_bundle(index_data = idx)
+
+See Also
+  build_displayr_payload()
+  write_displayr_template_bootstrap()
+  prep_ohep_snapshot()
+
+
+========================================================================================
+Title: Write Displayr Template Bootstrap Files
+Function: write_displayr_template_bootstrap
+
+One-sentence purpose
+  Export the exact files needed to initialize a Displayr template.
+
+Description
+  Creates two folders under `out_dir`:
+  - `displayr_payload/`: files to upload or paste into Displayr.
+  - `displayr_support/`: setup notes, manifest, and optional RDS archive.
+
+Usage
+  write_displayr_template_bootstrap(static_bundle, out_dir, include_rds = TRUE, dataset_names = list(index_item_data = "index_item_data", 
+      index_user_data_key = "index_user_data_key", predictive_data = "predictive_data", 
+      colors_table = "colors_table", raw_user_data = "raw_user_data")) 
+
+Arguments
+  - static_bundle: list, required. Output from `build_displayr_static_bundle()`.
+  - out_dir: character scalar path, required. Target directory.
+  - include_rds: logical, optional. If TRUE, writes `displayr_support/template_static_bundle.rds`.
+  - dataset_names: named list, optional. Must include `index_item_data`, `index_user_data_key`, `predictive_data`, `colors_table`, and `raw_user_data`.
+
+Details
+  The single script `displayr_payload/displayr_bootstrap_single_paste.R` is intended for copy/paste into one Displayr R Output.
+  Users edit only the `DATASET_MAP` block.
+
+Value
+  Returns `out_dir` invisibly.
+
+Examples
+  idx <- load_example_index_data()
+  static <- build_displayr_static_bundle(idx)
+  write_displayr_template_bootstrap(static, out_dir = "displayr_bootstrap")
+
+See Also
+  build_displayr_static_bundle()
+
+
+========================================================================================
+Title: Prepare an OHEP Snapshot (Derived Marts)
+Function: prep_ohep_snapshot
+
+One-sentence purpose
+  Compute derived analytics tables from respondent data and static metadata.
+
+Description
+  This is the core transformation step that powers downstream renderers.
+  It calculates item/fundamental/facet metrics, benchmark deltas, prior-year deltas, predictive edges, and metadata lookup tables.
+
+Usage
+  prep_ohep_snapshot(raw_user_data, index_data, predictive_data = NULL, snapshot_id = format(Sys.time(), 
+      "%Y%m%dT%H%M%SZ", tz = "UTC")) 
+
+Arguments
+  - raw_user_data: data.frame, required. Must include `company`, `year`, and item columns. Item columns are matched using `index_data$item_data$item_id`.
+  - index_data: list, required. Must include `item_data` data.frame with required columns: `item_id`, `item_text`, `fundamental_id`, `facet_id`, `is_reverse_scored`, `response_scale_min`, `response_scale_max`.
+  - predictive_data: data.frame, optional. Predictive model edges; included in output when provided.
+  - snapshot_id: character scalar, optional. Defaults to current UTC timestamp.
+
+Details
+  `canonical data` in this package means normalized table structures expected by render functions.
+  The returned marts are the canonical analytical layer for rendering pages.
+
+Value
+  Named list with at least: `snapshot_meta`, `company_item_year`, `company_fundamental_year`, `company_facet_year`, `benchmark_item_year`, `predictive_edges`, `metadata_lookup`.
+
+Examples
+  inputs <- example_fundamental_inputs()
+  snapshot <- prep_ohep_snapshot(inputs$user_data$user_data, inputs$index_data)
+
+See Also
+  fundamental_page()
+  decision_matrix_page()
+  write_ohep_snapshot()
+
+
+========================================================================================
+Title: Build a Displayr-ready Analytical Payload
+Function: build_displayr_payload
+
+One-sentence purpose
+  Combine live respondent data with a static bundle and compute a fresh snapshot.
+
+Description
+  This is a local QA/debug helper for producing one object with both source tables and derived marts.
+  In template-first Displayr workflows you typically compute marts directly in Displayr instead.
+
+Usage
+  build_displayr_payload(raw_user_data, static_bundle, snapshot_id = format(Sys.time(), "%Y%m%dT%H%M%SZ", 
+      tz = "UTC")) 
+
+Arguments
+  - raw_user_data: data.frame, required. Respondent-level table expected by `prep_ohep_snapshot()`. Must include at least `company`, `year`, and item response columns referenced by index item metadata.
+  - static_bundle: list, required. Output from `build_displayr_static_bundle()`.
+  - snapshot_id: character scalar, optional. Defaults to current UTC timestamp.
+
+Details
+  `snapshot` means one computed analytics state for a specific data refresh.
+  `marts` means derived analytics tables optimized for rendering and comparisons.
+
+Value
+  Named list with `payload_meta`, `raw_user_data`, `marts`, `index_data`, `predictive_data`, and `colors_table`.
+
+Examples
+  inputs <- example_fundamental_inputs()
+  static <- build_displayr_static_bundle(inputs$index_data)
+  payload <- build_displayr_payload(inputs$user_data$user_data, static)
+
+See Also
+  prep_ohep_snapshot()
+  validate_displayr_schema()
+
+
+========================================================================================
+Title: Validate a Displayr Payload Object
+Function: validate_displayr_schema
+
+One-sentence purpose
+  Check whether a payload object has all required tables and columns.
+
+Description
+  Use this in QA scripts before writing or consuming payload objects.
+
+Usage
+  validate_displayr_schema(payload) 
+
+Arguments
+  - payload: named list, required. Typically output from `build_displayr_payload()`.
+
+Value
+  Returns TRUE invisibly when valid; otherwise throws an error with missing field details.
+
+Examples
+  p <- example_displayr_payload()
+  validate_displayr_schema(p)
+
+See Also
+  build_displayr_payload()
+
+
+========================================================================================
+Title: Render a Fundamental Dashboard Page
+Function: fundamental_page
+
+One-sentence purpose
+  Render the core fundamental page from either marts-mode or legacy raw/index mode.
+
+Description
+  Supports two modes:
+  1) Marts mode (recommended): provide `company`, `year`, `fundamental`, and `marts`.
+  2) Legacy mode: provide `fundamental`, `index_data`, and `user_data`.
+  The function validates input combinations and raises clear errors when mode requirements are incomplete.
+
+Usage
+  fundamental_page(company = NULL, year = NULL, fundamental = NULL, marts = NULL, filtered_user_data = NULL, 
+      min_n = 3, privacy_message = "Not enough responses to display this view.", index_data = NULL, 
+      user_data = NULL, id = "ohep-custom-dashboard", color_overrides = NULL, benchmark_company = TRUE, 
+      benchmark_index = TRUE, benchmark_prior = TRUE, ...) 
+
+Arguments
+  - company: character scalar, required in marts mode; ignored in legacy mode.
+  - year: integer/numeric scalar, required in marts mode; ignored in legacy mode.
+  - fundamental: character scalar or unquoted symbol, required in both modes.
+  - marts: named list, required in marts mode. Expected output from `prep_ohep_snapshot()`.
+  - filtered_user_data: data.frame, optional (marts mode only). If supplied, page metrics are recalculated on this filtered subset while benchmarks remain from snapshot.
+  - min_n: integer, optional. Minimum N threshold for filtered display; default 3.
+  - privacy_message: character scalar, optional. Message when subset N is below threshold.
+  - index_data: list, required in legacy mode only.
+  - user_data: list, required in legacy mode only.
+  - id: character scalar, optional HTML id for CSS scoping.
+  - color_overrides: named list; optional; token overrides keyed by `variable` values in `colors_table` / `inst/extdata/branding/colors.csv`.
+  - benchmark_company: logical, optional. Show company benchmark column when available.
+  - benchmark_index: logical, optional. Show index benchmark column when available.
+  - benchmark_prior: logical, optional. Show prior-year comparison column when available.
+  - ...: optional inline token overrides passed through `...`.
+
+Details
+  When `filtered_user_data` is below `min_n`, the page returns a privacy-safe overlay state.
+  Use marts mode for Displayr workflows.
+
+Value
+  A single `htmltools` tag object for one fundamental page render.
+
+Examples
+  inputs <- example_fundamental_inputs()
+  snap <- prep_ohep_snapshot(inputs$user_data$user_data, inputs$index_data)
+  fundamental_page(company = "Company2", year = 2026, fundamental = "Purpose", marts = snap)
+
+See Also
+  render_fundamental_page()
+  validate_fundamental_page_data()
+
+
+========================================================================================
+Title: Render Fundamental Page from Canonical Dashboard Data
+Function: render_fundamental_page
+
+One-sentence purpose
+  Render a fundamental page when canonical dashboard tables are already assembled.
+
+Description
+  This is a lower-level renderer compared with `fundamental_page()`.
+  Use it when you have already built `dashboard_data` and only need rendering.
+
+Usage
+  render_fundamental_page(dashboard_data, id = "ohep-custom-dashboard", color_overrides = NULL, benchmark_company = TRUE, 
+      benchmark_index = TRUE, benchmark_prior = TRUE, ...) 
+
+Arguments
+  - dashboard_data: named list, required. Must include data frames for `fundamental`, `outcomes`, and `items` matching `validate_fundamental_page_data()` contract.
+  - id: character scalar, optional HTML id.
+  - color_overrides: named list; optional; token overrides keyed by `variable` values in `colors_table` / `inst/extdata/branding/colors.csv`.
+  - benchmark_company: logical, optional. Include company benchmark column.
+  - benchmark_index: logical, optional. Include index benchmark column.
+  - benchmark_prior: logical, optional. Include prior-year benchmark column.
+  - ...: optional inline token overrides passed through `...`.
+
+Value
+  A single `htmltools` fundamental page object.
+
+Examples
+  ## Typically called indirectly via fundamental_page(...)
+  ## after data prep from marts.
+
+See Also
+  fundamental_page()
+  validate_fundamental_page_data()
+
+
+========================================================================================
+Title: Render Decision Matrix Chart(s)
+Function: decision_matrix_page
+
+One-sentence purpose
+  Render one decision matrix from explicit points or multiple matrices from marts.
+
+Description
+  Supports two modes:
+  1) Points mode: provide `points`; returns a single matrix.
+  2) Marts mode: provide `company`, `year`, and `marts`; returns one per outcome plus optional composite.
+  Use marts mode for production because it aligns with snapshot tables and benchmark logic.
+
+Usage
+  decision_matrix_page(points = NULL, company = NULL, year = NULL, marts = NULL, outcomes = NULL, 
+      include_composite = TRUE, subset = "All", significant_only = FALSE, fallback_to_latest_year = TRUE, 
+      as_list = FALSE, id = "ohep-decision-matrix", theme_kicker = "Decision Matrix", 
+      title = "Health Driver Action Matrix", subtitle = "", x_metric = "benchmark_delta", 
+      y_metric = "impact", x_split_mode = "auto", y_split_mode = "auto", y_axis_main = NULL, 
+      x_axis_main = NULL, color_overrides = NULL, ...) 
+
+Arguments
+  - points: data.frame, optional (points mode). Required columns: `fundamental`, `score`, `impact`. Optional columns: `label`, `priority`.
+  - company: character scalar, required in marts mode.
+  - year: integer/numeric scalar, required in marts mode.
+  - marts: named list, required in marts mode. Must include `company_fundamental_year` and `predictive_edges`.
+  - outcomes: character vector, optional (marts mode). Defaults to available outcomes excluding `Outcomes`.
+  - include_composite: logical, optional (marts mode). Adds an equally weighted outcomes composite matrix.
+  - subset: character scalar, optional. Predictive subset filter; default `All`.
+  - significant_only: logical, optional. If TRUE, keep only significant predictive rows when available.
+  - fallback_to_latest_year: logical, optional. If requested year missing, uses latest available year.
+  - as_list: logical, optional. In marts mode returns named list instead of single `tagList`.
+  - id: character scalar, optional HTML id.
+  - theme_kicker: character scalar, optional subtitle kicker.
+  - title: character scalar, optional chart title.
+  - subtitle: character scalar, optional chart subtitle.
+  - x_metric: character scalar, optional. One of `benchmark_delta`, `prior_delta`, `impact`, `opportunity`.
+  - y_metric: character scalar, optional. One of `impact`, `benchmark_delta`, `prior_delta`, `opportunity`.
+  - x_split_mode: character scalar, optional. One of `auto`, `zero`, `median`.
+  - y_split_mode: character scalar, optional. One of `auto`, `zero`, `median`.
+  - y_axis_main: character scalar, optional y-axis title override.
+  - x_axis_main: character scalar, optional x-axis title override.
+  - color_overrides: named list; optional; token overrides keyed by `variable` values in `colors_table` / `inst/extdata/branding/colors.csv`.
+  - ...: optional inline token overrides passed through `...`.
+
+Details
+  Marts mode uses stagger-stable prior benchmark logic for x-axis benchmark deltas.
+  Output shape depends on mode and `as_list`.
+
+Value
+  Points mode: single `htmltools` matrix object. Marts mode: `tagList` of matrices, or named list when `as_list = TRUE`.
+
+Examples
+  inputs <- example_fundamental_inputs()
+  snap <- prep_ohep_snapshot(inputs$user_data$user_data, inputs$index_data)
+  decision_matrix_page(company = "Company2", year = 2026, marts = snap)
+
+See Also
+  prep_ohep_snapshot()
+  fundamental_page()
+
+
+========================================================================================
+Title: Render a Demographics Composer Page (2x2)
+Function: demographics_page
+
+One-sentence purpose
+  Compose up to four typed demographics panels in a fixed 2x2 layout.
+
+Description
+  Each slot (`tl`, `tr`, `bl`, `br`) accepts a panel object created by a `demo_*` constructor or NULL.
+  NULL slots render placeholders; no auto-span behavior is applied.
+
+Usage
+  demographics_page(tl = NULL, tr = NULL, bl = NULL, br = NULL, id = "ohep-demographics-page", 
+      title = "Demographics", subtitle = "", color_overrides = NULL, ...) 
+
+Arguments
+  - tl: panel object or NULL. Use `demo_bipolar_split()`, `demo_categorical_bar()`, `demo_categorical_tree()`, or `demo_ordinal_bar()`.
+  - tr: panel object or NULL.
+  - bl: panel object or NULL.
+  - br: panel object or NULL.
+  - id: character scalar, optional HTML id.
+  - title: character scalar, optional page title.
+  - subtitle: character scalar, optional page subtitle.
+  - color_overrides: named list; optional; token overrides keyed by `variable` values in `colors_table` / `inst/extdata/branding/colors.csv`.
+  - ...: optional inline token overrides passed through `...`.
+
+Value
+  A single `htmltools` page object containing the 2x2 layout.
+
+Examples
+  p1 <- demo_bipolar_split(data.frame(label=c("A","B"), count=c(40,60), pct=c(40,60)))
+  p2 <- demo_categorical_bar(data.frame(category=c("X","Y"), value=c(70,30)))
+  demographics_page(tl = p1, tr = p2)
+
+See Also
+  demo_bipolar_split()
+  demo_categorical_bar()
+  demo_categorical_tree()
+  demo_ordinal_bar()
+
+
+========================================================================================
+Title: Create a Bipolar Split Panel Specification
+Function: demo_bipolar_split
+
+One-sentence purpose
+  Construct a validated panel spec for two-group split displays.
+
+Description
+  Use this constructor for demographics pages where two opposing groups are shown.
+  Validation enforces exactly two rows and percentages summing to approximately 100.
+
+Usage
+  demo_bipolar_split(data, title = "", subtitle = "") 
+
+Arguments
+  - data: data.frame, required. Must have exactly 2 rows and columns: `label` (non-empty), `count` (non-negative numeric), `pct` (non-negative numeric, sums to 100 +/- 1).
+  - title: character scalar, optional panel title.
+  - subtitle: character scalar, optional panel subtitle.
+
+Value
+  Typed panel spec (`ohep_demo_panel`) for use in `demographics_page()`.
+
+Examples
+  demo_bipolar_split(data.frame(label=c("Manager","Staff"), count=c(40,160), pct=c(20,80)))
+
+See Also
+  demographics_page()
+
+
+========================================================================================
+Title: Create a Categorical Bar Panel Specification
+Function: demo_categorical_bar
+
+One-sentence purpose
+  Construct a validated categorical bar panel spec.
+
+Description
+  Use this for category-value comparisons in the demographics composer.
+  Input rows can be automatically sorted descending by `value`.
+
+Usage
+  demo_categorical_bar(data, title = "", subtitle = "", sort_desc = TRUE) 
+
+Arguments
+  - data: data.frame, required. Required columns: `category` (non-empty), `value` (non-negative numeric). Optional column: `color_key`.
+  - title: character scalar, optional panel title.
+  - subtitle: character scalar, optional panel subtitle.
+  - sort_desc: logical, optional. Default TRUE.
+
+Value
+  Typed panel spec (`ohep_demo_panel`) for use in `demographics_page()`.
+
+Examples
+  demo_categorical_bar(data.frame(category=c("Ops","Clinical"), value=c(62,38)))
+
+See Also
+  demographics_page()
+
+
+========================================================================================
+Title: Create a Categorical Tree Panel Specification
+Function: demo_categorical_tree
+
+One-sentence purpose
+  Construct a validated treemap-style panel spec from category shares.
+
+Description
+  Use this for proportional category composition views.
+  Values are normalized to shares for tile sizing.
+
+Usage
+  demo_categorical_tree(data, title = "", subtitle = "") 
+
+Arguments
+  - data: data.frame, required. Required columns: `category` (non-empty), `value` (non-negative numeric). Optional columns: `short_label`, `color_key`.
+  - title: character scalar, optional panel title.
+  - subtitle: character scalar, optional panel subtitle.
+
+Value
+  Typed panel spec (`ohep_demo_panel`) for use in `demographics_page()`.
+
+Examples
+  demo_categorical_tree(data.frame(category=c("18-29","30-39","40+"), value=c(25,35,40)))
+
+See Also
+  demographics_page()
+
+
+========================================================================================
+Title: Create an Ordinal Distribution Panel Specification
+Function: demo_ordinal_bar
+
+One-sentence purpose
+  Construct a validated panel spec for ordered response bins.
+
+Description
+  Use this for Likert-style or ordered category distributions.
+  Validation enforces non-negative percentages summing to approximately 100.
+
+Usage
+  demo_ordinal_bar(data, title = "", subtitle = "", callout_index = NULL, callout_value = NULL) 
+
+Arguments
+  - data: data.frame, required. Required columns: `label` (non-empty), `pct` (non-negative numeric, sums to 100 +/- 1).
+  - title: character scalar, optional panel title.
+  - subtitle: character scalar, optional panel subtitle.
+  - callout_index: integer, optional 1-based segment index. Falls back to smallest segment if invalid.
+  - callout_value: character, optional. Defaults to selected segment percentage text.
+
+Value
+  Typed panel spec (`ohep_demo_panel`) for use in `demographics_page()`.
+
+Examples
+  demo_ordinal_bar(data.frame(label=c("SD","D","N","A","SA"), pct=c(5,10,15,40,30)))
+
+See Also
+  demographics_page()
+
+
+========================================================================================
+Title: Render an eNPS Page
+Function: enps_page
+
+One-sentence purpose
+  Render an eNPS card and distribution chart.
+
+Description
+  If `enps_data` is NULL, a built-in example dataset is used.
+  Use custom input in production.
+
+Usage
+  enps_page(enps_data = NULL, id = "ohep-enps-page", color_overrides = NULL, ...) 
+
+Arguments
+  - enps_data: named list, optional. `summary` one-row data.frame (optional columns: `title`, `subtitle`, `score`, `score_delta`, `delta_label`); `distribution` data.frame with `rating` (0-10) and `pct` (should sum to ~100).
+  - id: character scalar, optional HTML id.
+  - color_overrides: named list; optional; token overrides keyed by `variable` values in `colors_table` / `inst/extdata/branding/colors.csv`.
+  - ...: optional inline token overrides passed through `...`.
+
+Value
+  A single `htmltools` eNPS page/widget object.
+
+Examples
+  enps_page()
+
+See Also
+  model_page()
+  item_distribution_page()
+
+
+========================================================================================
+Title: Render an Internal Comparison Heatmap Page
+Function: heatmap_page
+
+One-sentence purpose
+  Render one or more heatmap tables with column-relative color encoding.
+
+Description
+  If `heatmap_data` is NULL, a built-in example is used.
+  Each table should place the row label in column 1 and numeric comparison values in the remaining columns.
+
+Usage
+  heatmap_page(heatmap_data = NULL, id = "ohep-heatmap-page", color_overrides = NULL, 
+      ...) 
+
+Arguments
+  - heatmap_data: named list, optional. Keys include `title`, `subtitle`, `legend_low`, `legend_high`, and `tables`. `tables` must be a named list of data.frames where first column is category label and other columns are numeric.
+  - id: character scalar, optional HTML id.
+  - color_overrides: named list; optional; token overrides keyed by `variable` values in `colors_table` / `inst/extdata/branding/colors.csv`.
+  - ...: optional inline token overrides passed through `...`.
+
+Value
+  A single `htmltools` heatmap page object.
+
+Examples
+  heatmap_page()
+
+See Also
+  item_distribution_page()
+  model_page()
+
+
+========================================================================================
+Title: Render an Item-level Distribution Page
+Function: item_distribution_page
+
+One-sentence purpose
+  Render item-level agreement/neutral/disagreement distributions with deltas.
+
+Description
+  If `item_distribution_data` is NULL, a built-in example is used.
+
+Usage
+  item_distribution_page(item_distribution_data = NULL, id = "ohep-item-distribution-page", color_overrides = NULL, 
+      ...) 
+
+Arguments
+  - item_distribution_data: named list, optional. `summary` one-row data.frame with optional labels; `items` data.frame requires columns `label`, `mean`, `disagree_pct`, `neutral_pct`, `agree_pct`, `vs_industry`, `vs_prior`.
+  - id: character scalar, optional HTML id.
+  - color_overrides: named list; optional; token overrides keyed by `variable` values in `colors_table` / `inst/extdata/branding/colors.csv`.
+  - ...: optional inline token overrides passed through `...`.
+
+Value
+  A single `htmltools` item distribution page object.
+
+Examples
+  item_distribution_page()
+
+See Also
+  fundamental_page()
+
+
+========================================================================================
+Title: Render a Model Representation Page
+Function: model_page
+
+One-sentence purpose
+  Render percentile tracks for fundamentals and outcomes on a model page.
+
+Description
+  If `model_data` is NULL, a built-in example is used.
+  Designed for side-by-side interpretation of current percentile positions and optional prior deltas.
+
+Usage
+  model_page(model_data = NULL, id = "ohep-model-page", color_overrides = NULL, ...) 
+
+Arguments
+  - model_data: named list, optional. `summary` one-row labels table; `fundamentals` data.frame requires `label`, `percentile` and may include `prior_percentile`, `raw_avg`, `delta`, `shape`; `outcomes` data.frame requires `label`, `percentile` and may include `prior_percentile`, `raw_avg`, `delta`, `shape`.
+  - id: character scalar, optional HTML id.
+  - color_overrides: named list; optional; token overrides keyed by `variable` values in `colors_table` / `inst/extdata/branding/colors.csv`.
+  - ...: optional inline token overrides passed through `...`.
+
+Value
+  A single `htmltools` model page object.
+
+Examples
+  model_page()
+
+See Also
+  enps_page()
+  heatmap_page()
+
+
+========================================================================================
+Title: Outcome Page (Not Implemented)
+Function: outcome_page
+
+One-sentence purpose
+  Reserve a public API placeholder for a future outcomes renderer.
+
+Description
+  This function currently always errors with `outcome_page() is not implemented yet`.
+  Do not use in production until an implementation is added.
+
+Usage
+  outcome_page(...) 
+
+Arguments
+  - ...: reserved for future inputs.
+
+Value
+  No return value; always raises an error.
+
+Examples
+  ## outcome_page(...)  # currently throws an error
+
+See Also
+  fundamental_page()
+  model_page()
+
+
+========================================================================================
+Title: Write Snapshot Tables to Disk
+Function: write_ohep_snapshot
+
+One-sentence purpose
+  Persist computed snapshot tables as either RDS or CSV files.
+
+Description
+  Use when you want reproducible snapshot artifacts for audit, handoff, or debugging.
+
+Usage
+  write_ohep_snapshot(snapshot, path, format = c("rds", "csv")) 
+
+Arguments
+  - snapshot: named list, required. Output from `prep_ohep_snapshot()`.
+  - path: character scalar path, required. Target directory.
+  - format: character scalar, optional. One of `rds` or `csv`; default `rds`.
+
+Value
+  Returns `path` invisibly.
+
+Examples
+  ## write_ohep_snapshot(snapshot, path = "snapshots", format = "csv")
+
+See Also
+  load_ohep_snapshot()
+  prep_ohep_snapshot()
+
+
+========================================================================================
+Title: Load Snapshot Tables from Disk or In-memory
+Function: load_ohep_snapshot
+
+One-sentence purpose
+  Read a saved snapshot from RDS/CSV files or accept an already-loaded list.
+
+Description
+  This function supports two inputs:
+  1) a directory path containing snapshot files, or
+  2) a named list of tables (returned unchanged).
+
+Usage
+  load_ohep_snapshot(path_or_tables) 
+
+Arguments
+  - path_or_tables: character path or named list, required.
+
+Value
+  Named list of snapshot tables.
+
+Examples
+  ## snap <- load_ohep_snapshot("snapshots")
+
+See Also
+  write_ohep_snapshot()
+
+
+========================================================================================
+Title: Validate Canonical Fundamental Dashboard Data
+Function: validate_fundamental_page_data
+
+One-sentence purpose
+  Check that dashboard tables required by `render_fundamental_page()` are structurally valid.
+
+Description
+  Use this before rendering when constructing dashboard tables manually.
+
+Usage
+  validate_fundamental_page_data(dashboard_data) 
+
+Arguments
+  - dashboard_data: named list, required. Canonical dashboard sections.
+
+Value
+  Returns `dashboard_data` invisibly when valid; otherwise throws an error.
+
+Examples
+  ## validate_fundamental_page_data(dashboard_data)
+
+See Also
+  render_fundamental_page()
+
+
+========================================================================================
+Title: Create the ohepR Runtime Environment
+Function: ohepRDisplayr
+
+One-sentence purpose
+  Instantiate runtime methods used by rendering and utility helpers.
+
+Description
+  Most users call high-level wrappers and do not need this directly.
+  Use this when you need access to lower-level runtime helpers.
+
+Usage
+  ohepRDisplayr() 
+
+Arguments
+  None.
+
+Value
+  Environment containing rendering, validation, and utility functions.
+
+Examples
+  rt <- ohepRDisplayr()
+  names(rt)
+
+See Also
+  fundamental_page()
+  decision_matrix_page()
+
+
+========================================================================================
+Title: Load Brand Color Token Table
+Function: load_brand_colors_table
+
+One-sentence purpose
+  Read the color token table used by renderer theme overrides.
+
+Description
+  When no path is provided, reads package extdata `branding/colors.csv`.
+
+Usage
+  load_brand_colors_table(path = NULL) 
+
+Arguments
+  - path: character scalar path, optional. Defaults to packaged colors file.
+
+Value
+  Data frame of color tokens.
+
+Examples
+  cols <- load_brand_colors_table()
+
+See Also
+  write_displayr_template_bootstrap()
+
+
+========================================================================================
+Title: Load Example Index Metadata Tables
+Function: load_example_index_data
+
+One-sentence purpose
+  Load packaged benchmark/index input tables for testing.
+
+Description
+  Returns a list containing `item_data`, `user_data_key`, and optional `predictive_data`.
+
+Usage
+  load_example_index_data() 
+
+Arguments
+  None.
+
+Value
+  Named list of example index tables.
+
+Examples
+  idx <- load_example_index_data()
+
+See Also
+  example_fundamental_inputs()
+
+
+========================================================================================
+Title: Load Example Respondent Data
+Function: load_example_user_data
+
+One-sentence purpose
+  Load packaged respondent-level fixture data for local tests.
+
+Description
+  Useful for smoke tests and example snapshots.
+
+Usage
+  load_example_user_data() 
+
+Arguments
+  None.
+
+Value
+  Named list with `user_data` data.frame.
+
+Examples
+  u <- load_example_user_data()
+
+See Also
+  example_fundamental_inputs()
+
+
+========================================================================================
+Title: Get Example Inputs (Index + User Data)
+Function: example_fundamental_inputs
+
+One-sentence purpose
+  Return both example index tables and example respondent data in one object.
+
+Description
+  Convenience wrapper around `load_example_index_data()` and `load_example_user_data()`.
+
+Usage
+  example_fundamental_inputs() 
+
+Arguments
+  None.
+
+Value
+  Named list with `index_data` and `user_data`.
+
+Examples
+  inputs <- example_fundamental_inputs()
+
+See Also
+  example_ohep_snapshot()
+
+
+========================================================================================
+Title: Build an Example Snapshot
+Function: example_ohep_snapshot
+
+One-sentence purpose
+  Run full snapshot prep using packaged example data.
+
+Description
+  Useful for quick sanity checks without external files.
+
+Usage
+  example_ohep_snapshot() 
+
+Arguments
+  None.
+
+Value
+  Named list of snapshot marts.
+
+Examples
+  snap <- example_ohep_snapshot()
+
+See Also
+  prep_ohep_snapshot()
+
+
+========================================================================================
+Title: Build an Example Displayr Payload
+Function: example_displayr_payload
+
+One-sentence purpose
+  Create a complete sample payload from packaged test fixtures.
+
+Description
+  Primarily useful for local QA and development checks.
+
+Usage
+  example_displayr_payload() 
+
+Arguments
+  None.
+
+Value
+  Named payload list from `build_displayr_payload()`.
+
+Examples
+  payload <- example_displayr_payload()
+
+See Also
+  build_displayr_payload()
+  validate_displayr_schema()
+
+
+========================================================================================
+Title: Map Delta Values to Pill CSS Class
+Function: get_delta_pill
+
+One-sentence purpose
+  Classify numeric change values as positive, negative, or neutral display pills.
+
+Description
+  Small helper used by renderers; not a primary report-construction function.
+
+Usage
+  get_delta_pill(delta_value) 
+
+Arguments
+  - delta_value: numeric scalar, required.
+
+Value
+  Character scalar class: `dp-pos`, `dp-neg`, or `dp-neu`.
+
+Examples
+  get_delta_pill(3)
+  get_delta_pill(-1)
+
+See Also
+  get_sentiment_class()
+
+
+========================================================================================
+Title: Map Percentage to Sentiment CSS Class
+Function: get_sentiment_class
+
+One-sentence purpose
+  Classify a score into agree/neutral/disagree sentiment class names.
+
+Description
+  Small helper used by renderers; not a primary report-construction function.
+
+Usage
+  get_sentiment_class(score) 
+
+Arguments
+  - score: numeric scalar, required.
+
+Value
+  Character scalar class: `bg-agree`, `bg-neutral`, or `bg-disagree`.
+
+Examples
+  get_sentiment_class(80)
+  get_sentiment_class(45)
+
+See Also
+  get_delta_pill()
+
+
