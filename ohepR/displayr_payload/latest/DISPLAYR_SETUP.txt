@@ -2,7 +2,9 @@ Displayr Setup (RDS Workflow Only)
 
 1) Commit/push this generated folder so `sources/*.rds` are reachable by URL.
 2) In Displayr, paste `bootstrap/displayr_bootstrap_from_github_rds.R` into one R Output.
-3) Edit one line only: raw_user_data <- <Displayr respondent table reference>.
+3) Ensure respondent columns are exposed as vectors in the R environment.
+   The script stitches raw_user_data from vectors named table.<column>
+   (or user_data.<column> / <column>).
 4) Run the script. It creates `snapshot`, `index_data`, and `colors_table`.
 
 Notes:

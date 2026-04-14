@@ -24,21 +24,59 @@ if (!is.list(static_bundle) || !is.list(static_bundle$index_data)) {
   stop("static bundle RDS is not in expected format.", call. = FALSE)
 }
 
-# IMPORTANT: replace this line with your Displayr respondent table reference.
-# Example: raw_user_data <- table.raw_user_data
+required_base_cols <- c("company", "year")
+required_item_cols <- unique(as.character(static_bundle$index_data$item_data$item_id))
+required_item_cols <- required_item_cols[!is.na(required_item_cols) & nzchar(required_item_cols)]
+required_cols <- unique(c(required_base_cols, required_item_cols))
+
+find_displayr_col <- function(col, env = .GlobalEnv) {
+  candidates <- c(paste0("table.", col), paste0("user_data.", col), col)
+  for (nm in candidates) {
+    if (exists(nm, envir = env, inherits = TRUE)) {
+      obj <- get(nm, envir = env, inherits = TRUE)
+      if (is.atomic(obj) && is.null(dim(obj))) return(obj)
+    }
+  }
+  NULL
+}
+
+assemble_raw_user_data <- function(cols, env = .GlobalEnv) {
+  vals <- lapply(cols, find_displayr_col, env = env)
+  ok <- !vapply(vals, is.null, logical(1))
+  if (!all(ok)) {
+    return(list(data = NULL, missing = cols[!ok]))
+  }
+  lens <- vapply(vals, length, integer(1))
+  if (length(unique(lens)) != 1L) {
+    stop("Detected Displayr columns have inconsistent lengths; cannot stitch raw_user_data.", call. = FALSE)
+  }
+  names(vals) <- cols
+  list(data = as.data.frame(vals, stringsAsFactors = FALSE), missing = character(0))
+}
+
+# Respondent data is assembled from Displayr column vectors.
+# Expected vector names: table.<column> (preferred), user_data.<column>, or <column>.
 raw_user_data <- NULL
+stitched <- assemble_raw_user_data(required_cols, env = .GlobalEnv)
+if (is.data.frame(stitched$data)) {
+  raw_user_data <- stitched$data
+  message(sprintf(
+    "Assembled raw_user_data from Displayr columns (%d/%d required columns found).",
+    ncol(raw_user_data), length(required_cols)
+  ))
+}
 if (!is.data.frame(raw_user_data)) {
-  stop("Set `raw_user_data` to a Displayr data-frame reference before running.", call. = FALSE)
+  stop(
+    "Could not assemble respondent data from Displayr vectors. Expose required columns as `table.<col>` / `user_data.<col>` / `<col>`.",
+    call. = FALSE
+  )
 }
 
 # Preflight schema validation for respondent data
-required_base_cols <- c("company", "year")
 missing_base <- setdiff(required_base_cols, names(raw_user_data))
 if (length(missing_base) > 0L) {
   stop(sprintf("`raw_user_data` is missing required columns: %s", paste(missing_base, collapse = ", ")), call. = FALSE)
 }
-required_item_cols <- unique(as.character(static_bundle$index_data$item_data$item_id))
-required_item_cols <- required_item_cols[!is.na(required_item_cols) & nzchar(required_item_cols)]
 missing_items <- setdiff(required_item_cols, names(raw_user_data))
 if (length(missing_items) > 0L) {
   preview <- utils::head(missing_items, 30)

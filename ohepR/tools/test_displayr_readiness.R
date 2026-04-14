@@ -87,7 +87,7 @@ if (!any(grepl("Aggregate-only user data is not supported", gh_script, fixed = T
 
 setup_txt <- readLines(file.path(out_dir, "DISPLAYR_SETUP.txt"), warn = FALSE)
 if (!any(grepl("RDS Workflow Only", setup_txt, fixed = TRUE))) stop("Setup file missing workflow heading.", call. = FALSE)
-if (!any(grepl("Edit one line only", setup_txt, fixed = TRUE))) stop("Setup file missing one-line edit instruction.", call. = FALSE)
+if (!any(grepl("script stitches raw_user_data", setup_txt, fixed = TRUE))) stop("Setup file missing stitching instruction.", call. = FALSE)
 
 # 1c) Functional dry-run simulation for GitHub loader with local file URLs
 fn_bundle <- readRDS(file.path(sources_dir, "template_functions_bundle.rds"))
