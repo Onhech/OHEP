@@ -4,7 +4,7 @@
 
 now_stamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
 args <- commandArgs(trailingOnly = TRUE)
-out_dir_arg <- if (length(args) >= 1L) args[[1]] else file.path("preview", "test_examples", paste0("smoke_test_", now_stamp))
+out_dir_arg <- if (length(args) >= 1L) args[[1]] else file.path("preview", "test_examples", "Smoke_Test", "latest")
 
 script_path <- tryCatch(normalizePath(sys.frame(1)$ofile, mustWork = TRUE), error = function(e) NULL)
 pkg_root <- if (!is.null(script_path)) {
@@ -29,9 +29,14 @@ if (!requireNamespace("htmltools", quietly = TRUE)) {
 }
 
 out_dir <- file.path(pkg_root, out_dir_arg)
+if (dir.exists(out_dir) && length(args) < 1L) {
+  unlink(out_dir, recursive = TRUE, force = TRUE)
+}
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
-proof_dir <- file.path(out_dir, "render_validation")
+proof_dir <- file.path(out_dir, "proof_renders")
+run_info_dir <- file.path(out_dir, "run_info")
 dir.create(proof_dir, recursive = TRUE, showWarnings = FALSE)
+dir.create(run_info_dir, recursive = TRUE, showWarnings = FALSE)
 
 cat("== OHEP Displayr Readiness Smoke Test ==\n")
 cat("Package root:", pkg_root, "\n")
@@ -53,14 +58,17 @@ support_dir <- file.path(out_dir, "displayr_support")
 
 # 1a) Assert expected bootstrap artifacts exist
 must_exist <- c(
+  file.path(out_dir, "00_START_HERE.txt"),
   file.path(payload_dir, "displayr_bootstrap_from_github_rds.R"),
   file.path(payload_dir, "displayr_bootstrap_single_paste.R"),
+  file.path(payload_dir, "README_payload_files.txt"),
   file.path(payload_dir, "01_index_item_data.csv"),
   file.path(payload_dir, "02_index_user_data_key.csv"),
   file.path(payload_dir, "03_predictive_data.csv"),
   file.path(payload_dir, "04_colors_table.csv"),
   file.path(support_dir, "template_functions_bundle.rds"),
   file.path(support_dir, "template_static_bundle.rds"),
+  file.path(support_dir, "README_support_files.txt"),
   file.path(support_dir, "README_displayr_setup.txt"),
   file.path(support_dir, "function_reference_appendix.txt"),
   file.path(support_dir, "manifest.csv")
@@ -229,7 +237,7 @@ matrix_txt_path <- file.path(proof_dir, "03_decision_matrix_smoke_rendered.txt")
 htmltools::save_html(matrix_html, file = matrix_html_path)
 writeLines(htmltools::renderTags(matrix_html)$html, con = matrix_txt_path, useBytes = TRUE)
 
-# 6) Write run manifest
+# 6) Write run manifest + run guide
 manifest <- data.frame(
   check = c(
     "template_bootstrap_written",
@@ -256,11 +264,33 @@ manifest <- data.frame(
   ),
   stringsAsFactors = FALSE
 )
-utils::write.csv(manifest, file.path(out_dir, "smoke_test_manifest.csv"), row.names = FALSE)
+manifest_path <- file.path(run_info_dir, "smoke_test_manifest.csv")
+utils::write.csv(manifest, manifest_path, row.names = FALSE)
+
+run_guide <- c(
+  "Smoke Test Run Guide",
+  "",
+  paste0("Run stamp: ", now_stamp),
+  "",
+  "What this run validated:",
+  "- Displayr bootstrap bundle generation",
+  "- GitHub RDS bootstrap script structure",
+  "- Preflight schema checks for respondent data",
+  "- Snapshot build and key page renders",
+  "",
+  "Where to look:",
+  "- 00_START_HERE.txt",
+  "- displayr_payload/",
+  "- displayr_support/",
+  "- proof_renders/",
+  "- run_info/smoke_test_manifest.csv"
+)
+writeLines(run_guide, file.path(run_info_dir, "README_run_info.txt"), useBytes = TRUE)
 
 cat("\nSmoke test completed successfully.\n")
 cat("Artifacts:\n")
-cat("-", normalizePath(file.path(out_dir, "smoke_test_manifest.csv"), mustWork = TRUE), "\n")
+cat("-", normalizePath(file.path(out_dir, "00_START_HERE.txt"), mustWork = TRUE), "\n")
 cat("-", normalizePath(payload_dir, mustWork = TRUE), "\n")
 cat("-", normalizePath(support_dir, mustWork = TRUE), "\n")
 cat("-", normalizePath(proof_dir, mustWork = TRUE), "\n")
+cat("-", normalizePath(manifest_path, mustWork = TRUE), "\n")

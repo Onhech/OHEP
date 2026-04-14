@@ -1276,6 +1276,28 @@ write_displayr_template_bootstrap <- function(
   )
   writeLines(github_loader_lines, file.path(payload_dir, "displayr_bootstrap_from_github_rds.R"), useBytes = TRUE)
 
+  payload_readme_lines <- c(
+    "Displayr Payload Folder",
+    "",
+    "Use this folder directly in Displayr.",
+    "",
+    "Primary script:",
+    "- displayr_bootstrap_from_github_rds.R",
+    "  Loads ohepR functions + static bundle from GitHub-hosted RDS files.",
+    "  Edit CONFIG URLs and one line: raw_user_data <- <Displayr respondent table reference>.",
+    "",
+    "Fallback script:",
+    "- displayr_bootstrap_single_paste.R",
+    "  Use only when GitHub RDS loading is unavailable.",
+    "",
+    "Fallback CSV files:",
+    "- 01_index_item_data.csv",
+    "- 02_index_user_data_key.csv",
+    "- 03_predictive_data.csv",
+    "- 04_colors_table.csv"
+  )
+  writeLines(payload_readme_lines, file.path(payload_dir, "README_payload_files.txt"), useBytes = TRUE)
+
   setup_lines <- c(
     "Displayr Template Bootstrap Setup (Primary: GitHub RDS)",
     "",
@@ -1305,12 +1327,33 @@ write_displayr_template_bootstrap <- function(
     useBytes = TRUE
   )
 
+  support_readme_lines <- c(
+    "Displayr Support Folder",
+    "",
+    "template_functions_bundle.rds",
+    "- Serialized exported ohepR runtime function script lines.",
+    "",
+    "template_static_bundle.rds",
+    "- Serialized static data bundle (index_data, predictive_data, colors_table).",
+    "",
+    "README_displayr_setup.txt",
+    "- Step-by-step Displayr setup instructions (primary + fallback).",
+    "",
+    "function_reference_appendix.txt",
+    "- Function syntax and argument reference for Displayr users without RStudio help panes.",
+    "",
+    "manifest.csv",
+    "- Metadata about this generated payload bundle."
+  )
+  writeLines(support_readme_lines, file.path(support_dir, "README_support_files.txt"), useBytes = TRUE)
+
   manifest <- data.frame(
-    field = c("bundle_id", "generated_at_utc", "payload_dir", "supports_github_rds_loader"),
+    field = c("bundle_id", "generated_at_utc", "payload_dir", "support_dir", "supports_github_rds_loader"),
     value = c(
       as.character(static_bundle$bundle_meta$bundle_id[[1]]),
       as.character(static_bundle$bundle_meta$generated_at_utc[[1]]),
       "displayr_payload",
+      "displayr_support",
       "yes"
     ),
     stringsAsFactors = FALSE
@@ -1320,6 +1363,20 @@ write_displayr_template_bootstrap <- function(
   if (isTRUE(include_rds)) {
     saveRDS(static_bundle, file.path(support_dir, "template_static_bundle.rds"))
   }
+
+  start_here_lines <- c(
+    "START HERE: Displayr Bootstrap Package",
+    "",
+    "1) Open displayr_support/README_displayr_setup.txt and follow the Primary path.",
+    "2) Use displayr_payload/displayr_bootstrap_from_github_rds.R in Displayr.",
+    "3) Set one Displayr binding line: raw_user_data <- <Displayr respondent table reference>.",
+    "4) Keep fallback files only for environments where GitHub RDS loading is blocked.",
+    "",
+    "Folder guide:",
+    "- displayr_payload/: scripts + fallback CSVs used in Displayr.",
+    "- displayr_support/: RDS bundles, setup documentation, and function appendix."
+  )
+  writeLines(start_here_lines, file.path(out_dir, "00_START_HERE.txt"), useBytes = TRUE)
 
   invisible(normalizePath(out_dir, winslash = "/", mustWork = FALSE))
 }

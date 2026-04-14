@@ -24,12 +24,15 @@ write_displayr_template_bootstrap(
 
 This writes:
 
+- `00_START_HERE.txt`
 - `displayr_payload/displayr_bootstrap_from_github_rds.R` (primary Displayr script)
 - `displayr_payload/displayr_bootstrap_single_paste.R` (fallback script)
 - `displayr_payload/*.csv` (fallback static tables)
+- `displayr_payload/README_payload_files.txt`
 - `displayr_support/template_functions_bundle.rds`
 - `displayr_support/template_static_bundle.rds`
 - `displayr_support/README_displayr_setup.txt`
+- `displayr_support/README_support_files.txt`
 - `displayr_support/function_reference_appendix.txt`
 - `displayr_support/manifest.csv`
 

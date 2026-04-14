@@ -1,0 +1,10 @@
+START HERE: Displayr Bootstrap Package
+
+1) Open displayr_support/README_displayr_setup.txt and follow the Primary path.
+2) Use displayr_payload/displayr_bootstrap_from_github_rds.R in Displayr.
+3) Set one Displayr binding line: raw_user_data <- <Displayr respondent table reference>.
+4) Keep fallback files only for environments where GitHub RDS loading is blocked.
+
+Folder guide:
+- displayr_payload/: scripts + fallback CSVs used in Displayr.
+- displayr_support/: RDS bundles, setup documentation, and function appendix.
