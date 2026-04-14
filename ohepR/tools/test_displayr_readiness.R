@@ -4,7 +4,7 @@
 
 now_stamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
 args <- commandArgs(trailingOnly = TRUE)
-out_dir_arg <- if (length(args) >= 1L) args[[1]] else file.path("preview", "test_examples", "Smoke_Test", "latest")
+out_dir_arg <- if (length(args) >= 1L) args[[1]] else file.path("displayr_payload", "latest")
 
 script_path <- tryCatch(normalizePath(sys.frame(1)$ofile, mustWork = TRUE), error = function(e) NULL)
 pkg_root <- if (!is.null(script_path)) {

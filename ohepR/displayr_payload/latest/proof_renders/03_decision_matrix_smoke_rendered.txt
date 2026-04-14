@@ -1,0 +1,726 @@
+<style>#ohep-smoke-decision-matrix-outcome_burnout-1, #ohep-smoke-decision-matrix-outcome_burnout-1 * { box-sizing: border-box; }
+#ohep-smoke-decision-matrix-outcome_burnout-1.ohep-dm-root {
+  --matrix-shell-bg: #E2E8F0;
+  --matrix-slide-bg: #F8FAFC;
+  --matrix-header-divider: #CBD5E1;
+  --matrix-theme-kicker: #475569;
+  --matrix-title: #0F172A;
+  --matrix-subtitle: #64748B;
+  --matrix-axis-line: #94A3B8;
+  --matrix-axis-text: #64748B;
+  --matrix-axis-main: #334155;
+  --matrix-plot-bg: #FFFFFF;
+  --matrix-quadrant-tl-bg: #FFF1F2;
+  --matrix-quadrant-tl-text: #E11D48;
+  --matrix-quadrant-tr-bg: #F0FDFA;
+  --matrix-quadrant-tr-text: #0F766E;
+  --matrix-quadrant-bl-bg: #F8FAFC;
+  --matrix-quadrant-bl-text: #64748B;
+  --matrix-quadrant-br-bg: #F1F5F9;
+  --matrix-quadrant-br-text: #94A3B8;
+  --matrix-quadrant-divider: #CBD5E1;
+  --matrix-dot-critical: #E11D48;
+  --matrix-dot-leverage: #0F766E;
+  --matrix-dot-monitor: #64748B;
+  --matrix-dot-maintain: #64748B;
+  --matrix-point-border: #FFFFFF;
+  --matrix-point-shadow: rgba(0,0,0,0.15);
+  --matrix-label-bg: #FFFFFF;
+  --matrix-label-text: #334155;
+  --matrix-label-border: #E2E8F0;
+  --matrix-label-shadow: rgba(0,0,0,0.08);
+  --matrix-brand-text: #334155;
+  --matrix-brand-dot: #0EA5E9;
+  width: 1280px;
+  height: 720px;
+  background: var(--matrix-slide-bg);
+  padding: 36px 48px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+#ohep-smoke-decision-matrix-outcome_burnout-1 .header-section { display: flex; flex-direction: column; border-bottom: 2px solid var(--matrix-header-divider); padding-bottom: 12px; margin-bottom: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .theme-kicker { font-size: 14px; font-weight: 800; color: var(--matrix-theme-kicker); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .title { font-size: 32px; font-weight: 900; color: var(--matrix-title); margin: 0 0 6px 0; letter-spacing: -0.5px; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .subtitle { font-size: 15px; color: var(--matrix-subtitle); font-weight: 500; margin: 0; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .chart-wrapper { display: flex; position: relative; flex: 1; min-height: 0; margin-top: 10px; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .y-axis { width: 60px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-bottom: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .y-axis-text { font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .y-axis-main { transform: rotate(-90deg); white-space: nowrap; font-size: 16px; font-weight: 900; letter-spacing: 1.5px; color: var(--matrix-axis-main); }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .matrix-container { position: relative; flex-grow: 1; border-left: 3px solid var(--matrix-axis-line); border-bottom: 3px solid var(--matrix-axis-line); display: flex; flex-wrap: wrap; background: var(--matrix-plot-bg); border-radius: 0 8px 0 0; overflow: hidden; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .quadrant { width: 50%; height: 50%; box-sizing: border-box; padding: 24px; font-size: 16px; font-weight: 900; letter-spacing: 1px; position: relative; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .q-tl { background-color: var(--matrix-quadrant-tl-bg); color: var(--matrix-quadrant-tl-text); border-right: 2px dashed var(--matrix-quadrant-divider); border-bottom: 2px dashed var(--matrix-quadrant-divider); }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .q-tr { background-color: var(--matrix-quadrant-tr-bg); color: var(--matrix-quadrant-tr-text); border-bottom: 2px dashed var(--matrix-quadrant-divider); text-align: right; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .q-bl { background-color: var(--matrix-quadrant-bl-bg); color: var(--matrix-quadrant-bl-text); border-right: 2px dashed var(--matrix-quadrant-divider); display: flex; align-items: flex-end; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .q-br { background-color: var(--matrix-quadrant-br-bg); color: var(--matrix-quadrant-br-text); display: flex; align-items: flex-end; justify-content: flex-end; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .points-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .point { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; transition: transform 0.2s ease, z-index 0s; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .point:hover { transform: translate(-50%, -50%) scale(1.08); z-index: 20; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .dot { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--matrix-point-border); box-shadow: 0 4px 8px var(--matrix-point-shadow); }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .dot-critical { background: var(--matrix-dot-critical); }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .dot-leverage { background: var(--matrix-dot-leverage); }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .dot-monitor { background: var(--matrix-dot-monitor); }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .dot-maintain { background: var(--matrix-dot-maintain); }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .label { position: absolute; top: 50%; background: var(--matrix-label-bg); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; color: var(--matrix-label-text); box-shadow: 0 4px 10px var(--matrix-label-shadow); border: 1px solid var(--matrix-label-border); white-space: nowrap; line-height: 1; transform: translateY(-50%); }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .label-right { left: 28px; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .label-left { right: 28px; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .x-axis { display: flex; justify-content: space-between; align-items: center; padding-left: 60px; margin-top: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .x-axis-text { font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }
+#ohep-smoke-decision-matrix-outcome_burnout-1 .x-axis-main { font-size: 16px; font-weight: 900; letter-spacing: 1.5px; color: var(--matrix-axis-main); }</style>
+<div id="ohep-smoke-decision-matrix-outcome_burnout-1" class="ohep-dm-root">
+  <div class="header-section">
+    <div class="theme-kicker">Decision Matrix</div>
+    <h1 class="title">Decision Matrix - 1 2023 - Burnout</h1>
+    
+  </div>
+  <div class="chart-wrapper">
+    <div class="y-axis">
+      <div class="y-axis-text">HIGH</div>
+      <div class="y-axis-main">IMPACT ON BURNOUT</div>
+      <div class="y-axis-text">LOW</div>
+    </div>
+    <div class="matrix-container">
+      <div class="quadrant q-tl">CRITICAL FOCUS</div>
+      <div class="quadrant q-tr">LEVERAGE</div>
+      <div class="quadrant q-bl">MONITOR</div>
+      <div class="quadrant q-br">MAINTAIN</div>
+      <div class="points-layer">
+        <div class="point" style="left: 45.7%; top: 26.0%;">
+  <div class="dot dot-critical"></div>
+  <div class="label label-right">Communication</div>
+</div><div class="point" style="left: 51.6%; top: 30.8%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-right">Leadership</div>
+</div><div class="point" style="left: 92.0%; top: 16.7%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-left">Learning &amp; innovation</div>
+</div><div class="point" style="left: 44.2%; top: 44.3%;">
+  <div class="dot dot-monitor"></div>
+  <div class="label label-right">Performance development</div>
+</div><div class="point" style="left: 64.8%; top: 88.0%;">
+  <div class="dot dot-maintain"></div>
+  <div class="label label-right">Purpose</div>
+</div><div class="point" style="left: 9.5%; top: 58.4%;">
+  <div class="dot dot-monitor"></div>
+  <div class="label label-right">Respect, care, and trust</div>
+</div><div class="point" style="left: 52.3%; top: 12.0%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-right">Strategy</div>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="x-axis">
+    <div class="x-axis-text">UNDER INDEX</div>
+    <div class="x-axis-main">PERFORMANCE VS. BENCHMARK</div>
+    <div class="x-axis-text">ABOVE INDEX</div>
+  </div>
+</div>
+<style>#ohep-smoke-decision-matrix-outcome_engagement-2, #ohep-smoke-decision-matrix-outcome_engagement-2 * { box-sizing: border-box; }
+#ohep-smoke-decision-matrix-outcome_engagement-2.ohep-dm-root {
+  --matrix-shell-bg: #E2E8F0;
+  --matrix-slide-bg: #F8FAFC;
+  --matrix-header-divider: #CBD5E1;
+  --matrix-theme-kicker: #475569;
+  --matrix-title: #0F172A;
+  --matrix-subtitle: #64748B;
+  --matrix-axis-line: #94A3B8;
+  --matrix-axis-text: #64748B;
+  --matrix-axis-main: #334155;
+  --matrix-plot-bg: #FFFFFF;
+  --matrix-quadrant-tl-bg: #FFF1F2;
+  --matrix-quadrant-tl-text: #E11D48;
+  --matrix-quadrant-tr-bg: #F0FDFA;
+  --matrix-quadrant-tr-text: #0F766E;
+  --matrix-quadrant-bl-bg: #F8FAFC;
+  --matrix-quadrant-bl-text: #64748B;
+  --matrix-quadrant-br-bg: #F1F5F9;
+  --matrix-quadrant-br-text: #94A3B8;
+  --matrix-quadrant-divider: #CBD5E1;
+  --matrix-dot-critical: #E11D48;
+  --matrix-dot-leverage: #0F766E;
+  --matrix-dot-monitor: #64748B;
+  --matrix-dot-maintain: #64748B;
+  --matrix-point-border: #FFFFFF;
+  --matrix-point-shadow: rgba(0,0,0,0.15);
+  --matrix-label-bg: #FFFFFF;
+  --matrix-label-text: #334155;
+  --matrix-label-border: #E2E8F0;
+  --matrix-label-shadow: rgba(0,0,0,0.08);
+  --matrix-brand-text: #334155;
+  --matrix-brand-dot: #0EA5E9;
+  width: 1280px;
+  height: 720px;
+  background: var(--matrix-slide-bg);
+  padding: 36px 48px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+#ohep-smoke-decision-matrix-outcome_engagement-2 .header-section { display: flex; flex-direction: column; border-bottom: 2px solid var(--matrix-header-divider); padding-bottom: 12px; margin-bottom: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .theme-kicker { font-size: 14px; font-weight: 800; color: var(--matrix-theme-kicker); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .title { font-size: 32px; font-weight: 900; color: var(--matrix-title); margin: 0 0 6px 0; letter-spacing: -0.5px; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .subtitle { font-size: 15px; color: var(--matrix-subtitle); font-weight: 500; margin: 0; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .chart-wrapper { display: flex; position: relative; flex: 1; min-height: 0; margin-top: 10px; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .y-axis { width: 60px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-bottom: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .y-axis-text { font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .y-axis-main { transform: rotate(-90deg); white-space: nowrap; font-size: 16px; font-weight: 900; letter-spacing: 1.5px; color: var(--matrix-axis-main); }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .matrix-container { position: relative; flex-grow: 1; border-left: 3px solid var(--matrix-axis-line); border-bottom: 3px solid var(--matrix-axis-line); display: flex; flex-wrap: wrap; background: var(--matrix-plot-bg); border-radius: 0 8px 0 0; overflow: hidden; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .quadrant { width: 50%; height: 50%; box-sizing: border-box; padding: 24px; font-size: 16px; font-weight: 900; letter-spacing: 1px; position: relative; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .q-tl { background-color: var(--matrix-quadrant-tl-bg); color: var(--matrix-quadrant-tl-text); border-right: 2px dashed var(--matrix-quadrant-divider); border-bottom: 2px dashed var(--matrix-quadrant-divider); }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .q-tr { background-color: var(--matrix-quadrant-tr-bg); color: var(--matrix-quadrant-tr-text); border-bottom: 2px dashed var(--matrix-quadrant-divider); text-align: right; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .q-bl { background-color: var(--matrix-quadrant-bl-bg); color: var(--matrix-quadrant-bl-text); border-right: 2px dashed var(--matrix-quadrant-divider); display: flex; align-items: flex-end; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .q-br { background-color: var(--matrix-quadrant-br-bg); color: var(--matrix-quadrant-br-text); display: flex; align-items: flex-end; justify-content: flex-end; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .points-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .point { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; transition: transform 0.2s ease, z-index 0s; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .point:hover { transform: translate(-50%, -50%) scale(1.08); z-index: 20; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .dot { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--matrix-point-border); box-shadow: 0 4px 8px var(--matrix-point-shadow); }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .dot-critical { background: var(--matrix-dot-critical); }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .dot-leverage { background: var(--matrix-dot-leverage); }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .dot-monitor { background: var(--matrix-dot-monitor); }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .dot-maintain { background: var(--matrix-dot-maintain); }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .label { position: absolute; top: 50%; background: var(--matrix-label-bg); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; color: var(--matrix-label-text); box-shadow: 0 4px 10px var(--matrix-label-shadow); border: 1px solid var(--matrix-label-border); white-space: nowrap; line-height: 1; transform: translateY(-50%); }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .label-right { left: 28px; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .label-left { right: 28px; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .x-axis { display: flex; justify-content: space-between; align-items: center; padding-left: 60px; margin-top: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .x-axis-text { font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }
+#ohep-smoke-decision-matrix-outcome_engagement-2 .x-axis-main { font-size: 16px; font-weight: 900; letter-spacing: 1.5px; color: var(--matrix-axis-main); }</style>
+<div id="ohep-smoke-decision-matrix-outcome_engagement-2" class="ohep-dm-root">
+  <div class="header-section">
+    <div class="theme-kicker">Decision Matrix</div>
+    <h1 class="title">Decision Matrix - 1 2023 - Engagement</h1>
+    
+  </div>
+  <div class="chart-wrapper">
+    <div class="y-axis">
+      <div class="y-axis-text">HIGH</div>
+      <div class="y-axis-main">IMPACT ON ENGAGEMENT</div>
+      <div class="y-axis-text">LOW</div>
+    </div>
+    <div class="matrix-container">
+      <div class="quadrant q-tl">CRITICAL FOCUS</div>
+      <div class="quadrant q-tr">LEVERAGE</div>
+      <div class="quadrant q-bl">MONITOR</div>
+      <div class="quadrant q-br">MAINTAIN</div>
+      <div class="points-layer">
+        <div class="point" style="left: 45.7%; top: 88.0%;">
+  <div class="dot dot-monitor"></div>
+  <div class="label label-right">Communication</div>
+</div><div class="point" style="left: 51.6%; top: 54.3%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-right">Leadership</div>
+</div><div class="point" style="left: 92.0%; top: 60.3%;">
+  <div class="dot dot-maintain"></div>
+  <div class="label label-left">Learning &amp; innovation</div>
+</div><div class="point" style="left: 44.2%; top: 57.1%;">
+  <div class="dot dot-critical"></div>
+  <div class="label label-right">Performance development</div>
+</div><div class="point" style="left: 64.8%; top: 12.0%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-right">Purpose</div>
+</div><div class="point" style="left: 9.5%; top: 53.2%;">
+  <div class="dot dot-critical"></div>
+  <div class="label label-right">Respect, care, and trust</div>
+</div><div class="point" style="left: 52.3%; top: 80.3%;">
+  <div class="dot dot-maintain"></div>
+  <div class="label label-right">Strategy</div>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="x-axis">
+    <div class="x-axis-text">UNDER INDEX</div>
+    <div class="x-axis-main">PERFORMANCE VS. BENCHMARK</div>
+    <div class="x-axis-text">ABOVE INDEX</div>
+  </div>
+</div>
+<style>#ohep-smoke-decision-matrix-outcome_enps-3, #ohep-smoke-decision-matrix-outcome_enps-3 * { box-sizing: border-box; }
+#ohep-smoke-decision-matrix-outcome_enps-3.ohep-dm-root {
+  --matrix-shell-bg: #E2E8F0;
+  --matrix-slide-bg: #F8FAFC;
+  --matrix-header-divider: #CBD5E1;
+  --matrix-theme-kicker: #475569;
+  --matrix-title: #0F172A;
+  --matrix-subtitle: #64748B;
+  --matrix-axis-line: #94A3B8;
+  --matrix-axis-text: #64748B;
+  --matrix-axis-main: #334155;
+  --matrix-plot-bg: #FFFFFF;
+  --matrix-quadrant-tl-bg: #FFF1F2;
+  --matrix-quadrant-tl-text: #E11D48;
+  --matrix-quadrant-tr-bg: #F0FDFA;
+  --matrix-quadrant-tr-text: #0F766E;
+  --matrix-quadrant-bl-bg: #F8FAFC;
+  --matrix-quadrant-bl-text: #64748B;
+  --matrix-quadrant-br-bg: #F1F5F9;
+  --matrix-quadrant-br-text: #94A3B8;
+  --matrix-quadrant-divider: #CBD5E1;
+  --matrix-dot-critical: #E11D48;
+  --matrix-dot-leverage: #0F766E;
+  --matrix-dot-monitor: #64748B;
+  --matrix-dot-maintain: #64748B;
+  --matrix-point-border: #FFFFFF;
+  --matrix-point-shadow: rgba(0,0,0,0.15);
+  --matrix-label-bg: #FFFFFF;
+  --matrix-label-text: #334155;
+  --matrix-label-border: #E2E8F0;
+  --matrix-label-shadow: rgba(0,0,0,0.08);
+  --matrix-brand-text: #334155;
+  --matrix-brand-dot: #0EA5E9;
+  width: 1280px;
+  height: 720px;
+  background: var(--matrix-slide-bg);
+  padding: 36px 48px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+#ohep-smoke-decision-matrix-outcome_enps-3 .header-section { display: flex; flex-direction: column; border-bottom: 2px solid var(--matrix-header-divider); padding-bottom: 12px; margin-bottom: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .theme-kicker { font-size: 14px; font-weight: 800; color: var(--matrix-theme-kicker); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .title { font-size: 32px; font-weight: 900; color: var(--matrix-title); margin: 0 0 6px 0; letter-spacing: -0.5px; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .subtitle { font-size: 15px; color: var(--matrix-subtitle); font-weight: 500; margin: 0; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .chart-wrapper { display: flex; position: relative; flex: 1; min-height: 0; margin-top: 10px; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .y-axis { width: 60px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-bottom: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .y-axis-text { font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .y-axis-main { transform: rotate(-90deg); white-space: nowrap; font-size: 16px; font-weight: 900; letter-spacing: 1.5px; color: var(--matrix-axis-main); }
+#ohep-smoke-decision-matrix-outcome_enps-3 .matrix-container { position: relative; flex-grow: 1; border-left: 3px solid var(--matrix-axis-line); border-bottom: 3px solid var(--matrix-axis-line); display: flex; flex-wrap: wrap; background: var(--matrix-plot-bg); border-radius: 0 8px 0 0; overflow: hidden; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .quadrant { width: 50%; height: 50%; box-sizing: border-box; padding: 24px; font-size: 16px; font-weight: 900; letter-spacing: 1px; position: relative; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .q-tl { background-color: var(--matrix-quadrant-tl-bg); color: var(--matrix-quadrant-tl-text); border-right: 2px dashed var(--matrix-quadrant-divider); border-bottom: 2px dashed var(--matrix-quadrant-divider); }
+#ohep-smoke-decision-matrix-outcome_enps-3 .q-tr { background-color: var(--matrix-quadrant-tr-bg); color: var(--matrix-quadrant-tr-text); border-bottom: 2px dashed var(--matrix-quadrant-divider); text-align: right; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .q-bl { background-color: var(--matrix-quadrant-bl-bg); color: var(--matrix-quadrant-bl-text); border-right: 2px dashed var(--matrix-quadrant-divider); display: flex; align-items: flex-end; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .q-br { background-color: var(--matrix-quadrant-br-bg); color: var(--matrix-quadrant-br-text); display: flex; align-items: flex-end; justify-content: flex-end; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .points-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .point { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; transition: transform 0.2s ease, z-index 0s; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .point:hover { transform: translate(-50%, -50%) scale(1.08); z-index: 20; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .dot { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--matrix-point-border); box-shadow: 0 4px 8px var(--matrix-point-shadow); }
+#ohep-smoke-decision-matrix-outcome_enps-3 .dot-critical { background: var(--matrix-dot-critical); }
+#ohep-smoke-decision-matrix-outcome_enps-3 .dot-leverage { background: var(--matrix-dot-leverage); }
+#ohep-smoke-decision-matrix-outcome_enps-3 .dot-monitor { background: var(--matrix-dot-monitor); }
+#ohep-smoke-decision-matrix-outcome_enps-3 .dot-maintain { background: var(--matrix-dot-maintain); }
+#ohep-smoke-decision-matrix-outcome_enps-3 .label { position: absolute; top: 50%; background: var(--matrix-label-bg); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; color: var(--matrix-label-text); box-shadow: 0 4px 10px var(--matrix-label-shadow); border: 1px solid var(--matrix-label-border); white-space: nowrap; line-height: 1; transform: translateY(-50%); }
+#ohep-smoke-decision-matrix-outcome_enps-3 .label-right { left: 28px; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .label-left { right: 28px; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .x-axis { display: flex; justify-content: space-between; align-items: center; padding-left: 60px; margin-top: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .x-axis-text { font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }
+#ohep-smoke-decision-matrix-outcome_enps-3 .x-axis-main { font-size: 16px; font-weight: 900; letter-spacing: 1.5px; color: var(--matrix-axis-main); }</style>
+<div id="ohep-smoke-decision-matrix-outcome_enps-3" class="ohep-dm-root">
+  <div class="header-section">
+    <div class="theme-kicker">Decision Matrix</div>
+    <h1 class="title">Decision Matrix - 1 2023 - eNPS</h1>
+    
+  </div>
+  <div class="chart-wrapper">
+    <div class="y-axis">
+      <div class="y-axis-text">HIGH</div>
+      <div class="y-axis-main">IMPACT ON ENPS</div>
+      <div class="y-axis-text">LOW</div>
+    </div>
+    <div class="matrix-container">
+      <div class="quadrant q-tl">CRITICAL FOCUS</div>
+      <div class="quadrant q-tr">LEVERAGE</div>
+      <div class="quadrant q-bl">MONITOR</div>
+      <div class="quadrant q-br">MAINTAIN</div>
+      <div class="points-layer">
+        <div class="point" style="left: 45.7%; top: 68.6%;">
+  <div class="dot dot-monitor"></div>
+  <div class="label label-right">Communication</div>
+</div><div class="point" style="left: 51.6%; top: 63.7%;">
+  <div class="dot dot-maintain"></div>
+  <div class="label label-right">Leadership</div>
+</div><div class="point" style="left: 92.0%; top: 88.0%;">
+  <div class="dot dot-maintain"></div>
+  <div class="label label-left">Learning &amp; innovation</div>
+</div><div class="point" style="left: 44.2%; top: 36.4%;">
+  <div class="dot dot-critical"></div>
+  <div class="label label-right">Performance development</div>
+</div><div class="point" style="left: 64.8%; top: 12.0%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-right">Purpose</div>
+</div><div class="point" style="left: 9.5%; top: 39.3%;">
+  <div class="dot dot-critical"></div>
+  <div class="label label-right">Respect, care, and trust</div>
+</div><div class="point" style="left: 52.3%; top: 59.2%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-right">Strategy</div>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="x-axis">
+    <div class="x-axis-text">UNDER INDEX</div>
+    <div class="x-axis-main">PERFORMANCE VS. BENCHMARK</div>
+    <div class="x-axis-text">ABOVE INDEX</div>
+  </div>
+</div>
+<style>#ohep-smoke-decision-matrix-outcome_turnover_intentions-4, #ohep-smoke-decision-matrix-outcome_turnover_intentions-4 * { box-sizing: border-box; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4.ohep-dm-root {
+  --matrix-shell-bg: #E2E8F0;
+  --matrix-slide-bg: #F8FAFC;
+  --matrix-header-divider: #CBD5E1;
+  --matrix-theme-kicker: #475569;
+  --matrix-title: #0F172A;
+  --matrix-subtitle: #64748B;
+  --matrix-axis-line: #94A3B8;
+  --matrix-axis-text: #64748B;
+  --matrix-axis-main: #334155;
+  --matrix-plot-bg: #FFFFFF;
+  --matrix-quadrant-tl-bg: #FFF1F2;
+  --matrix-quadrant-tl-text: #E11D48;
+  --matrix-quadrant-tr-bg: #F0FDFA;
+  --matrix-quadrant-tr-text: #0F766E;
+  --matrix-quadrant-bl-bg: #F8FAFC;
+  --matrix-quadrant-bl-text: #64748B;
+  --matrix-quadrant-br-bg: #F1F5F9;
+  --matrix-quadrant-br-text: #94A3B8;
+  --matrix-quadrant-divider: #CBD5E1;
+  --matrix-dot-critical: #E11D48;
+  --matrix-dot-leverage: #0F766E;
+  --matrix-dot-monitor: #64748B;
+  --matrix-dot-maintain: #64748B;
+  --matrix-point-border: #FFFFFF;
+  --matrix-point-shadow: rgba(0,0,0,0.15);
+  --matrix-label-bg: #FFFFFF;
+  --matrix-label-text: #334155;
+  --matrix-label-border: #E2E8F0;
+  --matrix-label-shadow: rgba(0,0,0,0.08);
+  --matrix-brand-text: #334155;
+  --matrix-brand-dot: #0EA5E9;
+  width: 1280px;
+  height: 720px;
+  background: var(--matrix-slide-bg);
+  padding: 36px 48px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .header-section { display: flex; flex-direction: column; border-bottom: 2px solid var(--matrix-header-divider); padding-bottom: 12px; margin-bottom: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .theme-kicker { font-size: 14px; font-weight: 800; color: var(--matrix-theme-kicker); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .title { font-size: 32px; font-weight: 900; color: var(--matrix-title); margin: 0 0 6px 0; letter-spacing: -0.5px; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .subtitle { font-size: 15px; color: var(--matrix-subtitle); font-weight: 500; margin: 0; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .chart-wrapper { display: flex; position: relative; flex: 1; min-height: 0; margin-top: 10px; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .y-axis { width: 60px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-bottom: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .y-axis-text { font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .y-axis-main { transform: rotate(-90deg); white-space: nowrap; font-size: 16px; font-weight: 900; letter-spacing: 1.5px; color: var(--matrix-axis-main); }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .matrix-container { position: relative; flex-grow: 1; border-left: 3px solid var(--matrix-axis-line); border-bottom: 3px solid var(--matrix-axis-line); display: flex; flex-wrap: wrap; background: var(--matrix-plot-bg); border-radius: 0 8px 0 0; overflow: hidden; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .quadrant { width: 50%; height: 50%; box-sizing: border-box; padding: 24px; font-size: 16px; font-weight: 900; letter-spacing: 1px; position: relative; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .q-tl { background-color: var(--matrix-quadrant-tl-bg); color: var(--matrix-quadrant-tl-text); border-right: 2px dashed var(--matrix-quadrant-divider); border-bottom: 2px dashed var(--matrix-quadrant-divider); }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .q-tr { background-color: var(--matrix-quadrant-tr-bg); color: var(--matrix-quadrant-tr-text); border-bottom: 2px dashed var(--matrix-quadrant-divider); text-align: right; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .q-bl { background-color: var(--matrix-quadrant-bl-bg); color: var(--matrix-quadrant-bl-text); border-right: 2px dashed var(--matrix-quadrant-divider); display: flex; align-items: flex-end; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .q-br { background-color: var(--matrix-quadrant-br-bg); color: var(--matrix-quadrant-br-text); display: flex; align-items: flex-end; justify-content: flex-end; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .points-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .point { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; transition: transform 0.2s ease, z-index 0s; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .point:hover { transform: translate(-50%, -50%) scale(1.08); z-index: 20; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .dot { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--matrix-point-border); box-shadow: 0 4px 8px var(--matrix-point-shadow); }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .dot-critical { background: var(--matrix-dot-critical); }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .dot-leverage { background: var(--matrix-dot-leverage); }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .dot-monitor { background: var(--matrix-dot-monitor); }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .dot-maintain { background: var(--matrix-dot-maintain); }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .label { position: absolute; top: 50%; background: var(--matrix-label-bg); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; color: var(--matrix-label-text); box-shadow: 0 4px 10px var(--matrix-label-shadow); border: 1px solid var(--matrix-label-border); white-space: nowrap; line-height: 1; transform: translateY(-50%); }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .label-right { left: 28px; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .label-left { right: 28px; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .x-axis { display: flex; justify-content: space-between; align-items: center; padding-left: 60px; margin-top: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .x-axis-text { font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }
+#ohep-smoke-decision-matrix-outcome_turnover_intentions-4 .x-axis-main { font-size: 16px; font-weight: 900; letter-spacing: 1.5px; color: var(--matrix-axis-main); }</style>
+<div id="ohep-smoke-decision-matrix-outcome_turnover_intentions-4" class="ohep-dm-root">
+  <div class="header-section">
+    <div class="theme-kicker">Decision Matrix</div>
+    <h1 class="title">Decision Matrix - 1 2023 - Turnover Intentions</h1>
+    
+  </div>
+  <div class="chart-wrapper">
+    <div class="y-axis">
+      <div class="y-axis-text">HIGH</div>
+      <div class="y-axis-main">IMPACT ON TURNOVER INTENTIONS</div>
+      <div class="y-axis-text">LOW</div>
+    </div>
+    <div class="matrix-container">
+      <div class="quadrant q-tl">CRITICAL FOCUS</div>
+      <div class="quadrant q-tr">LEVERAGE</div>
+      <div class="quadrant q-bl">MONITOR</div>
+      <div class="quadrant q-br">MAINTAIN</div>
+      <div class="points-layer">
+        <div class="point" style="left: 45.7%; top: 47.1%;">
+  <div class="dot dot-critical"></div>
+  <div class="label label-right">Communication</div>
+</div><div class="point" style="left: 51.6%; top: 45.1%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-right">Leadership</div>
+</div><div class="point" style="left: 92.0%; top: 27.4%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-left">Learning &amp; innovation</div>
+</div><div class="point" style="left: 44.2%; top: 88.0%;">
+  <div class="dot dot-monitor"></div>
+  <div class="label label-right">Performance development</div>
+</div><div class="point" style="left: 64.8%; top: 12.0%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-right">Purpose</div>
+</div><div class="point" style="left: 9.5%; top: 62.0%;">
+  <div class="dot dot-monitor"></div>
+  <div class="label label-right">Respect, care, and trust</div>
+</div><div class="point" style="left: 52.3%; top: 61.2%;">
+  <div class="dot dot-maintain"></div>
+  <div class="label label-right">Strategy</div>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="x-axis">
+    <div class="x-axis-text">UNDER INDEX</div>
+    <div class="x-axis-main">PERFORMANCE VS. BENCHMARK</div>
+    <div class="x-axis-text">ABOVE INDEX</div>
+  </div>
+</div>
+<style>#ohep-smoke-decision-matrix-outcome_work_satisfaction-5, #ohep-smoke-decision-matrix-outcome_work_satisfaction-5 * { box-sizing: border-box; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5.ohep-dm-root {
+  --matrix-shell-bg: #E2E8F0;
+  --matrix-slide-bg: #F8FAFC;
+  --matrix-header-divider: #CBD5E1;
+  --matrix-theme-kicker: #475569;
+  --matrix-title: #0F172A;
+  --matrix-subtitle: #64748B;
+  --matrix-axis-line: #94A3B8;
+  --matrix-axis-text: #64748B;
+  --matrix-axis-main: #334155;
+  --matrix-plot-bg: #FFFFFF;
+  --matrix-quadrant-tl-bg: #FFF1F2;
+  --matrix-quadrant-tl-text: #E11D48;
+  --matrix-quadrant-tr-bg: #F0FDFA;
+  --matrix-quadrant-tr-text: #0F766E;
+  --matrix-quadrant-bl-bg: #F8FAFC;
+  --matrix-quadrant-bl-text: #64748B;
+  --matrix-quadrant-br-bg: #F1F5F9;
+  --matrix-quadrant-br-text: #94A3B8;
+  --matrix-quadrant-divider: #CBD5E1;
+  --matrix-dot-critical: #E11D48;
+  --matrix-dot-leverage: #0F766E;
+  --matrix-dot-monitor: #64748B;
+  --matrix-dot-maintain: #64748B;
+  --matrix-point-border: #FFFFFF;
+  --matrix-point-shadow: rgba(0,0,0,0.15);
+  --matrix-label-bg: #FFFFFF;
+  --matrix-label-text: #334155;
+  --matrix-label-border: #E2E8F0;
+  --matrix-label-shadow: rgba(0,0,0,0.08);
+  --matrix-brand-text: #334155;
+  --matrix-brand-dot: #0EA5E9;
+  width: 1280px;
+  height: 720px;
+  background: var(--matrix-slide-bg);
+  padding: 36px 48px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .header-section { display: flex; flex-direction: column; border-bottom: 2px solid var(--matrix-header-divider); padding-bottom: 12px; margin-bottom: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .theme-kicker { font-size: 14px; font-weight: 800; color: var(--matrix-theme-kicker); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .title { font-size: 32px; font-weight: 900; color: var(--matrix-title); margin: 0 0 6px 0; letter-spacing: -0.5px; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .subtitle { font-size: 15px; color: var(--matrix-subtitle); font-weight: 500; margin: 0; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .chart-wrapper { display: flex; position: relative; flex: 1; min-height: 0; margin-top: 10px; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .y-axis { width: 60px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-bottom: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .y-axis-text { font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .y-axis-main { transform: rotate(-90deg); white-space: nowrap; font-size: 16px; font-weight: 900; letter-spacing: 1.5px; color: var(--matrix-axis-main); }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .matrix-container { position: relative; flex-grow: 1; border-left: 3px solid var(--matrix-axis-line); border-bottom: 3px solid var(--matrix-axis-line); display: flex; flex-wrap: wrap; background: var(--matrix-plot-bg); border-radius: 0 8px 0 0; overflow: hidden; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .quadrant { width: 50%; height: 50%; box-sizing: border-box; padding: 24px; font-size: 16px; font-weight: 900; letter-spacing: 1px; position: relative; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .q-tl { background-color: var(--matrix-quadrant-tl-bg); color: var(--matrix-quadrant-tl-text); border-right: 2px dashed var(--matrix-quadrant-divider); border-bottom: 2px dashed var(--matrix-quadrant-divider); }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .q-tr { background-color: var(--matrix-quadrant-tr-bg); color: var(--matrix-quadrant-tr-text); border-bottom: 2px dashed var(--matrix-quadrant-divider); text-align: right; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .q-bl { background-color: var(--matrix-quadrant-bl-bg); color: var(--matrix-quadrant-bl-text); border-right: 2px dashed var(--matrix-quadrant-divider); display: flex; align-items: flex-end; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .q-br { background-color: var(--matrix-quadrant-br-bg); color: var(--matrix-quadrant-br-text); display: flex; align-items: flex-end; justify-content: flex-end; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .points-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .point { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; transition: transform 0.2s ease, z-index 0s; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .point:hover { transform: translate(-50%, -50%) scale(1.08); z-index: 20; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .dot { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--matrix-point-border); box-shadow: 0 4px 8px var(--matrix-point-shadow); }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .dot-critical { background: var(--matrix-dot-critical); }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .dot-leverage { background: var(--matrix-dot-leverage); }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .dot-monitor { background: var(--matrix-dot-monitor); }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .dot-maintain { background: var(--matrix-dot-maintain); }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .label { position: absolute; top: 50%; background: var(--matrix-label-bg); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; color: var(--matrix-label-text); box-shadow: 0 4px 10px var(--matrix-label-shadow); border: 1px solid var(--matrix-label-border); white-space: nowrap; line-height: 1; transform: translateY(-50%); }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .label-right { left: 28px; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .label-left { right: 28px; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .x-axis { display: flex; justify-content: space-between; align-items: center; padding-left: 60px; margin-top: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .x-axis-text { font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }
+#ohep-smoke-decision-matrix-outcome_work_satisfaction-5 .x-axis-main { font-size: 16px; font-weight: 900; letter-spacing: 1.5px; color: var(--matrix-axis-main); }</style>
+<div id="ohep-smoke-decision-matrix-outcome_work_satisfaction-5" class="ohep-dm-root">
+  <div class="header-section">
+    <div class="theme-kicker">Decision Matrix</div>
+    <h1 class="title">Decision Matrix - 1 2023 - Work Satisfaction</h1>
+    
+  </div>
+  <div class="chart-wrapper">
+    <div class="y-axis">
+      <div class="y-axis-text">HIGH</div>
+      <div class="y-axis-main">IMPACT ON WORK SATISFACTION</div>
+      <div class="y-axis-text">LOW</div>
+    </div>
+    <div class="matrix-container">
+      <div class="quadrant q-tl">CRITICAL FOCUS</div>
+      <div class="quadrant q-tr">LEVERAGE</div>
+      <div class="quadrant q-bl">MONITOR</div>
+      <div class="quadrant q-br">MAINTAIN</div>
+      <div class="points-layer">
+        <div class="point" style="left: 45.7%; top: 88.0%;">
+  <div class="dot dot-monitor"></div>
+  <div class="label label-right">Communication</div>
+</div><div class="point" style="left: 51.6%; top: 49.7%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-right">Leadership</div>
+</div><div class="point" style="left: 92.0%; top: 86.9%;">
+  <div class="dot dot-maintain"></div>
+  <div class="label label-left">Learning &amp; innovation</div>
+</div><div class="point" style="left: 44.2%; top: 39.9%;">
+  <div class="dot dot-critical"></div>
+  <div class="label label-right">Performance development</div>
+</div><div class="point" style="left: 64.8%; top: 12.0%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-right">Purpose</div>
+</div><div class="point" style="left: 9.5%; top: 72.8%;">
+  <div class="dot dot-critical"></div>
+  <div class="label label-right">Respect, care, and trust</div>
+</div><div class="point" style="left: 52.3%; top: 82.1%;">
+  <div class="dot dot-maintain"></div>
+  <div class="label label-right">Strategy</div>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="x-axis">
+    <div class="x-axis-text">UNDER INDEX</div>
+    <div class="x-axis-main">PERFORMANCE VS. BENCHMARK</div>
+    <div class="x-axis-text">ABOVE INDEX</div>
+  </div>
+</div>
+<style>#ohep-smoke-decision-matrix-outcomes_composite-6, #ohep-smoke-decision-matrix-outcomes_composite-6 * { box-sizing: border-box; }
+#ohep-smoke-decision-matrix-outcomes_composite-6.ohep-dm-root {
+  --matrix-shell-bg: #E2E8F0;
+  --matrix-slide-bg: #F8FAFC;
+  --matrix-header-divider: #CBD5E1;
+  --matrix-theme-kicker: #475569;
+  --matrix-title: #0F172A;
+  --matrix-subtitle: #64748B;
+  --matrix-axis-line: #94A3B8;
+  --matrix-axis-text: #64748B;
+  --matrix-axis-main: #334155;
+  --matrix-plot-bg: #FFFFFF;
+  --matrix-quadrant-tl-bg: #FFF1F2;
+  --matrix-quadrant-tl-text: #E11D48;
+  --matrix-quadrant-tr-bg: #F0FDFA;
+  --matrix-quadrant-tr-text: #0F766E;
+  --matrix-quadrant-bl-bg: #F8FAFC;
+  --matrix-quadrant-bl-text: #64748B;
+  --matrix-quadrant-br-bg: #F1F5F9;
+  --matrix-quadrant-br-text: #94A3B8;
+  --matrix-quadrant-divider: #CBD5E1;
+  --matrix-dot-critical: #E11D48;
+  --matrix-dot-leverage: #0F766E;
+  --matrix-dot-monitor: #64748B;
+  --matrix-dot-maintain: #64748B;
+  --matrix-point-border: #FFFFFF;
+  --matrix-point-shadow: rgba(0,0,0,0.15);
+  --matrix-label-bg: #FFFFFF;
+  --matrix-label-text: #334155;
+  --matrix-label-border: #E2E8F0;
+  --matrix-label-shadow: rgba(0,0,0,0.08);
+  --matrix-brand-text: #334155;
+  --matrix-brand-dot: #0EA5E9;
+  width: 1280px;
+  height: 720px;
+  background: var(--matrix-slide-bg);
+  padding: 36px 48px;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+#ohep-smoke-decision-matrix-outcomes_composite-6 .header-section { display: flex; flex-direction: column; border-bottom: 2px solid var(--matrix-header-divider); padding-bottom: 12px; margin-bottom: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .theme-kicker { font-size: 14px; font-weight: 800; color: var(--matrix-theme-kicker); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .title { font-size: 32px; font-weight: 900; color: var(--matrix-title); margin: 0 0 6px 0; letter-spacing: -0.5px; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .subtitle { font-size: 15px; color: var(--matrix-subtitle); font-weight: 500; margin: 0; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .chart-wrapper { display: flex; position: relative; flex: 1; min-height: 0; margin-top: 10px; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .y-axis { width: 60px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-bottom: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .y-axis-text { font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .y-axis-main { transform: rotate(-90deg); white-space: nowrap; font-size: 16px; font-weight: 900; letter-spacing: 1.5px; color: var(--matrix-axis-main); }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .matrix-container { position: relative; flex-grow: 1; border-left: 3px solid var(--matrix-axis-line); border-bottom: 3px solid var(--matrix-axis-line); display: flex; flex-wrap: wrap; background: var(--matrix-plot-bg); border-radius: 0 8px 0 0; overflow: hidden; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .quadrant { width: 50%; height: 50%; box-sizing: border-box; padding: 24px; font-size: 16px; font-weight: 900; letter-spacing: 1px; position: relative; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .q-tl { background-color: var(--matrix-quadrant-tl-bg); color: var(--matrix-quadrant-tl-text); border-right: 2px dashed var(--matrix-quadrant-divider); border-bottom: 2px dashed var(--matrix-quadrant-divider); }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .q-tr { background-color: var(--matrix-quadrant-tr-bg); color: var(--matrix-quadrant-tr-text); border-bottom: 2px dashed var(--matrix-quadrant-divider); text-align: right; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .q-bl { background-color: var(--matrix-quadrant-bl-bg); color: var(--matrix-quadrant-bl-text); border-right: 2px dashed var(--matrix-quadrant-divider); display: flex; align-items: flex-end; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .q-br { background-color: var(--matrix-quadrant-br-bg); color: var(--matrix-quadrant-br-text); display: flex; align-items: flex-end; justify-content: flex-end; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .points-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .point { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; transition: transform 0.2s ease, z-index 0s; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .point:hover { transform: translate(-50%, -50%) scale(1.08); z-index: 20; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .dot { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--matrix-point-border); box-shadow: 0 4px 8px var(--matrix-point-shadow); }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .dot-critical { background: var(--matrix-dot-critical); }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .dot-leverage { background: var(--matrix-dot-leverage); }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .dot-monitor { background: var(--matrix-dot-monitor); }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .dot-maintain { background: var(--matrix-dot-maintain); }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .label { position: absolute; top: 50%; background: var(--matrix-label-bg); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; color: var(--matrix-label-text); box-shadow: 0 4px 10px var(--matrix-label-shadow); border: 1px solid var(--matrix-label-border); white-space: nowrap; line-height: 1; transform: translateY(-50%); }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .label-right { left: 28px; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .label-left { right: 28px; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .x-axis { display: flex; justify-content: space-between; align-items: center; padding-left: 60px; margin-top: 20px; flex-shrink: 0; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .x-axis-text { font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }
+#ohep-smoke-decision-matrix-outcomes_composite-6 .x-axis-main { font-size: 16px; font-weight: 900; letter-spacing: 1.5px; color: var(--matrix-axis-main); }</style>
+<div id="ohep-smoke-decision-matrix-outcomes_composite-6" class="ohep-dm-root">
+  <div class="header-section">
+    <div class="theme-kicker">Decision Matrix</div>
+    <h1 class="title">Decision Matrix - 1 2023 - Outcomes Composite</h1>
+    
+  </div>
+  <div class="chart-wrapper">
+    <div class="y-axis">
+      <div class="y-axis-text">HIGH</div>
+      <div class="y-axis-main">IMPACT ON OUTCOMES COMPOSITE</div>
+      <div class="y-axis-text">LOW</div>
+    </div>
+    <div class="matrix-container">
+      <div class="quadrant q-tl">CRITICAL FOCUS</div>
+      <div class="quadrant q-tr">LEVERAGE</div>
+      <div class="quadrant q-bl">MONITOR</div>
+      <div class="quadrant q-br">MAINTAIN</div>
+      <div class="points-layer">
+        <div class="point" style="left: 45.7%; top: 88.0%;">
+  <div class="dot dot-monitor"></div>
+  <div class="label label-right">Communication</div>
+</div><div class="point" style="left: 51.6%; top: 60.9%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-right">Leadership</div>
+</div><div class="point" style="left: 92.0%; top: 76.3%;">
+  <div class="dot dot-maintain"></div>
+  <div class="label label-left">Learning &amp; innovation</div>
+</div><div class="point" style="left: 44.2%; top: 64.3%;">
+  <div class="dot dot-critical"></div>
+  <div class="label label-right">Performance development</div>
+</div><div class="point" style="left: 64.8%; top: 12.0%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-right">Purpose</div>
+</div><div class="point" style="left: 9.5%; top: 69.8%;">
+  <div class="dot dot-critical"></div>
+  <div class="label label-right">Respect, care, and trust</div>
+</div><div class="point" style="left: 52.3%; top: 77.2%;">
+  <div class="dot dot-maintain"></div>
+  <div class="label label-right">Strategy</div>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="x-axis">
+    <div class="x-axis-text">UNDER INDEX</div>
+    <div class="x-axis-main">PERFORMANCE VS. BENCHMARK</div>
+    <div class="x-axis-text">ABOVE INDEX</div>
+  </div>
+</div>
