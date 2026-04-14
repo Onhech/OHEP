@@ -1,6 +1,0 @@
-"check","status","details"
-"template_bootstrap_written","PASS","/Users/lyndenjensen/Documents/GitHub/OHEP/ohepR/preview/test_examples/smoke_test_20260413_164546/displayr_payload"
-"payload_schema_valid","PASS","validate_displayr_schema(payload)"
-"fundamental_rendered","PASS","/Users/lyndenjensen/Documents/GitHub/OHEP/ohepR/preview/test_examples/smoke_test_20260413_164546/render_validation/01_fundamental_smoke.html"
-"demographics_rendered","PASS","/Users/lyndenjensen/Documents/GitHub/OHEP/ohepR/preview/test_examples/smoke_test_20260413_164546/render_validation/02_demographics_smoke.html"
-"decision_matrix_rendered","PASS","/Users/lyndenjensen/Documents/GitHub/OHEP/ohepR/preview/test_examples/smoke_test_20260413_164546/render_validation/03_decision_matrix_smoke.html"

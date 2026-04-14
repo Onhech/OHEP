@@ -4893,6 +4893,15 @@ function(
   # followed by the dataset mapping block.
   ns <- asNamespace("ohepR")
   exported <- sort(getNamespaceExports("ohepR"))
+  runtime_lines <- character(0)
+  tc <- textConnection("runtime_lines", open = "w", local = TRUE)
+  dump(
+    list = exported,
+    file = tc,
+    envir = ns
+  )
+  close(tc)
+
   single_paste_path <- file.path(payload_dir, "displayr_bootstrap_single_paste.R")
   con <- file(single_paste_path, open = "wt", encoding = "UTF-8")
   on.exit(close(con), add = TRUE)
@@ -4909,32 +4918,117 @@ function(
     con = con,
     useBytes = TRUE
   )
-  dump(
-    list = exported,
-    file = con,
-    envir = ns
-  )
+  writeLines(runtime_lines, con = con, useBytes = TRUE)
   writeLines(c("", mapping_script), con = con, useBytes = TRUE)
   close(con)
   on.exit(NULL, add = FALSE)
 
+  functions_bundle <- list(
+    exported = exported,
+    runtime_script_lines = runtime_lines,
+    generated_at_utc = format(Sys.time(), "%Y-%m-%d %H:%M:%S", tz = "UTC")
+  )
+  if (isTRUE(include_rds)) {
+    saveRDS(functions_bundle, file.path(support_dir, "template_functions_bundle.rds"))
+  }
+
+  github_loader_lines <- c(
+    "# Displayr GitHub RDS Bootstrap Script",
+    "# PRIMARY FLOW: load ohepR functions + static data from GitHub-hosted RDS files.",
+    "# Pin URLs to a commit SHA for reproducibility.",
+    "# Edit the CONFIG block and raw_user_data assignment only.",
+    "",
+    "CONFIG <- list(",
+    "  # Example pinned URL:",
+    "  # https://raw.githubusercontent.com/<owner>/<repo>/<commit-sha>/<path>/displayr_support/template_functions_bundle.rds",
+    "  functions_rds_url = \"https://raw.githubusercontent.com/<owner>/<repo>/<commit-sha>/<path>/displayr_support/template_functions_bundle.rds\",",
+    "  static_bundle_rds_url = \"https://raw.githubusercontent.com/<owner>/<repo>/<commit-sha>/<path>/displayr_support/template_static_bundle.rds\"",
+    ")",
+    "",
+    "read_rds_url <- function(u) {",
+    "  con <- url(u, open = \"rb\")",
+    "  on.exit(close(con), add = TRUE)",
+    "  readRDS(con)",
+    "}",
+    "",
+    "fn_bundle <- read_rds_url(CONFIG$functions_rds_url)",
+    "if (!is.list(fn_bundle) || !is.character(fn_bundle$runtime_script_lines)) {",
+    "  stop(\"functions bundle RDS is not in expected format.\", call. = FALSE)",
+    "}",
+    "eval(parse(text = fn_bundle$runtime_script_lines), envir = .GlobalEnv)",
+    "",
+    "static_bundle <- read_rds_url(CONFIG$static_bundle_rds_url)",
+    "if (!is.list(static_bundle) || !is.list(static_bundle$index_data)) {",
+    "  stop(\"static bundle RDS is not in expected format.\", call. = FALSE)",
+    "}",
+    "",
+    "# IMPORTANT: replace this line with your Displayr respondent table reference.",
+    "# Example: raw_user_data <- table.raw_user_data",
+    "raw_user_data <- NULL",
+    "if (!is.data.frame(raw_user_data)) {",
+    "  stop(\"Set `raw_user_data` to a Displayr data-frame reference before running.\", call. = FALSE)",
+    "}",
+    "",
+    "# Preflight schema validation for respondent data",
+    "required_base_cols <- c(\"company\", \"year\")",
+    "missing_base <- setdiff(required_base_cols, names(raw_user_data))",
+    "if (length(missing_base) > 0L) {",
+    "  stop(sprintf(\"`raw_user_data` is missing required columns: %s\", paste(missing_base, collapse = \", \")), call. = FALSE)",
+    "}",
+    "required_item_cols <- unique(as.character(static_bundle$index_data$item_data$item_id))",
+    "required_item_cols <- required_item_cols[!is.na(required_item_cols) & nzchar(required_item_cols)]",
+    "missing_items <- setdiff(required_item_cols, names(raw_user_data))",
+    "if (length(missing_items) > 0L) {",
+    "  preview <- utils::head(missing_items, 30)",
+    "  suffix <- if (length(missing_items) > 30L) \" ...\" else \"\"",
+    "  stop(sprintf(",
+    "    \"`raw_user_data` is missing %d required item columns. First missing: %s%s\",",
+    "    length(missing_items), paste(preview, collapse = \", \"), suffix",
+    "  ), call. = FALSE)",
+    "}",
+    "if (ncol(raw_user_data) <= 3L) {",
+    "  stop(\"Aggregate-only user data is not supported. Provide respondent-level data with item columns.\", call. = FALSE)",
+    "}",
+    "",
+    "index_data <- static_bundle$index_data",
+    "colors_table <- static_bundle$colors_table",
+    "",
+    "snapshot <- prep_ohep_snapshot(",
+    "  raw_user_data = raw_user_data,",
+    "  index_data = index_data,",
+    "  predictive_data = static_bundle$predictive_data,",
+    "  snapshot_id = format(Sys.time(), \"%Y%m%dT%H%M%SZ\", tz = \"UTC\")",
+    ")",
+    "",
+    "# Example:",
+    "# company <- as.character(snapshot$company_fundamental_year$company[[1]])",
+    "# year <- as.integer(snapshot$company_fundamental_year$year[[1]])",
+    "# fundamental <- as.character(snapshot$company_fundamental_year$fundamental_id[[1]])",
+    "# fundamental_page(company = company, year = year, fundamental = fundamental, marts = snapshot)"
+  )
+  writeLines(github_loader_lines, file.path(payload_dir, "displayr_bootstrap_from_github_rds.R"), useBytes = TRUE)
+
   setup_lines <- c(
-    "Displayr Template Bootstrap Setup",
+    "Displayr Template Bootstrap Setup (Primary: GitHub RDS)",
     "",
-    "1) Upload these files from `displayr_payload/` into your Displayr template:",
-    "   - 01_index_item_data.csv",
-    "   - 02_index_user_data_key.csv",
-    "   - 03_predictive_data.csv (if exported)",
-    "   - 04_colors_table.csv",
+    "Primary path:",
+    "1) Paste `displayr_payload/displayr_bootstrap_from_github_rds.R` into one Displayr R Output.",
+    "2) Set `CONFIG$functions_rds_url` and `CONFIG$static_bundle_rds_url` to pinned commit-SHA raw URLs.",
+    "3) Set one line: `raw_user_data <- <Displayr respondent table reference>`.",
+    "4) Run script. It creates `index_data`, `colors_table`, and `snapshot`.",
     "",
-    sprintf("2) Name Displayr data sets exactly as: %s, %s, %s, %s, %s",
-      dataset_names$index_item_data, dataset_names$index_user_data_key, dataset_names$predictive_data,
-      dataset_names$colors_table, dataset_names$raw_user_data),
+    "Fallback path (CSV + local single paste):",
+    "5) Upload static CSVs from `displayr_payload/` and paste `displayr_payload/displayr_bootstrap_single_paste.R`.",
+    sprintf("6) In fallback mode, map names as: %s, %s, %s, %s, %s",
+      dataset_names$index_item_data,
+      dataset_names$index_user_data_key,
+      dataset_names$predictive_data,
+      dataset_names$colors_table,
+      dataset_names$raw_user_data),
     "",
-    "3) Paste displayr_bootstrap_single_paste.R into one R Output in Displayr.",
-    "4) Edit only DATASET_MAP in that script.",
-    "5) Use chart functions with marts = snapshot (e.g., fundamental_page(..., marts = snapshot)).",
-    "6) See function_reference_appendix.txt for syntax and usage of all exported functions."
+    "7) Use chart functions with marts = snapshot (e.g., fundamental_page(..., marts = snapshot)).",
+    "8) Aggregate-only user data is not supported; respondent-level item columns are required.",
+    "9) See function_reference_appendix.txt for syntax and usage of all exported functions."
   )
   writeLines(setup_lines, con = file.path(support_dir, "README_displayr_setup.txt"), useBytes = TRUE)
   writeLines(
@@ -4944,11 +5038,12 @@ function(
   )
 
   manifest <- data.frame(
-    field = c("bundle_id", "generated_at_utc", "payload_dir"),
+    field = c("bundle_id", "generated_at_utc", "payload_dir", "supports_github_rds_loader"),
     value = c(
       as.character(static_bundle$bundle_meta$bundle_id[[1]]),
       as.character(static_bundle$bundle_meta$generated_at_utc[[1]]),
-      "displayr_payload"
+      "displayr_payload",
+      "yes"
     ),
     stringsAsFactors = FALSE
   )

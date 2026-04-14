@@ -1,8 +1,8 @@
 # Displayr Template Bootstrap Playbook (ohepR)
 
-Use one Displayr template with static tables uploaded once, then reuse it for nested/client reports.
+Use one primary flow: load ohepR runtime functions and static reference data from GitHub-hosted RDS files inside Displayr. Use CSV upload + single-paste script only as fallback/debug.
 
-## Bootstrap Once (Template Setup)
+## 1) Build the Bootstrap Package
 
 Run in `ohepR/`:
 
@@ -18,35 +18,56 @@ static_bundle <- build_displayr_static_bundle(
 
 write_displayr_template_bootstrap(
   static_bundle = static_bundle,
-  out_dir = "displayr_template_bootstrap"
+  out_dir = "displayr_payload_export"
 )
 ```
 
 This writes:
 
-- `displayr_payload/` (files to upload to Displayr)
+- `displayr_payload/displayr_bootstrap_from_github_rds.R` (primary Displayr script)
+- `displayr_payload/displayr_bootstrap_single_paste.R` (fallback script)
+- `displayr_payload/*.csv` (fallback static tables)
+- `displayr_support/template_functions_bundle.rds`
+- `displayr_support/template_static_bundle.rds`
 - `displayr_support/README_displayr_setup.txt`
+- `displayr_support/function_reference_appendix.txt`
 - `displayr_support/manifest.csv`
-- `displayr_support/template_static_bundle.rds` (optional)
 
-## In Displayr (Template Document)
+## 2) Primary Displayr Setup (GitHub RDS)
 
-1. Upload files from `displayr_payload/`.
-2. Name the data sets exactly as expected in `displayr_support/README_displayr_setup.txt`.
-3. Paste `displayr_payload/displayr_bootstrap_single_paste.R` into one R Output.
-4. Edit only the `DATASET_MAP` block.
-5. Build chart outputs from `snapshot` and `index_data`.
+1. Commit/push the generated `displayr_support/*.rds` files to GitHub.
+2. In Displayr, add one R Output and paste `displayr_payload/displayr_bootstrap_from_github_rds.R`.
+3. Edit only:
+   - `CONFIG$functions_rds_url` (raw GitHub URL pinned to commit SHA)
+   - `CONFIG$static_bundle_rds_url` (raw GitHub URL pinned to commit SHA)
+   - `raw_user_data <- <Displayr respondent table reference>`
+4. Run once; this creates `index_data`, `colors_table`, and `snapshot`.
 
-## New Report Flow
+Notes:
 
-1. Duplicate the Displayr template document.
-2. Connect or upload the report's live respondent table as `raw_user_data`.
-3. Re-run outputs.
+- `raw_user_data` must be respondent-level and include `company`, `year`, plus required item columns.
+- Aggregate-only input is not supported.
 
-No per-wave marts export is required.
+## 3) Render Outputs in Displayr
 
-## Annual Maintenance
+Use page functions with `marts = snapshot`, for example:
 
-1. Refresh static benchmark files (`index_item_data`, `index_user_data_key`, `predictive_data`) as needed.
-2. Re-run `write_displayr_template_bootstrap()`.
-3. Update the Displayr template's static tables once.
+```r
+company <- as.character(snapshot$company_fundamental_year$company[[1]])
+year <- as.integer(snapshot$company_fundamental_year$year[[1]])
+fundamental <- as.character(snapshot$company_fundamental_year$fundamental_id[[1]])
+
+fundamental_page(company = company, year = year, fundamental = fundamental, marts = snapshot)
+```
+
+All page functions return HTML tag objects/snippets suitable for Displayr rendering.
+
+## 4) Fallback Path (Only if Needed)
+
+If GitHub RDS loading is blocked in your environment:
+
+1. Upload CSVs from `displayr_payload/`.
+2. Paste `displayr_payload/displayr_bootstrap_single_paste.R`.
+3. Edit `DATASET_MAP` and run.
+
+Treat this as fallback/debug, not the default workflow.

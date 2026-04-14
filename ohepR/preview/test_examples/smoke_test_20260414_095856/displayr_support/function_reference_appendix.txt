@@ -82,8 +82,9 @@ Arguments
   - dataset_names: named list, optional. Must include `index_item_data`, `index_user_data_key`, `predictive_data`, `colors_table`, and `raw_user_data`.
 
 Details
-  The single script `displayr_payload/displayr_bootstrap_single_paste.R` is intended for copy/paste into one Displayr R Output.
-  Users edit only the `DATASET_MAP` block.
+  Primary script: `displayr_payload/displayr_bootstrap_from_github_rds.R`.
+  Set commit-SHA pinned raw GitHub URLs for function/static RDS files and edit only `raw_user_data <- ...`.
+  Fallback script: `displayr_payload/displayr_bootstrap_single_paste.R` for CSV-upload workflows.
 
 Value
   Returns `out_dir` invisibly.
