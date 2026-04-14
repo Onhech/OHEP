@@ -1,13 +1,10 @@
 # Displayr GitHub RDS Bootstrap Script
-# PRIMARY FLOW: load ohepR functions + static data from GitHub-hosted RDS files.
-# Pin URLs to a commit SHA for reproducibility.
-# Edit the CONFIG block and raw_user_data assignment only.
+# PRIMARY FLOW: paste into Displayr and edit only raw_user_data assignment.
+# URLs are pre-filled when git remote/ref/path can be inferred.
 
 CONFIG <- list(
-  # Example pinned URL:
-  # https://raw.githubusercontent.com/<owner>/<repo>/<commit-sha>/<path>/displayr_support/template_functions_bundle.rds
-  functions_rds_url = "https://raw.githubusercontent.com/<owner>/<repo>/<commit-sha>/<path>/displayr_support/template_functions_bundle.rds",
-  static_bundle_rds_url = "https://raw.githubusercontent.com/<owner>/<repo>/<commit-sha>/<path>/displayr_support/template_static_bundle.rds"
+  functions_rds_url = "https://raw.githubusercontent.com/Onhech/OHEP/main/ohepR/preview/test_examples/Smoke_Test/latest/sources/template_functions_bundle.rds",
+  static_bundle_rds_url = "https://raw.githubusercontent.com/Onhech/OHEP/main/ohepR/preview/test_examples/Smoke_Test/latest/sources/template_static_bundle.rds"
 )
 
 read_rds_url <- function(u) {

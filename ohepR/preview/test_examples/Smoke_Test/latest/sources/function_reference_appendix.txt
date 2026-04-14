@@ -66,25 +66,29 @@ One-sentence purpose
   Export the exact files needed to initialize a Displayr template.
 
 Description
-  Creates two folders under `out_dir`:
-  - `displayr_payload/`: files to upload or paste into Displayr.
-  - `displayr_support/`: setup notes, manifest, and optional RDS archive.
+  Creates an RDS-first bundle under `out_dir` for Displayr.
+  Primary script is placed in `bootstrap/` and source artifacts are placed in `sources/`.
+  CSV/single-paste files are optional fallback outputs under `legacy_optional/`.
 
 Usage
   write_displayr_template_bootstrap(static_bundle, out_dir, include_rds = TRUE, dataset_names = list(index_item_data = "index_item_data", 
       index_user_data_key = "index_user_data_key", predictive_data = "predictive_data", 
-      colors_table = "colors_table", raw_user_data = "raw_user_data")) 
+      colors_table = "colors_table", raw_user_data = "raw_user_data"), include_fallback = FALSE, 
+      github_repo = NULL, github_ref = NULL) 
 
 Arguments
   - static_bundle: list, required. Output from `build_displayr_static_bundle()`.
   - out_dir: character scalar path, required. Target directory.
-  - include_rds: logical, optional. If TRUE, writes `displayr_support/template_static_bundle.rds`.
+  - include_rds: logical, optional. If TRUE, writes source RDS files in `sources/`.
   - dataset_names: named list, optional. Must include `index_item_data`, `index_user_data_key`, `predictive_data`, `colors_table`, and `raw_user_data`.
+  - include_fallback: logical, optional. If TRUE, writes legacy CSV + single-paste fallback artifacts.
+  - github_repo: character scalar, optional. GitHub `owner/repo` used to prefill raw source URLs.
+  - github_ref: character scalar, optional. Git ref (prefer commit SHA) used to prefill raw source URLs.
 
 Details
-  Primary script: `displayr_payload/displayr_bootstrap_from_github_rds.R`.
-  Set commit-SHA pinned raw GitHub URLs for function/static RDS files and edit only `raw_user_data <- ...`.
-  Fallback script: `displayr_payload/displayr_bootstrap_single_paste.R` for CSV-upload workflows.
+  Primary script: `bootstrap/displayr_bootstrap_from_github_rds.R`.
+  By default, only RDS workflow artifacts are generated for day-to-day use.
+  Edit only `raw_user_data <- ...` in Displayr when URLs are correctly prefilled.
 
 Value
   Returns `out_dir` invisibly.

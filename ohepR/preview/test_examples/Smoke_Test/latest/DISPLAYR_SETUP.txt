@@ -1,0 +1,15 @@
+Displayr Setup (RDS Workflow Only)
+
+1) Commit/push this generated folder so `sources/*.rds` are reachable by URL.
+2) In Displayr, paste `bootstrap/displayr_bootstrap_from_github_rds.R` into one R Output.
+3) Edit one line only: raw_user_data <- <Displayr respondent table reference>.
+4) Run the script. It creates `snapshot`, `index_data`, and `colors_table`.
+
+Notes:
+- Respondent-level data is required (aggregate-only input is unsupported).
+- If URLs are not prefilled correctly, update only CONFIG URLs.
+
+Prefilled sources base URL:
+- https://raw.githubusercontent.com/Onhech/OHEP/main/ohepR/preview/test_examples/Smoke_Test/latest/sources
+
+Function syntax reference: sources/function_reference_appendix.txt

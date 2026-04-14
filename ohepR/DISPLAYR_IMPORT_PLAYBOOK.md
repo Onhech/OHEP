@@ -1,16 +1,13 @@
-# Displayr Template Bootstrap Playbook (ohepR)
+# Displayr Bootstrap Playbook (RDS Workflow Only)
 
-Use one primary flow: load ohepR runtime functions and static reference data from GitHub-hosted RDS files inside Displayr. Use CSV upload + single-paste script only as fallback/debug.
+This package now uses one primary setup flow: **GitHub-hosted RDS sources + one Displayr bootstrap script**.
 
-## 1) Build the Bootstrap Package
-
-Run in `ohepR/`:
+## 1) Generate the bundle
 
 ```r
 library(ohepR)
 
 inputs <- example_fundamental_inputs()
-
 static_bundle <- build_displayr_static_bundle(
   index_data = inputs$index_data,
   predictive_data = inputs$index_data$predictive_data
@@ -18,40 +15,37 @@ static_bundle <- build_displayr_static_bundle(
 
 write_displayr_template_bootstrap(
   static_bundle = static_bundle,
-  out_dir = "displayr_payload_export"
+  out_dir = "displayr_bootstrap"
 )
 ```
 
-This writes:
+Generated structure:
 
-- `00_START_HERE.txt`
-- `displayr_payload/displayr_bootstrap_from_github_rds.R` (primary Displayr script)
-- `displayr_payload/displayr_bootstrap_single_paste.R` (fallback script)
-- `displayr_payload/*.csv` (fallback static tables)
-- `displayr_payload/README_payload_files.txt`
-- `displayr_support/template_functions_bundle.rds`
-- `displayr_support/template_static_bundle.rds`
-- `displayr_support/README_displayr_setup.txt`
-- `displayr_support/README_support_files.txt`
-- `displayr_support/function_reference_appendix.txt`
-- `displayr_support/manifest.csv`
+- `DISPLAYR_SETUP.txt` (single setup instructions file)
+- `bootstrap/displayr_bootstrap_from_github_rds.R` (paste this into Displayr)
+- `sources/template_functions_bundle.rds`
+- `sources/template_static_bundle.rds`
+- `sources/function_reference_appendix.txt`
+- `sources/manifest.csv`
 
-## 2) Primary Displayr Setup (GitHub RDS)
+## 2) Push bundle to GitHub
 
-1. Commit/push the generated `displayr_support/*.rds` files to GitHub.
-2. In Displayr, add one R Output and paste `displayr_payload/displayr_bootstrap_from_github_rds.R`.
-3. Edit only:
-   - `CONFIG$functions_rds_url` (raw GitHub URL pinned to commit SHA)
-   - `CONFIG$static_bundle_rds_url` (raw GitHub URL pinned to commit SHA)
-   - `raw_user_data <- <Displayr respondent table reference>`
-4. Run once; this creates `index_data`, `colors_table`, and `snapshot`.
+Commit and push the generated folder so files in `sources/` are reachable by raw GitHub URL.
 
-Notes:
+## 3) In Displayr
 
-- `raw_user_data` must be respondent-level and include `company`, `year`, plus required item columns.
-- Aggregate-only input is not supported.
+1. Paste `bootstrap/displayr_bootstrap_from_github_rds.R` into one R Output.
+2. Edit one line only:
 
-## 3) Render Outputs in Displayr
+```r
+raw_user_data <- <Displayr respondent table reference>
+```
+
+3. Run the script.
+
+It creates `snapshot`, `index_data`, and `colors_table`.
+
+## 4) Render charts
 
 Use page functions with `marts = snapshot`, for example:
 
@@ -63,14 +57,8 @@ fundamental <- as.character(snapshot$company_fundamental_year$fundamental_id[[1]
 fundamental_page(company = company, year = year, fundamental = fundamental, marts = snapshot)
 ```
 
-All page functions return HTML tag objects/snippets suitable for Displayr rendering.
+## Notes
 
-## 4) Fallback Path (Only if Needed)
-
-If GitHub RDS loading is blocked in your environment:
-
-1. Upload CSVs from `displayr_payload/`.
-2. Paste `displayr_payload/displayr_bootstrap_single_paste.R`.
-3. Edit `DATASET_MAP` and run.
-
-Treat this as fallback/debug, not the default workflow.
+- Input must be respondent-level data.
+- Required schema checks are enforced in the bootstrap script.
+- Legacy CSV/single-paste assets are optional (`include_fallback = TRUE`) and not part of normal usage.

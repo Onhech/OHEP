@@ -421,23 +421,26 @@ build_displayr_function_reference <- function() {
       title = "Write Displayr Template Bootstrap Files",
       purpose = "Export the exact files needed to initialize a Displayr template.",
       description = c(
-        "Creates two folders under `out_dir`:",
-        "- `displayr_payload/`: files to upload or paste into Displayr.",
-        "- `displayr_support/`: setup notes, manifest, and optional RDS archive."
+        "Creates an RDS-first bundle under `out_dir` for Displayr.",
+        "Primary script is placed in `bootstrap/` and source artifacts are placed in `sources/`.",
+        "CSV/single-paste files are optional fallback outputs under `legacy_optional/`."
       ),
       arg_docs = list(
         static_bundle = "list, required. Output from `build_displayr_static_bundle()`.",
         out_dir = "character scalar path, required. Target directory.",
-        include_rds = "logical, optional. If TRUE, writes `displayr_support/template_static_bundle.rds`.",
+        include_rds = "logical, optional. If TRUE, writes source RDS files in `sources/`.",
         dataset_names = paste(
           "named list, optional. Must include `index_item_data`, `index_user_data_key`,",
           "`predictive_data`, `colors_table`, and `raw_user_data`."
-        )
+        ),
+        include_fallback = "logical, optional. If TRUE, writes legacy CSV + single-paste fallback artifacts.",
+        github_repo = "character scalar, optional. GitHub `owner/repo` used to prefill raw source URLs.",
+        github_ref = "character scalar, optional. Git ref (prefer commit SHA) used to prefill raw source URLs."
       ),
       details = c(
-        "Primary script: `displayr_payload/displayr_bootstrap_from_github_rds.R`.",
-        "Set commit-SHA pinned raw GitHub URLs for function/static RDS files and edit only `raw_user_data <- ...`.",
-        "Fallback script: `displayr_payload/displayr_bootstrap_single_paste.R` for CSV-upload workflows."
+        "Primary script: `bootstrap/displayr_bootstrap_from_github_rds.R`.",
+        "By default, only RDS workflow artifacts are generated for day-to-day use.",
+        "Edit only `raw_user_data <- ...` in Displayr when URLs are correctly prefilled."
       ),
       value = "Returns `out_dir` invisibly.",
       examples = c(
@@ -1101,14 +1104,20 @@ build_displayr_function_reference <- function() {
 #' Write Displayr Template Bootstrap Files
 #'
 #' Write a streamlined bootstrap payload for template-based Displayr workflows.
-#' Exports only the files required for Displayr setup.
+#' Defaults to a GitHub-RDS-first workflow with one copy/paste script for Displayr.
 #'
 #' @param static_bundle Output of [build_displayr_static_bundle()].
 #' @param out_dir Output directory to create/update.
-#' @param include_rds Logical; when `TRUE` writes `template_static_bundle.rds`.
+#' @param include_rds Logical; when `TRUE` writes RDS source bundles.
 #' @param dataset_names Named list controlling expected Displayr object names:
 #'   `index_item_data`, `index_user_data_key`, `predictive_data`, `colors_table`,
 #'   `raw_user_data`.
+#' @param include_fallback Logical; when `TRUE`, also writes optional CSV +
+#'   single-paste fallback artifacts under `legacy_optional/`.
+#' @param github_repo Optional `owner/repo` for raw GitHub URL prefill.
+#'   If `NULL`, inferred from git `remote.origin.url` when possible.
+#' @param github_ref Optional git ref (prefer commit SHA) for raw GitHub URL
+#'   prefill. If `NULL`, inferred from `git rev-parse HEAD` when possible.
 #'
 #' @return Invisibly returns `out_dir`.
 #' @export
@@ -1122,7 +1131,10 @@ write_displayr_template_bootstrap <- function(
     predictive_data = "predictive_data",
     colors_table = "colors_table",
     raw_user_data = "raw_user_data"
-  )
+  ),
+  include_fallback = FALSE,
+  github_repo = NULL,
+  github_ref = NULL
 ) {
   if (!is.list(static_bundle) || !is.list(static_bundle$index_data) || !is.data.frame(static_bundle$index_data$item_data)) {
     stop("`static_bundle` must come from `build_displayr_static_bundle()`.", call. = FALSE)
@@ -1139,26 +1151,71 @@ write_displayr_template_bootstrap <- function(
     stop("`dataset_names` must include: index_item_data, index_user_data_key, predictive_data, colors_table, raw_user_data.", call. = FALSE)
   }
 
+  if (!is.logical(include_fallback) || length(include_fallback) != 1L || is.na(include_fallback)) {
+    stop("`include_fallback` must be TRUE or FALSE.", call. = FALSE)
+  }
+
+  if (!is.null(github_repo) && (!is.character(github_repo) || length(github_repo) != 1L || !nzchar(github_repo))) {
+    stop("`github_repo` must be NULL or a non-empty `owner/repo` string.", call. = FALSE)
+  }
+  if (!is.null(github_ref) && (!is.character(github_ref) || length(github_ref) != 1L || !nzchar(github_ref))) {
+    stop("`github_ref` must be NULL or a non-empty git ref string.", call. = FALSE)
+  }
+
+  parse_github_repo <- function(remote_url) {
+    if (!is.character(remote_url) || length(remote_url) < 1L || !nzchar(remote_url[[1]])) return(NULL)
+    u <- remote_url[[1]]
+    u <- sub("\\.git$", "", u)
+    if (grepl("^git@github.com:", u)) {
+      return(sub("^git@github.com:", "", u))
+    }
+    if (grepl("^https://github.com/", u)) {
+      return(sub("^https://github.com/", "", u))
+    }
+    NULL
+  }
+
+  infer_git_value <- function(args) {
+    out <- tryCatch(
+      suppressWarnings(system2("git", args = args, stdout = TRUE, stderr = FALSE)),
+      error = function(e) character(0)
+    )
+    if (length(out) < 1L) return(NULL)
+    val <- trimws(out[[1]])
+    if (!nzchar(val)) return(NULL)
+    val
+  }
+
+  infer_repo_root <- function() {
+    infer_git_value(c("rev-parse", "--show-toplevel"))
+  }
+
+  repo_guess <- github_repo
+  if (is.null(repo_guess)) {
+    repo_guess <- parse_github_repo(infer_git_value(c("config", "--get", "remote.origin.url")))
+  }
+
+  ref_guess <- github_ref
+  if (is.null(ref_guess)) {
+    ref_guess <- infer_git_value(c("rev-parse", "--abbrev-ref", "HEAD"))
+  }
+  if (is.null(ref_guess)) {
+    ref_guess <- infer_git_value(c("rev-parse", "HEAD"))
+  }
+
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
-  payload_dir <- file.path(out_dir, "displayr_payload")
-  support_dir <- file.path(out_dir, "displayr_support")
-  dir.create(payload_dir, recursive = TRUE, showWarnings = FALSE)
-  dir.create(support_dir, recursive = TRUE, showWarnings = FALSE)
+  bootstrap_dir <- file.path(out_dir, "bootstrap")
+  sources_dir <- file.path(out_dir, "sources")
+  dir.create(bootstrap_dir, recursive = TRUE, showWarnings = FALSE)
+  dir.create(sources_dir, recursive = TRUE, showWarnings = FALSE)
+  legacy_dir <- file.path(out_dir, "legacy_optional")
+  if (isTRUE(include_fallback)) {
+    dir.create(legacy_dir, recursive = TRUE, showWarnings = FALSE)
+  }
   write_csv <- function(x, path) utils::write.csv(x, path, row.names = FALSE)
 
-  write_csv(static_bundle$index_data$item_data, file.path(payload_dir, "01_index_item_data.csv"))
-  if (!is.null(static_bundle$index_data$user_data_key) && is.data.frame(static_bundle$index_data$user_data_key)) {
-    write_csv(static_bundle$index_data$user_data_key, file.path(payload_dir, "02_index_user_data_key.csv"))
-  }
-  if (!is.null(static_bundle$predictive_data) && is.data.frame(static_bundle$predictive_data)) {
-    write_csv(static_bundle$predictive_data, file.path(payload_dir, "03_predictive_data.csv"))
-  }
-  write_csv(static_bundle$colors_table, file.path(payload_dir, "04_colors_table.csv"))
-
-  mapping_script <- build_displayr_mapping_script(dataset_names = dataset_names)
-
   # Build a single pasteable script containing all exported ohepR functions
-  # followed by the dataset mapping block.
+  # lines for GitHub-loaded runtime.
   ns <- asNamespace("ohepR")
   exported <- sort(getNamespaceExports("ohepR"))
   runtime_lines <- character(0)
@@ -1170,47 +1227,45 @@ write_displayr_template_bootstrap <- function(
   )
   close(tc)
 
-  single_paste_path <- file.path(payload_dir, "displayr_bootstrap_single_paste.R")
-  con <- file(single_paste_path, open = "wt", encoding = "UTF-8")
-  on.exit(close(con), add = TRUE)
-  writeLines(
-    c(
-      "# Single-paste Displayr bootstrap script",
-      "# 1) Upload CSVs from this folder.",
-      "# 2) Paste this whole script into one Displayr R Output.",
-      "# 3) Edit DATASET_MAP only, then run.",
-      "",
-      "# ohepR runtime function bundle for Displayr",
-      ""
-    ),
-    con = con,
-    useBytes = TRUE
-  )
-  writeLines(runtime_lines, con = con, useBytes = TRUE)
-  writeLines(c("", mapping_script), con = con, useBytes = TRUE)
-  close(con)
-  on.exit(NULL, add = FALSE)
-
   functions_bundle <- list(
     exported = exported,
     runtime_script_lines = runtime_lines,
     generated_at_utc = format(Sys.time(), "%Y-%m-%d %H:%M:%S", tz = "UTC")
   )
   if (isTRUE(include_rds)) {
-    saveRDS(functions_bundle, file.path(support_dir, "template_functions_bundle.rds"))
+    saveRDS(functions_bundle, file.path(sources_dir, "template_functions_bundle.rds"))
+  }
+
+  static_rds_path <- file.path(sources_dir, "template_static_bundle.rds")
+  if (isTRUE(include_rds)) {
+    saveRDS(static_bundle, static_rds_path)
+  }
+
+  repo_root <- infer_repo_root()
+  sources_rel <- NULL
+  if (!is.null(repo_root)) {
+    repo_root_norm <- normalizePath(repo_root, winslash = "/", mustWork = FALSE)
+    sources_norm <- normalizePath(sources_dir, winslash = "/", mustWork = FALSE)
+    prefix <- paste0(repo_root_norm, "/")
+    if (startsWith(sources_norm, prefix)) {
+      sources_rel <- substring(sources_norm, nchar(prefix) + 1L)
+    }
+  }
+
+  placeholder_base <- "https://raw.githubusercontent.com/<owner>/<repo>/<commit-sha>/<path-to-sources>"
+  sources_base_url <- placeholder_base
+  if (!is.null(repo_guess) && !is.null(ref_guess) && !is.null(sources_rel)) {
+    sources_base_url <- sprintf("https://raw.githubusercontent.com/%s/%s/%s", repo_guess, ref_guess, sources_rel)
   }
 
   github_loader_lines <- c(
     "# Displayr GitHub RDS Bootstrap Script",
-    "# PRIMARY FLOW: load ohepR functions + static data from GitHub-hosted RDS files.",
-    "# Pin URLs to a commit SHA for reproducibility.",
-    "# Edit the CONFIG block and raw_user_data assignment only.",
+    "# PRIMARY FLOW: paste into Displayr and edit only raw_user_data assignment.",
+    "# URLs are pre-filled when git remote/ref/path can be inferred.",
     "",
     "CONFIG <- list(",
-    "  # Example pinned URL:",
-    "  # https://raw.githubusercontent.com/<owner>/<repo>/<commit-sha>/<path>/displayr_support/template_functions_bundle.rds",
-    "  functions_rds_url = \"https://raw.githubusercontent.com/<owner>/<repo>/<commit-sha>/<path>/displayr_support/template_functions_bundle.rds\",",
-    "  static_bundle_rds_url = \"https://raw.githubusercontent.com/<owner>/<repo>/<commit-sha>/<path>/displayr_support/template_static_bundle.rds\"",
+    sprintf("  functions_rds_url = \"%s/template_functions_bundle.rds\",", sources_base_url),
+    sprintf("  static_bundle_rds_url = \"%s/template_static_bundle.rds\"", sources_base_url),
     ")",
     "",
     "read_rds_url <- function(u) {",
@@ -1274,109 +1329,75 @@ write_displayr_template_bootstrap <- function(
     "# fundamental <- as.character(snapshot$company_fundamental_year$fundamental_id[[1]])",
     "# fundamental_page(company = company, year = year, fundamental = fundamental, marts = snapshot)"
   )
-  writeLines(github_loader_lines, file.path(payload_dir, "displayr_bootstrap_from_github_rds.R"), useBytes = TRUE)
-
-  payload_readme_lines <- c(
-    "Displayr Payload Folder",
-    "",
-    "Use this folder directly in Displayr.",
-    "",
-    "Primary script:",
-    "- displayr_bootstrap_from_github_rds.R",
-    "  Loads ohepR functions + static bundle from GitHub-hosted RDS files.",
-    "  Edit CONFIG URLs and one line: raw_user_data <- <Displayr respondent table reference>.",
-    "",
-    "Fallback script:",
-    "- displayr_bootstrap_single_paste.R",
-    "  Use only when GitHub RDS loading is unavailable.",
-    "",
-    "Fallback CSV files:",
-    "- 01_index_item_data.csv",
-    "- 02_index_user_data_key.csv",
-    "- 03_predictive_data.csv",
-    "- 04_colors_table.csv"
-  )
-  writeLines(payload_readme_lines, file.path(payload_dir, "README_payload_files.txt"), useBytes = TRUE)
+  writeLines(github_loader_lines, file.path(bootstrap_dir, "displayr_bootstrap_from_github_rds.R"), useBytes = TRUE)
 
   setup_lines <- c(
-    "Displayr Template Bootstrap Setup (Primary: GitHub RDS)",
+    "Displayr Setup (RDS Workflow Only)",
     "",
-    "Primary path:",
-    "1) Paste `displayr_payload/displayr_bootstrap_from_github_rds.R` into one Displayr R Output.",
-    "2) Set `CONFIG$functions_rds_url` and `CONFIG$static_bundle_rds_url` to pinned commit-SHA raw URLs.",
-    "3) Set one line: `raw_user_data <- <Displayr respondent table reference>`.",
-    "4) Run script. It creates `index_data`, `colors_table`, and `snapshot`.",
+    "1) Commit/push this generated folder so `sources/*.rds` are reachable by URL.",
+    "2) In Displayr, paste `bootstrap/displayr_bootstrap_from_github_rds.R` into one R Output.",
+    "3) Edit one line only: raw_user_data <- <Displayr respondent table reference>.",
+    "4) Run the script. It creates `snapshot`, `index_data`, and `colors_table`.",
     "",
-    "Fallback path (CSV + local single paste):",
-    "5) Upload static CSVs from `displayr_payload/` and paste `displayr_payload/displayr_bootstrap_single_paste.R`.",
-    sprintf("6) In fallback mode, map names as: %s, %s, %s, %s, %s",
-      dataset_names$index_item_data,
-      dataset_names$index_user_data_key,
-      dataset_names$predictive_data,
-      dataset_names$colors_table,
-      dataset_names$raw_user_data),
+    "Notes:",
+    "- Respondent-level data is required (aggregate-only input is unsupported).",
+    "- If URLs are not prefilled correctly, update only CONFIG URLs.",
     "",
-    "7) Use chart functions with marts = snapshot (e.g., fundamental_page(..., marts = snapshot)).",
-    "8) Aggregate-only user data is not supported; respondent-level item columns are required.",
-    "9) See function_reference_appendix.txt for syntax and usage of all exported functions."
+    "Prefilled sources base URL:",
+    paste0("- ", sources_base_url),
+    "",
+    "Function syntax reference: sources/function_reference_appendix.txt"
   )
-  writeLines(setup_lines, con = file.path(support_dir, "README_displayr_setup.txt"), useBytes = TRUE)
+  writeLines(setup_lines, con = file.path(out_dir, "DISPLAYR_SETUP.txt"), useBytes = TRUE)
   writeLines(
     build_displayr_function_reference(),
-    con = file.path(support_dir, "function_reference_appendix.txt"),
+    con = file.path(sources_dir, "function_reference_appendix.txt"),
     useBytes = TRUE
   )
 
-  support_readme_lines <- c(
-    "Displayr Support Folder",
-    "",
-    "template_functions_bundle.rds",
-    "- Serialized exported ohepR runtime function script lines.",
-    "",
-    "template_static_bundle.rds",
-    "- Serialized static data bundle (index_data, predictive_data, colors_table).",
-    "",
-    "README_displayr_setup.txt",
-    "- Step-by-step Displayr setup instructions (primary + fallback).",
-    "",
-    "function_reference_appendix.txt",
-    "- Function syntax and argument reference for Displayr users without RStudio help panes.",
-    "",
-    "manifest.csv",
-    "- Metadata about this generated payload bundle."
-  )
-  writeLines(support_readme_lines, file.path(support_dir, "README_support_files.txt"), useBytes = TRUE)
-
   manifest <- data.frame(
-    field = c("bundle_id", "generated_at_utc", "payload_dir", "support_dir", "supports_github_rds_loader"),
+    field = c("bundle_id", "generated_at_utc", "bootstrap_dir", "sources_dir", "sources_base_url", "supports_github_rds_loader"),
     value = c(
       as.character(static_bundle$bundle_meta$bundle_id[[1]]),
       as.character(static_bundle$bundle_meta$generated_at_utc[[1]]),
-      "displayr_payload",
-      "displayr_support",
+      "bootstrap",
+      "sources",
+      sources_base_url,
       "yes"
     ),
     stringsAsFactors = FALSE
   )
-  write_csv(manifest, file.path(support_dir, "manifest.csv"))
+  write_csv(manifest, file.path(sources_dir, "manifest.csv"))
 
-  if (isTRUE(include_rds)) {
-    saveRDS(static_bundle, file.path(support_dir, "template_static_bundle.rds"))
+  if (isTRUE(include_fallback)) {
+    write_csv(static_bundle$index_data$item_data, file.path(legacy_dir, "01_index_item_data.csv"))
+    if (!is.null(static_bundle$index_data$user_data_key) && is.data.frame(static_bundle$index_data$user_data_key)) {
+      write_csv(static_bundle$index_data$user_data_key, file.path(legacy_dir, "02_index_user_data_key.csv"))
+    }
+    if (!is.null(static_bundle$predictive_data) && is.data.frame(static_bundle$predictive_data)) {
+      write_csv(static_bundle$predictive_data, file.path(legacy_dir, "03_predictive_data.csv"))
+    }
+    write_csv(static_bundle$colors_table, file.path(legacy_dir, "04_colors_table.csv"))
+    mapping_script <- build_displayr_mapping_script(dataset_names = dataset_names)
+    single_paste_path <- file.path(legacy_dir, "displayr_bootstrap_single_paste.R")
+    con <- file(single_paste_path, open = "wt", encoding = "UTF-8")
+    on.exit(close(con), add = TRUE)
+    writeLines(
+      c(
+        "# Optional fallback script (legacy CSV workflow).",
+        "# Primary Displayr workflow uses bootstrap/displayr_bootstrap_from_github_rds.R.",
+        "",
+        "# ohepR runtime function bundle for Displayr",
+        ""
+      ),
+      con = con,
+      useBytes = TRUE
+    )
+    writeLines(runtime_lines, con = con, useBytes = TRUE)
+    writeLines(c("", mapping_script), con = con, useBytes = TRUE)
+    close(con)
+    on.exit(NULL, add = FALSE)
   }
-
-  start_here_lines <- c(
-    "START HERE: Displayr Bootstrap Package",
-    "",
-    "1) Open displayr_support/README_displayr_setup.txt and follow the Primary path.",
-    "2) Use displayr_payload/displayr_bootstrap_from_github_rds.R in Displayr.",
-    "3) Set one Displayr binding line: raw_user_data <- <Displayr respondent table reference>.",
-    "4) Keep fallback files only for environments where GitHub RDS loading is blocked.",
-    "",
-    "Folder guide:",
-    "- displayr_payload/: scripts + fallback CSVs used in Displayr.",
-    "- displayr_support/: RDS bundles, setup documentation, and function appendix."
-  )
-  writeLines(start_here_lines, file.path(out_dir, "00_START_HERE.txt"), useBytes = TRUE)
 
   invisible(normalizePath(out_dir, winslash = "/", mustWork = FALSE))
 }

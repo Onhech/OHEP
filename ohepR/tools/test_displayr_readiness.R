@@ -53,25 +53,17 @@ write_displayr_template_bootstrap(
   out_dir = out_dir,
   include_rds = TRUE
 )
-payload_dir <- file.path(out_dir, "displayr_payload")
-support_dir <- file.path(out_dir, "displayr_support")
+bootstrap_dir <- file.path(out_dir, "bootstrap")
+sources_dir <- file.path(out_dir, "sources")
 
 # 1a) Assert expected bootstrap artifacts exist
 must_exist <- c(
-  file.path(out_dir, "00_START_HERE.txt"),
-  file.path(payload_dir, "displayr_bootstrap_from_github_rds.R"),
-  file.path(payload_dir, "displayr_bootstrap_single_paste.R"),
-  file.path(payload_dir, "README_payload_files.txt"),
-  file.path(payload_dir, "01_index_item_data.csv"),
-  file.path(payload_dir, "02_index_user_data_key.csv"),
-  file.path(payload_dir, "03_predictive_data.csv"),
-  file.path(payload_dir, "04_colors_table.csv"),
-  file.path(support_dir, "template_functions_bundle.rds"),
-  file.path(support_dir, "template_static_bundle.rds"),
-  file.path(support_dir, "README_support_files.txt"),
-  file.path(support_dir, "README_displayr_setup.txt"),
-  file.path(support_dir, "function_reference_appendix.txt"),
-  file.path(support_dir, "manifest.csv")
+  file.path(out_dir, "DISPLAYR_SETUP.txt"),
+  file.path(bootstrap_dir, "displayr_bootstrap_from_github_rds.R"),
+  file.path(sources_dir, "template_functions_bundle.rds"),
+  file.path(sources_dir, "template_static_bundle.rds"),
+  file.path(sources_dir, "function_reference_appendix.txt"),
+  file.path(sources_dir, "manifest.csv")
 )
 missing_files <- must_exist[!file.exists(must_exist)]
 if (length(missing_files) > 0L) {
@@ -79,9 +71,10 @@ if (length(missing_files) > 0L) {
 }
 
 # 1b) Static content assertions for GitHub loader + README
-gh_script <- readLines(file.path(payload_dir, "displayr_bootstrap_from_github_rds.R"), warn = FALSE)
+gh_script <- readLines(file.path(bootstrap_dir, "displayr_bootstrap_from_github_rds.R"), warn = FALSE)
 if (!any(grepl("^CONFIG <- list\\(", gh_script))) stop("GitHub loader missing CONFIG block.", call. = FALSE)
 if (!any(grepl("^raw_user_data <-", gh_script))) stop("GitHub loader missing explicit raw_user_data binding line.", call. = FALSE)
+if (!any(grepl("raw.githubusercontent.com", gh_script, fixed = TRUE))) stop("GitHub loader missing prefilled raw URL.", call. = FALSE)
 if (!any(grepl("required_base_cols <- c\\(\"company\", \"year\"\\)", gh_script, fixed = FALSE))) {
   stop("GitHub loader missing base column preflight check.", call. = FALSE)
 }
@@ -92,13 +85,13 @@ if (!any(grepl("Aggregate-only user data is not supported", gh_script, fixed = T
   stop("GitHub loader missing aggregate-only guard.", call. = FALSE)
 }
 
-setup_txt <- readLines(file.path(support_dir, "README_displayr_setup.txt"), warn = FALSE)
-if (!any(grepl("Primary path:", setup_txt, fixed = TRUE))) stop("README missing primary path section.", call. = FALSE)
-if (!any(grepl("Fallback path", setup_txt, fixed = TRUE))) stop("README missing fallback path section.", call. = FALSE)
+setup_txt <- readLines(file.path(out_dir, "DISPLAYR_SETUP.txt"), warn = FALSE)
+if (!any(grepl("RDS Workflow Only", setup_txt, fixed = TRUE))) stop("Setup file missing workflow heading.", call. = FALSE)
+if (!any(grepl("Edit one line only", setup_txt, fixed = TRUE))) stop("Setup file missing one-line edit instruction.", call. = FALSE)
 
 # 1c) Functional dry-run simulation for GitHub loader with local file URLs
-fn_bundle <- readRDS(file.path(support_dir, "template_functions_bundle.rds"))
-static_bundle_from_file <- readRDS(file.path(support_dir, "template_static_bundle.rds"))
+fn_bundle <- readRDS(file.path(sources_dir, "template_functions_bundle.rds"))
+static_bundle_from_file <- readRDS(file.path(sources_dir, "template_static_bundle.rds"))
 tmp_env <- new.env(parent = baseenv())
 eval(parse(text = fn_bundle$runtime_script_lines), envir = tmp_env)
 tmp_env$raw_user_data <- inputs$user_data$user_data
@@ -252,9 +245,9 @@ manifest <- data.frame(
   ),
   status = c("PASS", "PASS", "PASS", "PASS", "PASS", "PASS", "PASS", "PASS", "PASS"),
   details = c(
-    normalizePath(payload_dir, mustWork = TRUE),
+    normalizePath(bootstrap_dir, mustWork = TRUE),
     "required bootstrap files found",
-    "CONFIG/raw_user_data/preflight checks verified",
+    "CONFIG/raw URL/raw_user_data/preflight checks verified",
     "functions bundle + static bundle local simulation succeeded",
     "missing company and missing item columns fail as expected",
     "validate_displayr_schema(payload)",
@@ -267,30 +260,10 @@ manifest <- data.frame(
 manifest_path <- file.path(run_info_dir, "smoke_test_manifest.csv")
 utils::write.csv(manifest, manifest_path, row.names = FALSE)
 
-run_guide <- c(
-  "Smoke Test Run Guide",
-  "",
-  paste0("Run stamp: ", now_stamp),
-  "",
-  "What this run validated:",
-  "- Displayr bootstrap bundle generation",
-  "- GitHub RDS bootstrap script structure",
-  "- Preflight schema checks for respondent data",
-  "- Snapshot build and key page renders",
-  "",
-  "Where to look:",
-  "- 00_START_HERE.txt",
-  "- displayr_payload/",
-  "- displayr_support/",
-  "- proof_renders/",
-  "- run_info/smoke_test_manifest.csv"
-)
-writeLines(run_guide, file.path(run_info_dir, "README_run_info.txt"), useBytes = TRUE)
-
 cat("\nSmoke test completed successfully.\n")
 cat("Artifacts:\n")
-cat("-", normalizePath(file.path(out_dir, "00_START_HERE.txt"), mustWork = TRUE), "\n")
-cat("-", normalizePath(payload_dir, mustWork = TRUE), "\n")
-cat("-", normalizePath(support_dir, mustWork = TRUE), "\n")
+cat("-", normalizePath(file.path(out_dir, "DISPLAYR_SETUP.txt"), mustWork = TRUE), "\n")
+cat("-", normalizePath(bootstrap_dir, mustWork = TRUE), "\n")
+cat("-", normalizePath(sources_dir, mustWork = TRUE), "\n")
 cat("-", normalizePath(proof_dir, mustWork = TRUE), "\n")
 cat("-", normalizePath(manifest_path, mustWork = TRUE), "\n")
