@@ -100,6 +100,10 @@ snapshot <- prep_ohep_snapshot(
   snapshot_id = format(Sys.time(), "%Y%m%dT%H%M%SZ", tz = "UTC")
 )
 
+# Optional first-step diagnostic pages:
+# test_data_mapping("table.company", index_data = index_data)
+# validate_data_sources(index_data = index_data, index_user_data_key = index_data$user_data_key)
+
 # Example:
 # company <- as.character(snapshot$company_fundamental_year$company[[1]])
 # year <- as.integer(snapshot$company_fundamental_year$year[[1]])

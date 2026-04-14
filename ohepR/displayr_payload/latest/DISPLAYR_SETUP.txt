@@ -6,6 +6,9 @@ Displayr Setup (RDS Workflow Only)
    The script stitches raw_user_data from vectors named table.<column>
    (or user_data.<column> / <column>).
 4) Run the script. It creates `snapshot`, `index_data`, and `colors_table`.
+5) Optional diagnostics before chart rendering:
+   - test_data_mapping("table.company", index_data = index_data)
+   - validate_data_sources(index_data = index_data, index_user_data_key = index_data$user_data_key)
 
 Notes:
 - Respondent-level data is required (aggregate-only input is unsupported).

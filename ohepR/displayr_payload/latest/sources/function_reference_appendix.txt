@@ -937,6 +937,117 @@ See Also
 
 
 ========================================================================================
+Title: Render Data Mapping Diagnostic Report
+Function: test_data_mapping
+
+One-sentence purpose
+  Probe any supplied object or object name and return a simple HTML mapping/debug report.
+
+Description
+  Use this for ad-hoc checks on object names (e.g. `table.company`), vectors, data frames, or strings.
+  When probing a data frame, validates required base and item coverage when index metadata is available.
+
+Usage
+  test_data_mapping(x = NULL, index_data = NULL, index_user_data_key = NULL, source_env = .GlobalEnv, 
+      required_base_cols = c("company", "year"), sample_rows = 5L, max_missing_preview = 40L, 
+      id = "ohep-data-mapping-probe") 
+
+Arguments
+  - x: object or character(1) object name, optional. If NULL, tries `raw_user_data` in source_env.
+  - index_data: list, optional. Provide to include item-level required-column checks.
+  - index_user_data_key: data.frame/list, optional. Reference key shown in diagnostics when available.
+  - source_env: environment, optional. Environment used for resolving object-name probes.
+  - required_base_cols: character vector, optional. Defaults to `c("company", "year")`.
+  - sample_rows: integer, optional. Number of preview rows to display in output.
+  - max_missing_preview: integer, optional. Maximum missing columns listed in detail.
+  - id: character scalar, optional HTML id.
+
+Value
+  A `htmltools` diagnostic page object with summary, logs, missing-column report, and data preview.
+
+Examples
+  diag <- test_data_mapping("raw_user_data", index_data = load_example_index_data())
+  diag <- test_data_mapping("table.company")
+  diag
+
+See Also
+  test.data()
+  validate_data_sources()
+  prep_ohep_snapshot()
+
+
+========================================================================================
+Title: Render Data Source Inventory Validator
+Function: validate_data_sources
+
+One-sentence purpose
+  Scan available environment objects and report mapping coverage at aggregate and per-column levels.
+
+Description
+  Designed for Displayr troubleshooting before full snapshot/chart runs.
+  Uses key + item coverage rules: required base columns and item ids from index metadata.
+
+Usage
+  validate_data_sources(source_env = .GlobalEnv, index_data = NULL, index_user_data_key = NULL, 
+      required_base_cols = c("company", "year"), max_sources = 50L, max_missing_preview = 60L, 
+      id = "ohep-data-source-validator") 
+
+Arguments
+  - source_env: environment, optional. Defaults to `.GlobalEnv` for Displayr runtime scans.
+  - index_data: list, optional. Supplies required item ids from `item_data$item_id`.
+  - index_user_data_key: data.frame/list, optional. Supplies expected key items for reference coverage.
+  - required_base_cols: character vector, optional. Defaults to `c("company", "year")`.
+  - max_sources: integer, optional. Limits number of scanned objects rendered.
+  - max_missing_preview: integer, optional. Limits number of listed missing columns.
+  - id: character scalar, optional HTML id.
+
+Value
+  A `htmltools` inventory report with status, source table, required-column coverage, and logs.
+
+Examples
+  validate_data_sources(index_data = load_example_index_data())
+
+See Also
+  test_data_mapping()
+  prep_ohep_snapshot()
+
+
+========================================================================================
+Title: Alias: test.data
+Function: test.data
+
+One-sentence purpose
+  Convenience alias for `test_data_mapping()`.
+
+Description
+  Accepts the same arguments as `test_data_mapping()`.
+
+Usage
+  test.data(x = NULL, index_data = NULL, index_user_data_key = NULL, source_env = .GlobalEnv, 
+      required_base_cols = c("company", "year"), sample_rows = 5L, max_missing_preview = 40L, 
+      id = "ohep-data-mapping-probe") 
+
+Arguments
+  - x: See Description.
+  - index_data: See Description.
+  - index_user_data_key: See Description.
+  - source_env: See Description.
+  - required_base_cols: See Description.
+  - sample_rows: See Description.
+  - max_missing_preview: See Description.
+  - id: See Description.
+
+Value
+  A `htmltools` diagnostic page object.
+
+Examples
+  test.data(index_data = load_example_index_data())
+
+See Also
+  test_data_mapping()
+
+
+========================================================================================
 Title: Map Delta Values to Pill CSS Class
 Function: get_delta_pill
 

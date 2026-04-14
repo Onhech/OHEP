@@ -107,7 +107,77 @@ if (!is.list(tmp_env$snapshot) || !is.data.frame(tmp_env$snapshot$company_fundam
   stop("Local URL simulation did not produce expected snapshot structure.", call. = FALSE)
 }
 
-# 1d) Failure simulations
+# 1d) Mapping diagnostics smoke checks
+diag_probe_name <- tmp_env$test_data_mapping(
+  x = "raw_user_data",
+  index_data = static_bundle_from_file$index_data,
+  source_env = tmp_env
+)
+if (!inherits(diag_probe_name, "shiny.tag.list") && !inherits(diag_probe_name, "shiny.tag")) {
+  stop("test_data_mapping(name) did not return an HTML tag object.", call. = FALSE)
+}
+
+diag_probe_missing <- tmp_env$test_data_mapping(
+  x = "does_not_exist",
+  index_data = static_bundle_from_file$index_data,
+  source_env = tmp_env
+)
+if (!inherits(diag_probe_missing, "shiny.tag.list") && !inherits(diag_probe_missing, "shiny.tag")) {
+  stop("test_data_mapping(missing) did not return an HTML tag object.", call. = FALSE)
+}
+
+diag_probe_vector <- tmp_env$test_data_mapping(x = tmp_env$raw_user_data[[1]])
+if (!inherits(diag_probe_vector, "shiny.tag.list") && !inherits(diag_probe_vector, "shiny.tag")) {
+  stop("test_data_mapping(vector) did not return an HTML tag object.", call. = FALSE)
+}
+
+diag_probe_df <- tmp_env$test_data_mapping(x = tmp_env$raw_user_data, index_data = static_bundle_from_file$index_data)
+if (!inherits(diag_probe_df, "shiny.tag.list") && !inherits(diag_probe_df, "shiny.tag")) {
+  stop("test_data_mapping(data.frame) did not return an HTML tag object.", call. = FALSE)
+}
+
+diag_probe_scalar <- tmp_env$test_data_mapping(x = "hello world")
+if (!inherits(diag_probe_scalar, "shiny.tag.list") && !inherits(diag_probe_scalar, "shiny.tag")) {
+  stop("test_data_mapping(scalar) did not return an HTML tag object.", call. = FALSE)
+}
+
+diag_inventory_full <- tmp_env$validate_data_sources(
+  source_env = tmp_env,
+  index_data = static_bundle_from_file$index_data,
+  index_user_data_key = static_bundle_from_file$index_data$user_data_key
+)
+if (!inherits(diag_inventory_full, "shiny.tag.list") && !inherits(diag_inventory_full, "shiny.tag")) {
+  stop("validate_data_sources(full) did not return an HTML tag object.", call. = FALSE)
+}
+
+tmp_missing_company <- list2env(as.list(tmp_env), parent = baseenv())
+if (exists("company", envir = tmp_missing_company, inherits = FALSE)) rm("company", envir = tmp_missing_company)
+if (exists("table.company", envir = tmp_missing_company, inherits = FALSE)) rm("table.company", envir = tmp_missing_company)
+diag_inventory_missing <- tmp_env$validate_data_sources(
+  source_env = tmp_missing_company,
+  index_data = static_bundle_from_file$index_data
+)
+if (!inherits(diag_inventory_missing, "shiny.tag.list") && !inherits(diag_inventory_missing, "shiny.tag")) {
+  stop("validate_data_sources(missing base) did not return an HTML tag object.", call. = FALSE)
+}
+
+tmp_partial_items <- list2env(as.list(tmp_env), parent = baseenv())
+required_items <- unique(as.character(static_bundle_from_file$index_data$item_data$item_id))
+required_items <- required_items[!is.na(required_items) & nzchar(required_items)]
+for (nm in utils::head(required_items, 2L)) {
+  for (cand in c(paste0("table.", nm), paste0("user_data.", nm), nm)) {
+    if (exists(cand, envir = tmp_partial_items, inherits = FALSE)) rm(list = cand, envir = tmp_partial_items)
+  }
+}
+diag_inventory_partial <- tmp_env$validate_data_sources(
+  source_env = tmp_partial_items,
+  index_data = static_bundle_from_file$index_data
+)
+if (!inherits(diag_inventory_partial, "shiny.tag.list") && !inherits(diag_inventory_partial, "shiny.tag")) {
+  stop("validate_data_sources(partial items) did not return an HTML tag object.", call. = FALSE)
+}
+
+# 1e) Failure simulations
 bad_missing_company <- inputs$user_data$user_data[, setdiff(names(inputs$user_data$user_data), "company"), drop = FALSE]
 failed <- FALSE
 tryCatch({
@@ -237,18 +307,20 @@ manifest <- data.frame(
     "bootstrap_artifacts_validated",
     "github_loader_content_validated",
     "github_loader_local_sim_passed",
+    "mapping_diagnostics_smoke_passed",
     "failure_simulations_passed",
     "payload_schema_valid",
     "fundamental_rendered",
     "demographics_rendered",
     "decision_matrix_rendered"
   ),
-  status = c("PASS", "PASS", "PASS", "PASS", "PASS", "PASS", "PASS", "PASS", "PASS"),
+  status = c("PASS", "PASS", "PASS", "PASS", "PASS", "PASS", "PASS", "PASS", "PASS", "PASS"),
   details = c(
     normalizePath(bootstrap_dir, mustWork = TRUE),
     "required bootstrap files found",
     "CONFIG/raw URL/raw_user_data/preflight checks verified",
     "functions bundle + static bundle local simulation succeeded",
+    "test_data_mapping + validate_data_sources returned HTML in all scenarios",
     "missing company and missing item columns fail as expected",
     "validate_displayr_schema(payload)",
     normalizePath(fund_html_path, mustWork = TRUE),

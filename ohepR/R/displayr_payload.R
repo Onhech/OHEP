@@ -1001,6 +1001,63 @@ build_displayr_function_reference <- function() {
       value = "Character scalar class: `bg-agree`, `bg-neutral`, or `bg-disagree`.",
       examples = c("get_sentiment_class(80)", "get_sentiment_class(45)"),
       see_also = c("get_delta_pill()")
+    ),
+
+    test_data_mapping = list(
+      title = "Render Data Mapping Diagnostic Report",
+      purpose = "Probe any supplied object or object name and return a simple HTML mapping/debug report.",
+      description = c(
+        "Use this for ad-hoc checks on object names (e.g. `table.company`), vectors, data frames, or strings.",
+        "When probing a data frame, validates required base and item coverage when index metadata is available."
+      ),
+      arg_docs = list(
+        x = "object or character(1) object name, optional. If NULL, tries `raw_user_data` in source_env.",
+        index_data = "list, optional. Provide to include item-level required-column checks.",
+        index_user_data_key = "data.frame/list, optional. Reference key shown in diagnostics when available.",
+        source_env = "environment, optional. Environment used for resolving object-name probes.",
+        required_base_cols = "character vector, optional. Defaults to `c(\"company\", \"year\")`.",
+        sample_rows = "integer, optional. Number of preview rows to display in output.",
+        max_missing_preview = "integer, optional. Maximum missing columns listed in detail.",
+        id = "character scalar, optional HTML id."
+      ),
+      value = "A `htmltools` diagnostic page object with summary, logs, missing-column report, and data preview.",
+      examples = c(
+        "diag <- test_data_mapping(\"raw_user_data\", index_data = load_example_index_data())",
+        "diag <- test_data_mapping(\"table.company\")",
+        "diag"
+      ),
+      see_also = c("test.data()", "validate_data_sources()", "prep_ohep_snapshot()")
+    ),
+
+    validate_data_sources = list(
+      title = "Render Data Source Inventory Validator",
+      purpose = "Scan available environment objects and report mapping coverage at aggregate and per-column levels.",
+      description = c(
+        "Designed for Displayr troubleshooting before full snapshot/chart runs.",
+        "Uses key + item coverage rules: required base columns and item ids from index metadata."
+      ),
+      arg_docs = list(
+        source_env = "environment, optional. Defaults to `.GlobalEnv` for Displayr runtime scans.",
+        index_data = "list, optional. Supplies required item ids from `item_data$item_id`.",
+        index_user_data_key = "data.frame/list, optional. Supplies expected key items for reference coverage.",
+        required_base_cols = "character vector, optional. Defaults to `c(\"company\", \"year\")`.",
+        max_sources = "integer, optional. Limits number of scanned objects rendered.",
+        max_missing_preview = "integer, optional. Limits number of listed missing columns.",
+        id = "character scalar, optional HTML id."
+      ),
+      value = "A `htmltools` inventory report with status, source table, required-column coverage, and logs.",
+      examples = c("validate_data_sources(index_data = load_example_index_data())"),
+      see_also = c("test_data_mapping()", "prep_ohep_snapshot()")
+    ),
+
+    test.data = list(
+      title = "Alias: test.data",
+      purpose = "Convenience alias for `test_data_mapping()`.",
+      description = c("Accepts the same arguments as `test_data_mapping()`."),
+      arg_docs = list(),
+      value = "A `htmltools` diagnostic page object.",
+      examples = c("test.data(index_data = load_example_index_data())"),
+      see_also = c("test_data_mapping()")
     )
   )
 
@@ -1073,6 +1130,9 @@ build_displayr_function_reference <- function() {
     "example_fundamental_inputs",
     "example_ohep_snapshot",
     "example_displayr_payload",
+    "test_data_mapping",
+    "validate_data_sources",
+    "test.data",
     "get_delta_pill",
     "get_sentiment_class"
   )
@@ -1218,10 +1278,14 @@ write_displayr_template_bootstrap <- function(
   # lines for GitHub-loaded runtime.
   ns <- asNamespace("ohepR")
   exported <- sort(getNamespaceExports("ohepR"))
+  runtime_symbols <- exported
+  if (exists(".diag_render_report", envir = ns, inherits = FALSE)) {
+    runtime_symbols <- unique(c(runtime_symbols, ".diag_render_report"))
+  }
   runtime_lines <- character(0)
   tc <- textConnection("runtime_lines", open = "w", local = TRUE)
   dump(
-    list = exported,
+    list = runtime_symbols,
     file = tc,
     envir = ns
   )
@@ -1361,6 +1425,10 @@ write_displayr_template_bootstrap <- function(
     "  snapshot_id = format(Sys.time(), \"%Y%m%dT%H%M%SZ\", tz = \"UTC\")",
     ")",
     "",
+    "# Optional first-step diagnostic pages:",
+    "# test_data_mapping(\"table.company\", index_data = index_data)",
+    "# validate_data_sources(index_data = index_data, index_user_data_key = index_data$user_data_key)",
+    "",
     "# Example:",
     "# company <- as.character(snapshot$company_fundamental_year$company[[1]])",
     "# year <- as.integer(snapshot$company_fundamental_year$year[[1]])",
@@ -1378,6 +1446,9 @@ write_displayr_template_bootstrap <- function(
     "   The script stitches raw_user_data from vectors named table.<column>",
     "   (or user_data.<column> / <column>).",
     "4) Run the script. It creates `snapshot`, `index_data`, and `colors_table`.",
+    "5) Optional diagnostics before chart rendering:",
+    "   - test_data_mapping(\"table.company\", index_data = index_data)",
+    "   - validate_data_sources(index_data = index_data, index_user_data_key = index_data$user_data_key)",
     "",
     "Notes:",
     "- Respondent-level data is required (aggregate-only input is unsupported).",

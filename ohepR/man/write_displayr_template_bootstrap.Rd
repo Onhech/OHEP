@@ -10,7 +10,10 @@ write_displayr_template_bootstrap(
   include_rds = TRUE,
   dataset_names = list(index_item_data = "index_item_data", index_user_data_key =
     "index_user_data_key", predictive_data = "predictive_data", colors_table =
-    "colors_table", raw_user_data = "raw_user_data")
+    "colors_table", raw_user_data = "raw_user_data"),
+  include_fallback = FALSE,
+  github_repo = NULL,
+  github_ref = NULL
 )
 }
 \arguments{
@@ -18,16 +21,25 @@ write_displayr_template_bootstrap(
 
 \item{out_dir}{Output directory to create/update.}
 
-\item{include_rds}{Logical; when \code{TRUE} writes \code{template_static_bundle.rds}.}
+\item{include_rds}{Logical; when \code{TRUE} writes RDS source bundles.}
 
 \item{dataset_names}{Named list controlling expected Displayr object names:
 \code{index_item_data}, \code{index_user_data_key}, \code{predictive_data}, \code{colors_table},
 \code{raw_user_data}.}
+
+\item{include_fallback}{Logical; when \code{TRUE}, also writes optional CSV +
+single-paste fallback artifacts under \verb{legacy_optional/}.}
+
+\item{github_repo}{Optional \code{owner/repo} for raw GitHub URL prefill.
+If \code{NULL}, inferred from git \code{remote.origin.url} when possible.}
+
+\item{github_ref}{Optional git ref (prefer commit SHA) for raw GitHub URL
+prefill. If \code{NULL}, inferred from \verb{git rev-parse HEAD} when possible.}
 }
 \value{
 Invisibly returns \code{out_dir}.
 }
 \description{
 Write a streamlined bootstrap payload for template-based Displayr workflows.
-Exports only the files required for Displayr setup.
+Defaults to a GitHub-RDS-first workflow with one copy/paste script for Displayr.
 }

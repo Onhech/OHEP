@@ -3,6 +3,7 @@
 "bootstrap_artifacts_validated","PASS","required bootstrap files found"
 "github_loader_content_validated","PASS","CONFIG/raw URL/raw_user_data/preflight checks verified"
 "github_loader_local_sim_passed","PASS","functions bundle + static bundle local simulation succeeded"
+"mapping_diagnostics_smoke_passed","PASS","test_data_mapping + validate_data_sources returned HTML in all scenarios"
 "failure_simulations_passed","PASS","missing company and missing item columns fail as expected"
 "payload_schema_valid","PASS","validate_displayr_schema(payload)"
 "fundamental_rendered","PASS","/Users/lyndenjensen/Documents/GitHub/OHEP/ohepR/displayr_payload/latest/proof_renders/01_fundamental_smoke.html"
