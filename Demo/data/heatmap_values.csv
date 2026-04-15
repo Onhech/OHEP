@@ -1,0 +1,57 @@
+"segment_type_id","row_label","segment_value_id","segment_value_label","value"
+"department","Purpose","business_development","Business Development",4.57
+"department","Purpose","capital_programs","Capital Programs",4.22
+"department","Purpose","completions_strategy","Completions Strategy",4.59
+"department","Purpose","corporate_services","Corporate Services",4.47
+"department","Purpose","cross_functional_groups","Cross-Functional Groups",4.48
+"department","Purpose","data_insights","Data & Insights",4.18
+"department","Purpose","operations_delivery","Operations Delivery",4.15
+"department","Strategy","business_development","Business Development",4.21
+"department","Strategy","capital_programs","Capital Programs",3.99
+"department","Strategy","completions_strategy","Completions Strategy",4.34
+"department","Strategy","corporate_services","Corporate Services",4.12
+"department","Strategy","cross_functional_groups","Cross-Functional Groups",4.21
+"department","Strategy","data_insights","Data & Insights",3.92
+"department","Strategy","operations_delivery","Operations Delivery",3.65
+"department","Leadership","business_development","Business Development",4.47
+"department","Leadership","capital_programs","Capital Programs",4.18
+"department","Leadership","completions_strategy","Completions Strategy",4.47
+"department","Leadership","corporate_services","Corporate Services",4.36
+"department","Leadership","cross_functional_groups","Cross-Functional Groups",4.4
+"department","Leadership","data_insights","Data & Insights",4.09
+"department","Leadership","operations_delivery","Operations Delivery",3.98
+"department","Communication","business_development","Business Development",4.43
+"department","Communication","capital_programs","Capital Programs",4.07
+"department","Communication","completions_strategy","Completions Strategy",4.4
+"department","Communication","corporate_services","Corporate Services",4.13
+"department","Communication","cross_functional_groups","Cross-Functional Groups",4.26
+"department","Communication","data_insights","Data & Insights",3.93
+"department","Communication","operations_delivery","Operations Delivery",3.88
+"department","Learning & innovation","business_development","Business Development",4.12
+"department","Learning & innovation","capital_programs","Capital Programs",3.97
+"department","Learning & innovation","completions_strategy","Completions Strategy",4.19
+"department","Learning & innovation","corporate_services","Corporate Services",3.99
+"department","Learning & innovation","cross_functional_groups","Cross-Functional Groups",4.1
+"department","Learning & innovation","data_insights","Data & Insights",3.92
+"department","Learning & innovation","operations_delivery","Operations Delivery",3.82
+"department","Respect, care, and trust","business_development","Business Development",4.4
+"department","Respect, care, and trust","capital_programs","Capital Programs",4.15
+"department","Respect, care, and trust","completions_strategy","Completions Strategy",4.48
+"department","Respect, care, and trust","corporate_services","Corporate Services",4.27
+"department","Respect, care, and trust","cross_functional_groups","Cross-Functional Groups",4.36
+"department","Respect, care, and trust","data_insights","Data & Insights",4.08
+"department","Respect, care, and trust","operations_delivery","Operations Delivery",3.92
+"department","Performance development","business_development","Business Development",4.25
+"department","Performance development","capital_programs","Capital Programs",3.85
+"department","Performance development","completions_strategy","Completions Strategy",4.27
+"department","Performance development","corporate_services","Corporate Services",4.24
+"department","Performance development","cross_functional_groups","Cross-Functional Groups",4.19
+"department","Performance development","data_insights","Data & Insights",3.82
+"department","Performance development","operations_delivery","Operations Delivery",3.75
+"department","Safety","business_development","Business Development",4.54
+"department","Safety","capital_programs","Capital Programs",4.39
+"department","Safety","completions_strategy","Completions Strategy",4.53
+"department","Safety","corporate_services","Corporate Services",4.57
+"department","Safety","cross_functional_groups","Cross-Functional Groups",4.59
+"department","Safety","data_insights","Data & Insights",4.4
+"department","Safety","operations_delivery","Operations Delivery",4.46

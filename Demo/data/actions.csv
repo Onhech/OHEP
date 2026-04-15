@@ -1,0 +1,4 @@
+"action_id","priority_rank","action_title","rationale","owner_hint","time_horizon"
+"action_1",1,"Improve Burnout","Current percentile: 50 | score: 2.22","Business Unit + HR","0-90 days"
+"action_2",2,"Improve Communication","Current percentile: 50 | score: 4.17","Business Unit + HR","90-180 days"
+"action_3",3,"Improve Engagement","Current percentile: 50 | score: 4.24","Business Unit + HR","180+ days"

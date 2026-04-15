@@ -1,0 +1,257 @@
+"filter_id","comment_id","takeaway_id","fundamental","comment_text","sort_order"
+"department=all|status=all|location=all","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=all|status=all|location=all","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=all|status=all|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=all|status=all|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=business_development|status=all|location=all","c_1","takeaway_1","Leadership","The most common friction appears around Learning & innovation, Strategy when workload and handoffs are unclear.",1
+"department=business_development|status=all|location=all","c_2","takeaway_2","Communication","People describe strong alignment around Purpose, Safety when priorities are explicit.",2
+"department=business_development|status=all|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=business_development|status=all|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=capital_programs|status=all|location=all","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=capital_programs|status=all|location=all","c_2","takeaway_2","Communication","The most common friction appears around Performance development, Learning & innovation when workload and handoffs are unclear.",2
+"department=capital_programs|status=all|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=capital_programs|status=all|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=completions_strategy|status=all|location=all","c_1","takeaway_2","Communication","People describe strong alignment around Purpose, Safety when priorities are explicit.",1
+"department=completions_strategy|status=all|location=all","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=completions_strategy|status=all|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=completions_strategy|status=all|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=corporate_services|status=all|location=all","c_1","takeaway_1","Leadership","The most common friction appears around Learning & innovation, Strategy when workload and handoffs are unclear.",1
+"department=corporate_services|status=all|location=all","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=corporate_services|status=all|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=corporate_services|status=all|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=cross_functional_groups|status=all|location=all","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=cross_functional_groups|status=all|location=all","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=cross_functional_groups|status=all|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=cross_functional_groups|status=all|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=data_insights|status=all|location=all","c_1","takeaway_1","Leadership","The most common friction appears around Performance development, Strategy when workload and handoffs are unclear.",1
+"department=data_insights|status=all|location=all","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=data_insights|status=all|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=data_insights|status=all|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=operations_delivery|status=all|location=all","c_1","takeaway_1","Leadership","The most common friction appears around Strategy, Performance development when workload and handoffs are unclear.",1
+"department=operations_delivery|status=all|location=all","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=operations_delivery|status=all|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=operations_delivery|status=all|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=all|status=full_time|location=all","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=all|status=full_time|location=all","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=all|status=full_time|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=all|status=full_time|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=business_development|status=full_time|location=all","c_1","takeaway_1","Leadership","The most common friction appears around Learning & innovation, Strategy when workload and handoffs are unclear.",1
+"department=business_development|status=full_time|location=all","c_2","takeaway_2","Communication","People describe strong alignment around Purpose, Safety when priorities are explicit.",2
+"department=business_development|status=full_time|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=business_development|status=full_time|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=capital_programs|status=full_time|location=all","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=capital_programs|status=full_time|location=all","c_2","takeaway_2","Communication","The most common friction appears around Performance development, Learning & innovation when workload and handoffs are unclear.",2
+"department=capital_programs|status=full_time|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=capital_programs|status=full_time|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=completions_strategy|status=full_time|location=all","c_1","takeaway_2","Communication","People describe strong alignment around Purpose, Safety when priorities are explicit.",1
+"department=completions_strategy|status=full_time|location=all","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=completions_strategy|status=full_time|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=completions_strategy|status=full_time|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=corporate_services|status=full_time|location=all","c_1","takeaway_1","Leadership","The most common friction appears around Learning & innovation, Strategy when workload and handoffs are unclear.",1
+"department=corporate_services|status=full_time|location=all","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=corporate_services|status=full_time|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=corporate_services|status=full_time|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=cross_functional_groups|status=full_time|location=all","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=cross_functional_groups|status=full_time|location=all","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=cross_functional_groups|status=full_time|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=cross_functional_groups|status=full_time|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=data_insights|status=full_time|location=all","c_1","takeaway_1","Leadership","The most common friction appears around Performance development, Strategy when workload and handoffs are unclear.",1
+"department=data_insights|status=full_time|location=all","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=data_insights|status=full_time|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=data_insights|status=full_time|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=operations_delivery|status=full_time|location=all","c_1","takeaway_1","Leadership","The most common friction appears around Strategy, Performance development when workload and handoffs are unclear.",1
+"department=operations_delivery|status=full_time|location=all","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=operations_delivery|status=full_time|location=all","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=operations_delivery|status=full_time|location=all","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=all|status=all|location=central_hub","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=all|status=all|location=central_hub","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=all|status=all|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=all|status=all|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=business_development|status=all|location=central_hub","c_1","takeaway_1","Leadership","The most common friction appears around Learning & innovation, Strategy when workload and handoffs are unclear.",1
+"department=business_development|status=all|location=central_hub","c_2","takeaway_2","Communication","People describe strong alignment around Purpose, Safety when priorities are explicit.",2
+"department=business_development|status=all|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=business_development|status=all|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=capital_programs|status=all|location=central_hub","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=capital_programs|status=all|location=central_hub","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=capital_programs|status=all|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=capital_programs|status=all|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=completions_strategy|status=all|location=central_hub","c_1","takeaway_2","Communication","People describe strong alignment around Purpose, Safety when priorities are explicit.",1
+"department=completions_strategy|status=all|location=central_hub","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=completions_strategy|status=all|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=completions_strategy|status=all|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=corporate_services|status=all|location=central_hub","c_1","takeaway_1","Leadership","The most common friction appears around Learning & innovation, Strategy when workload and handoffs are unclear.",1
+"department=corporate_services|status=all|location=central_hub","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=corporate_services|status=all|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=corporate_services|status=all|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=cross_functional_groups|status=all|location=central_hub","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=cross_functional_groups|status=all|location=central_hub","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=cross_functional_groups|status=all|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=cross_functional_groups|status=all|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=data_insights|status=all|location=central_hub","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=data_insights|status=all|location=central_hub","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=data_insights|status=all|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=data_insights|status=all|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=operations_delivery|status=all|location=central_hub","c_1","takeaway_1","Leadership","The most common friction appears around Strategy, Performance development when workload and handoffs are unclear.",1
+"department=operations_delivery|status=all|location=central_hub","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=operations_delivery|status=all|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=operations_delivery|status=all|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=all|status=full_time|location=central_hub","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=all|status=full_time|location=central_hub","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=all|status=full_time|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=all|status=full_time|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=business_development|status=full_time|location=central_hub","c_1","takeaway_1","Leadership","The most common friction appears around Learning & innovation, Strategy when workload and handoffs are unclear.",1
+"department=business_development|status=full_time|location=central_hub","c_2","takeaway_2","Communication","People describe strong alignment around Purpose, Safety when priorities are explicit.",2
+"department=business_development|status=full_time|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=business_development|status=full_time|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=capital_programs|status=full_time|location=central_hub","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=capital_programs|status=full_time|location=central_hub","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=capital_programs|status=full_time|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=capital_programs|status=full_time|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=completions_strategy|status=full_time|location=central_hub","c_1","takeaway_2","Communication","People describe strong alignment around Purpose, Safety when priorities are explicit.",1
+"department=completions_strategy|status=full_time|location=central_hub","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=completions_strategy|status=full_time|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=completions_strategy|status=full_time|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=corporate_services|status=full_time|location=central_hub","c_1","takeaway_1","Leadership","The most common friction appears around Learning & innovation, Strategy when workload and handoffs are unclear.",1
+"department=corporate_services|status=full_time|location=central_hub","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=corporate_services|status=full_time|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=corporate_services|status=full_time|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=cross_functional_groups|status=full_time|location=central_hub","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=cross_functional_groups|status=full_time|location=central_hub","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=cross_functional_groups|status=full_time|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=cross_functional_groups|status=full_time|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=data_insights|status=full_time|location=central_hub","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=data_insights|status=full_time|location=central_hub","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=data_insights|status=full_time|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=data_insights|status=full_time|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=operations_delivery|status=full_time|location=central_hub","c_1","takeaway_1","Leadership","The most common friction appears around Strategy, Performance development when workload and handoffs are unclear.",1
+"department=operations_delivery|status=full_time|location=central_hub","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=operations_delivery|status=full_time|location=central_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=operations_delivery|status=full_time|location=central_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=all|status=all|location=prairie_hub","c_1","takeaway_1","Leadership","The most common friction appears around Performance development, Strategy when workload and handoffs are unclear.",1
+"department=all|status=all|location=prairie_hub","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=all|status=all|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=all|status=all|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=business_development|status=all|location=prairie_hub","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=business_development|status=all|location=prairie_hub","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=business_development|status=all|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=business_development|status=all|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=capital_programs|status=all|location=prairie_hub","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=capital_programs|status=all|location=prairie_hub","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=capital_programs|status=all|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=capital_programs|status=all|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=completions_strategy|status=all|location=prairie_hub","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=completions_strategy|status=all|location=prairie_hub","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=completions_strategy|status=all|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=completions_strategy|status=all|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=corporate_services|status=all|location=prairie_hub","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=corporate_services|status=all|location=prairie_hub","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=corporate_services|status=all|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=corporate_services|status=all|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=cross_functional_groups|status=all|location=prairie_hub","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=cross_functional_groups|status=all|location=prairie_hub","c_2","takeaway_2","Communication","The most common friction appears around Performance development, Learning & innovation when workload and handoffs are unclear.",2
+"department=cross_functional_groups|status=all|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=cross_functional_groups|status=all|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=data_insights|status=all|location=prairie_hub","c_1","takeaway_1","Leadership","The most common friction appears around Performance development, Strategy when workload and handoffs are unclear.",1
+"department=data_insights|status=all|location=prairie_hub","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=data_insights|status=all|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=data_insights|status=all|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=operations_delivery|status=all|location=prairie_hub","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=operations_delivery|status=all|location=prairie_hub","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=operations_delivery|status=all|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=operations_delivery|status=all|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=all|status=full_time|location=prairie_hub","c_1","takeaway_1","Leadership","The most common friction appears around Performance development, Strategy when workload and handoffs are unclear.",1
+"department=all|status=full_time|location=prairie_hub","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=all|status=full_time|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=all|status=full_time|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=business_development|status=full_time|location=prairie_hub","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=business_development|status=full_time|location=prairie_hub","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=business_development|status=full_time|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=business_development|status=full_time|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=capital_programs|status=full_time|location=prairie_hub","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=capital_programs|status=full_time|location=prairie_hub","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=capital_programs|status=full_time|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=capital_programs|status=full_time|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=completions_strategy|status=full_time|location=prairie_hub","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=completions_strategy|status=full_time|location=prairie_hub","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=completions_strategy|status=full_time|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=completions_strategy|status=full_time|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=corporate_services|status=full_time|location=prairie_hub","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=corporate_services|status=full_time|location=prairie_hub","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=corporate_services|status=full_time|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=corporate_services|status=full_time|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=cross_functional_groups|status=full_time|location=prairie_hub","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=cross_functional_groups|status=full_time|location=prairie_hub","c_2","takeaway_2","Communication","The most common friction appears around Performance development, Learning & innovation when workload and handoffs are unclear.",2
+"department=cross_functional_groups|status=full_time|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=cross_functional_groups|status=full_time|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=data_insights|status=full_time|location=prairie_hub","c_1","takeaway_1","Leadership","The most common friction appears around Performance development, Strategy when workload and handoffs are unclear.",1
+"department=data_insights|status=full_time|location=prairie_hub","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=data_insights|status=full_time|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=data_insights|status=full_time|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=operations_delivery|status=full_time|location=prairie_hub","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=operations_delivery|status=full_time|location=prairie_hub","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=operations_delivery|status=full_time|location=prairie_hub","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=operations_delivery|status=full_time|location=prairie_hub","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=all|status=all|location=regional_support_sites","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=all|status=all|location=regional_support_sites","c_2","takeaway_2","Communication","The most common friction appears around Performance development, Learning & innovation when workload and handoffs are unclear.",2
+"department=all|status=all|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=all|status=all|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=business_development|status=all|location=regional_support_sites","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=business_development|status=all|location=regional_support_sites","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=business_development|status=all|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=business_development|status=all|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=capital_programs|status=all|location=regional_support_sites","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=capital_programs|status=all|location=regional_support_sites","c_2","takeaway_2","Communication","The most common friction appears around Performance development, Learning & innovation when workload and handoffs are unclear.",2
+"department=capital_programs|status=all|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=capital_programs|status=all|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=completions_strategy|status=all|location=regional_support_sites","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=completions_strategy|status=all|location=regional_support_sites","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=completions_strategy|status=all|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=completions_strategy|status=all|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=corporate_services|status=all|location=regional_support_sites","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=corporate_services|status=all|location=regional_support_sites","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=corporate_services|status=all|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=corporate_services|status=all|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=cross_functional_groups|status=all|location=regional_support_sites","c_1","takeaway_1","Leadership","The most common friction appears around Learning & innovation, Strategy when workload and handoffs are unclear.",1
+"department=cross_functional_groups|status=all|location=regional_support_sites","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=cross_functional_groups|status=all|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=cross_functional_groups|status=all|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=data_insights|status=all|location=regional_support_sites","c_1","takeaway_1","Leadership","The most common friction appears around Performance development, Strategy when workload and handoffs are unclear.",1
+"department=data_insights|status=all|location=regional_support_sites","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=data_insights|status=all|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=data_insights|status=all|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=operations_delivery|status=all|location=regional_support_sites","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=operations_delivery|status=all|location=regional_support_sites","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=operations_delivery|status=all|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=operations_delivery|status=all|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=all|status=full_time|location=regional_support_sites","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=all|status=full_time|location=regional_support_sites","c_2","takeaway_2","Communication","The most common friction appears around Performance development, Learning & innovation when workload and handoffs are unclear.",2
+"department=all|status=full_time|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=all|status=full_time|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=business_development|status=full_time|location=regional_support_sites","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=business_development|status=full_time|location=regional_support_sites","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=business_development|status=full_time|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=business_development|status=full_time|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=capital_programs|status=full_time|location=regional_support_sites","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=capital_programs|status=full_time|location=regional_support_sites","c_2","takeaway_2","Communication","The most common friction appears around Performance development, Learning & innovation when workload and handoffs are unclear.",2
+"department=capital_programs|status=full_time|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=capital_programs|status=full_time|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=completions_strategy|status=full_time|location=regional_support_sites","c_1","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",1
+"department=completions_strategy|status=full_time|location=regional_support_sites","c_2","takeaway_2","Communication","The most common friction appears around Learning & innovation, Performance development when workload and handoffs are unclear.",2
+"department=completions_strategy|status=full_time|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=completions_strategy|status=full_time|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=corporate_services|status=full_time|location=regional_support_sites","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=corporate_services|status=full_time|location=regional_support_sites","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=corporate_services|status=full_time|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=corporate_services|status=full_time|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","c_1","takeaway_1","Leadership","The most common friction appears around Learning & innovation, Strategy when workload and handoffs are unclear.",1
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=data_insights|status=full_time|location=regional_support_sites","c_1","takeaway_1","Leadership","The most common friction appears around Performance development, Strategy when workload and handoffs are unclear.",1
+"department=data_insights|status=full_time|location=regional_support_sites","c_2","takeaway_2","Communication","People describe strong alignment around Safety, Purpose when priorities are explicit.",2
+"department=data_insights|status=full_time|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=data_insights|status=full_time|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4
+"department=operations_delivery|status=full_time|location=regional_support_sites","c_1","takeaway_2","Communication","People describe strong alignment around  when priorities are explicit.",1
+"department=operations_delivery|status=full_time|location=regional_support_sites","c_2","takeaway_2","Communication","The most common friction appears around  when workload and handoffs are unclear.",2
+"department=operations_delivery|status=full_time|location=regional_support_sites","c_3","takeaway_2","Communication","Employees consistently request clearer sequencing of priorities and faster decision communication.",3
+"department=operations_delivery|status=full_time|location=regional_support_sites","c_4","takeaway_2","Communication","Cross-team execution is strongest when accountabilities and checkpoints are explicit.",4

@@ -1,0 +1,15 @@
+"segment_type_id","segment_value_id","segment_type_label","segment_value_label","sort_order","n"
+"department","all","Department","All",1,NA
+"department","business_development","Department","Business Development",2,NA
+"department","capital_programs","Department","Capital Programs",3,NA
+"department","completions_strategy","Department","Completions Strategy",4,NA
+"department","corporate_services","Department","Corporate Services",5,NA
+"department","cross_functional_groups","Department","Cross-Functional Groups",6,NA
+"department","data_insights","Department","Data & Insights",7,NA
+"department","operations_delivery","Department","Operations Delivery",8,NA
+"full_time_status","all","Full-Time Status","All",1,NA
+"full_time_status","full_time","Full-Time Status","Full-Time",2,NA
+"location_cluster","all","Location Cluster","All",1,NA
+"location_cluster","central_hub","Location Cluster","Central Hub",2,NA
+"location_cluster","prairie_hub","Location Cluster","Prairie Hub",3,NA
+"location_cluster","regional_support_sites","Location Cluster","Regional Support Sites",4,NA

@@ -1,0 +1,577 @@
+"filter_id","company","year","metric_group","metric_id","metric_label","score"
+"department=all|status=all|location=all","Company A",2025,"outcome","eNPS","eNPS",62.0689655172414
+"department=all|status=all|location=all","Company A",2025,"outcome","Burnout","Burnout",2.21799485861182
+"department=all|status=all|location=all","Company A",2025,"outcome","Engagement","Engagement",4.23762376237623
+"department=all|status=all|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.35569105691057
+"department=all|status=all|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.39
+"department=all|status=all|location=all","Company A",2025,"fundamental","Strategy","Strategy",4.11
+"department=all|status=all|location=all","Company A",2025,"fundamental","Leadership","Leadership",4.3
+"department=all|status=all|location=all","Company A",2025,"fundamental","Communication","Communication",4.17
+"department=all|status=all|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.04
+"department=all|status=all|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.27
+"department=all|status=all|location=all","Company A",2025,"fundamental","Performance development","Performance development",4.07
+"department=all|status=all|location=all","Company A",2025,"fundamental","Safety","Safety",4.51
+"department=business_development|status=all|location=all","Company A",2025,"outcome","eNPS","eNPS",70.3703703703704
+"department=business_development|status=all|location=all","Company A",2025,"outcome","Burnout","Burnout",2.1358024691358
+"department=business_development|status=all|location=all","Company A",2025,"outcome","Engagement","Engagement",4.42990654205607
+"department=business_development|status=all|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.4
+"department=business_development|status=all|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.57
+"department=business_development|status=all|location=all","Company A",2025,"fundamental","Strategy","Strategy",4.21
+"department=business_development|status=all|location=all","Company A",2025,"fundamental","Leadership","Leadership",4.47
+"department=business_development|status=all|location=all","Company A",2025,"fundamental","Communication","Communication",4.43
+"department=business_development|status=all|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.12
+"department=business_development|status=all|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.4
+"department=business_development|status=all|location=all","Company A",2025,"fundamental","Performance development","Performance development",4.25
+"department=business_development|status=all|location=all","Company A",2025,"fundamental","Safety","Safety",4.54
+"department=capital_programs|status=all|location=all","Company A",2025,"outcome","eNPS","eNPS",54.320987654321
+"department=capital_programs|status=all|location=all","Company A",2025,"outcome","Burnout","Burnout",2.37959183673469
+"department=capital_programs|status=all|location=all","Company A",2025,"outcome","Engagement","Engagement",4.1547619047619
+"department=capital_programs|status=all|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.31746031746032
+"department=capital_programs|status=all|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.22
+"department=capital_programs|status=all|location=all","Company A",2025,"fundamental","Strategy","Strategy",3.99
+"department=capital_programs|status=all|location=all","Company A",2025,"fundamental","Leadership","Leadership",4.18
+"department=capital_programs|status=all|location=all","Company A",2025,"fundamental","Communication","Communication",4.07
+"department=capital_programs|status=all|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.97
+"department=capital_programs|status=all|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.15
+"department=capital_programs|status=all|location=all","Company A",2025,"fundamental","Performance development","Performance development",3.85
+"department=capital_programs|status=all|location=all","Company A",2025,"fundamental","Safety","Safety",4.39
+"department=completions_strategy|status=all|location=all","Company A",2025,"outcome","eNPS","eNPS",59.4594594594595
+"department=completions_strategy|status=all|location=all","Company A",2025,"outcome","Burnout","Burnout",2
+"department=completions_strategy|status=all|location=all","Company A",2025,"outcome","Engagement","Engagement",4.375
+"department=completions_strategy|status=all|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.42990654205607
+"department=completions_strategy|status=all|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.59
+"department=completions_strategy|status=all|location=all","Company A",2025,"fundamental","Strategy","Strategy",4.34
+"department=completions_strategy|status=all|location=all","Company A",2025,"fundamental","Leadership","Leadership",4.47
+"department=completions_strategy|status=all|location=all","Company A",2025,"fundamental","Communication","Communication",4.4
+"department=completions_strategy|status=all|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.19
+"department=completions_strategy|status=all|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.48
+"department=completions_strategy|status=all|location=all","Company A",2025,"fundamental","Performance development","Performance development",4.27
+"department=completions_strategy|status=all|location=all","Company A",2025,"fundamental","Safety","Safety",4.53
+"department=corporate_services|status=all|location=all","Company A",2025,"outcome","eNPS","eNPS",63.6363636363636
+"department=corporate_services|status=all|location=all","Company A",2025,"outcome","Burnout","Burnout",2.16417910447761
+"department=corporate_services|status=all|location=all","Company A",2025,"outcome","Engagement","Engagement",4.17391304347826
+"department=corporate_services|status=all|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.26086956521739
+"department=corporate_services|status=all|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.47
+"department=corporate_services|status=all|location=all","Company A",2025,"fundamental","Strategy","Strategy",4.12
+"department=corporate_services|status=all|location=all","Company A",2025,"fundamental","Leadership","Leadership",4.36
+"department=corporate_services|status=all|location=all","Company A",2025,"fundamental","Communication","Communication",4.13
+"department=corporate_services|status=all|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.99
+"department=corporate_services|status=all|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.27
+"department=corporate_services|status=all|location=all","Company A",2025,"fundamental","Performance development","Performance development",4.24
+"department=corporate_services|status=all|location=all","Company A",2025,"fundamental","Safety","Safety",4.57
+"department=cross_functional_groups|status=all|location=all","Company A",2025,"outcome","eNPS","eNPS",60.4361370716511
+"department=cross_functional_groups|status=all|location=all","Company A",2025,"outcome","Burnout","Burnout",2.18439716312057
+"department=cross_functional_groups|status=all|location=all","Company A",2025,"outcome","Engagement","Engagement",4.27217589082638
+"department=cross_functional_groups|status=all|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.38523761375126
+"department=cross_functional_groups|status=all|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.48
+"department=cross_functional_groups|status=all|location=all","Company A",2025,"fundamental","Strategy","Strategy",4.21
+"department=cross_functional_groups|status=all|location=all","Company A",2025,"fundamental","Leadership","Leadership",4.4
+"department=cross_functional_groups|status=all|location=all","Company A",2025,"fundamental","Communication","Communication",4.26
+"department=cross_functional_groups|status=all|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.1
+"department=cross_functional_groups|status=all|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.36
+"department=cross_functional_groups|status=all|location=all","Company A",2025,"fundamental","Performance development","Performance development",4.19
+"department=cross_functional_groups|status=all|location=all","Company A",2025,"fundamental","Safety","Safety",4.59
+"department=data_insights|status=all|location=all","Company A",2025,"outcome","eNPS","eNPS",68.503937007874
+"department=data_insights|status=all|location=all","Company A",2025,"outcome","Burnout","Burnout",2.28020565552699
+"department=data_insights|status=all|location=all","Company A",2025,"outcome","Engagement","Engagement",4.19216417910448
+"department=data_insights|status=all|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.36567164179104
+"department=data_insights|status=all|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.18
+"department=data_insights|status=all|location=all","Company A",2025,"fundamental","Strategy","Strategy",3.92
+"department=data_insights|status=all|location=all","Company A",2025,"fundamental","Leadership","Leadership",4.09
+"department=data_insights|status=all|location=all","Company A",2025,"fundamental","Communication","Communication",3.93
+"department=data_insights|status=all|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.92
+"department=data_insights|status=all|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.08
+"department=data_insights|status=all|location=all","Company A",2025,"fundamental","Performance development","Performance development",3.82
+"department=data_insights|status=all|location=all","Company A",2025,"fundamental","Safety","Safety",4.4
+"department=operations_delivery|status=all|location=all","Company A",2025,"outcome","eNPS","eNPS",69.5652173913043
+"department=operations_delivery|status=all|location=all","Company A",2025,"outcome","Burnout","Burnout",2.26086956521739
+"department=operations_delivery|status=all|location=all","Company A",2025,"outcome","Engagement","Engagement",3.93478260869565
+"department=operations_delivery|status=all|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",3.94202898550725
+"department=operations_delivery|status=all|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.15
+"department=operations_delivery|status=all|location=all","Company A",2025,"fundamental","Strategy","Strategy",3.65
+"department=operations_delivery|status=all|location=all","Company A",2025,"fundamental","Leadership","Leadership",3.98
+"department=operations_delivery|status=all|location=all","Company A",2025,"fundamental","Communication","Communication",3.88
+"department=operations_delivery|status=all|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.82
+"department=operations_delivery|status=all|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",3.92
+"department=operations_delivery|status=all|location=all","Company A",2025,"fundamental","Performance development","Performance development",3.75
+"department=operations_delivery|status=all|location=all","Company A",2025,"fundamental","Safety","Safety",4.46
+"department=all|status=full_time|location=all","Company A",2025,"outcome","eNPS","eNPS",62.0689655172414
+"department=all|status=full_time|location=all","Company A",2025,"outcome","Burnout","Burnout",2.21799485861182
+"department=all|status=full_time|location=all","Company A",2025,"outcome","Engagement","Engagement",4.23762376237623
+"department=all|status=full_time|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.35569105691057
+"department=all|status=full_time|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.39
+"department=all|status=full_time|location=all","Company A",2025,"fundamental","Strategy","Strategy",4.11
+"department=all|status=full_time|location=all","Company A",2025,"fundamental","Leadership","Leadership",4.3
+"department=all|status=full_time|location=all","Company A",2025,"fundamental","Communication","Communication",4.17
+"department=all|status=full_time|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.04
+"department=all|status=full_time|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.27
+"department=all|status=full_time|location=all","Company A",2025,"fundamental","Performance development","Performance development",4.07
+"department=all|status=full_time|location=all","Company A",2025,"fundamental","Safety","Safety",4.51
+"department=business_development|status=full_time|location=all","Company A",2025,"outcome","eNPS","eNPS",70.3703703703704
+"department=business_development|status=full_time|location=all","Company A",2025,"outcome","Burnout","Burnout",2.1358024691358
+"department=business_development|status=full_time|location=all","Company A",2025,"outcome","Engagement","Engagement",4.42990654205607
+"department=business_development|status=full_time|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.4
+"department=business_development|status=full_time|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.57
+"department=business_development|status=full_time|location=all","Company A",2025,"fundamental","Strategy","Strategy",4.21
+"department=business_development|status=full_time|location=all","Company A",2025,"fundamental","Leadership","Leadership",4.47
+"department=business_development|status=full_time|location=all","Company A",2025,"fundamental","Communication","Communication",4.43
+"department=business_development|status=full_time|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.12
+"department=business_development|status=full_time|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.4
+"department=business_development|status=full_time|location=all","Company A",2025,"fundamental","Performance development","Performance development",4.25
+"department=business_development|status=full_time|location=all","Company A",2025,"fundamental","Safety","Safety",4.54
+"department=capital_programs|status=full_time|location=all","Company A",2025,"outcome","eNPS","eNPS",54.320987654321
+"department=capital_programs|status=full_time|location=all","Company A",2025,"outcome","Burnout","Burnout",2.37959183673469
+"department=capital_programs|status=full_time|location=all","Company A",2025,"outcome","Engagement","Engagement",4.1547619047619
+"department=capital_programs|status=full_time|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.31746031746032
+"department=capital_programs|status=full_time|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.22
+"department=capital_programs|status=full_time|location=all","Company A",2025,"fundamental","Strategy","Strategy",3.99
+"department=capital_programs|status=full_time|location=all","Company A",2025,"fundamental","Leadership","Leadership",4.18
+"department=capital_programs|status=full_time|location=all","Company A",2025,"fundamental","Communication","Communication",4.07
+"department=capital_programs|status=full_time|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.97
+"department=capital_programs|status=full_time|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.15
+"department=capital_programs|status=full_time|location=all","Company A",2025,"fundamental","Performance development","Performance development",3.85
+"department=capital_programs|status=full_time|location=all","Company A",2025,"fundamental","Safety","Safety",4.39
+"department=completions_strategy|status=full_time|location=all","Company A",2025,"outcome","eNPS","eNPS",59.4594594594595
+"department=completions_strategy|status=full_time|location=all","Company A",2025,"outcome","Burnout","Burnout",2
+"department=completions_strategy|status=full_time|location=all","Company A",2025,"outcome","Engagement","Engagement",4.375
+"department=completions_strategy|status=full_time|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.42990654205607
+"department=completions_strategy|status=full_time|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.59
+"department=completions_strategy|status=full_time|location=all","Company A",2025,"fundamental","Strategy","Strategy",4.34
+"department=completions_strategy|status=full_time|location=all","Company A",2025,"fundamental","Leadership","Leadership",4.47
+"department=completions_strategy|status=full_time|location=all","Company A",2025,"fundamental","Communication","Communication",4.4
+"department=completions_strategy|status=full_time|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.19
+"department=completions_strategy|status=full_time|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.48
+"department=completions_strategy|status=full_time|location=all","Company A",2025,"fundamental","Performance development","Performance development",4.27
+"department=completions_strategy|status=full_time|location=all","Company A",2025,"fundamental","Safety","Safety",4.53
+"department=corporate_services|status=full_time|location=all","Company A",2025,"outcome","eNPS","eNPS",63.6363636363636
+"department=corporate_services|status=full_time|location=all","Company A",2025,"outcome","Burnout","Burnout",2.16417910447761
+"department=corporate_services|status=full_time|location=all","Company A",2025,"outcome","Engagement","Engagement",4.17391304347826
+"department=corporate_services|status=full_time|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.26086956521739
+"department=corporate_services|status=full_time|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.47
+"department=corporate_services|status=full_time|location=all","Company A",2025,"fundamental","Strategy","Strategy",4.12
+"department=corporate_services|status=full_time|location=all","Company A",2025,"fundamental","Leadership","Leadership",4.36
+"department=corporate_services|status=full_time|location=all","Company A",2025,"fundamental","Communication","Communication",4.13
+"department=corporate_services|status=full_time|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.99
+"department=corporate_services|status=full_time|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.27
+"department=corporate_services|status=full_time|location=all","Company A",2025,"fundamental","Performance development","Performance development",4.24
+"department=corporate_services|status=full_time|location=all","Company A",2025,"fundamental","Safety","Safety",4.57
+"department=cross_functional_groups|status=full_time|location=all","Company A",2025,"outcome","eNPS","eNPS",60.4361370716511
+"department=cross_functional_groups|status=full_time|location=all","Company A",2025,"outcome","Burnout","Burnout",2.18439716312057
+"department=cross_functional_groups|status=full_time|location=all","Company A",2025,"outcome","Engagement","Engagement",4.27217589082638
+"department=cross_functional_groups|status=full_time|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.38523761375126
+"department=cross_functional_groups|status=full_time|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.48
+"department=cross_functional_groups|status=full_time|location=all","Company A",2025,"fundamental","Strategy","Strategy",4.21
+"department=cross_functional_groups|status=full_time|location=all","Company A",2025,"fundamental","Leadership","Leadership",4.4
+"department=cross_functional_groups|status=full_time|location=all","Company A",2025,"fundamental","Communication","Communication",4.26
+"department=cross_functional_groups|status=full_time|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.1
+"department=cross_functional_groups|status=full_time|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.36
+"department=cross_functional_groups|status=full_time|location=all","Company A",2025,"fundamental","Performance development","Performance development",4.19
+"department=cross_functional_groups|status=full_time|location=all","Company A",2025,"fundamental","Safety","Safety",4.59
+"department=data_insights|status=full_time|location=all","Company A",2025,"outcome","eNPS","eNPS",68.503937007874
+"department=data_insights|status=full_time|location=all","Company A",2025,"outcome","Burnout","Burnout",2.28020565552699
+"department=data_insights|status=full_time|location=all","Company A",2025,"outcome","Engagement","Engagement",4.19216417910448
+"department=data_insights|status=full_time|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.36567164179104
+"department=data_insights|status=full_time|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.18
+"department=data_insights|status=full_time|location=all","Company A",2025,"fundamental","Strategy","Strategy",3.92
+"department=data_insights|status=full_time|location=all","Company A",2025,"fundamental","Leadership","Leadership",4.09
+"department=data_insights|status=full_time|location=all","Company A",2025,"fundamental","Communication","Communication",3.93
+"department=data_insights|status=full_time|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.92
+"department=data_insights|status=full_time|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.08
+"department=data_insights|status=full_time|location=all","Company A",2025,"fundamental","Performance development","Performance development",3.82
+"department=data_insights|status=full_time|location=all","Company A",2025,"fundamental","Safety","Safety",4.4
+"department=operations_delivery|status=full_time|location=all","Company A",2025,"outcome","eNPS","eNPS",69.5652173913043
+"department=operations_delivery|status=full_time|location=all","Company A",2025,"outcome","Burnout","Burnout",2.26086956521739
+"department=operations_delivery|status=full_time|location=all","Company A",2025,"outcome","Engagement","Engagement",3.93478260869565
+"department=operations_delivery|status=full_time|location=all","Company A",2025,"outcome","Work satisfaction","Work satisfaction",3.94202898550725
+"department=operations_delivery|status=full_time|location=all","Company A",2025,"fundamental","Purpose","Purpose",4.15
+"department=operations_delivery|status=full_time|location=all","Company A",2025,"fundamental","Strategy","Strategy",3.65
+"department=operations_delivery|status=full_time|location=all","Company A",2025,"fundamental","Leadership","Leadership",3.98
+"department=operations_delivery|status=full_time|location=all","Company A",2025,"fundamental","Communication","Communication",3.88
+"department=operations_delivery|status=full_time|location=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.82
+"department=operations_delivery|status=full_time|location=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",3.92
+"department=operations_delivery|status=full_time|location=all","Company A",2025,"fundamental","Performance development","Performance development",3.75
+"department=operations_delivery|status=full_time|location=all","Company A",2025,"fundamental","Safety","Safety",4.46
+"department=all|status=all|location=central_hub","Company A",2025,"outcome","eNPS","eNPS",61.6045845272206
+"department=all|status=all|location=central_hub","Company A",2025,"outcome","Burnout","Burnout",2.14433962264151
+"department=all|status=all|location=central_hub","Company A",2025,"outcome","Engagement","Engagement",4.27644569816643
+"department=all|status=all|location=central_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.36406396989652
+"department=all|status=all|location=central_hub","Company A",2025,"fundamental","Purpose","Purpose",4.5
+"department=all|status=all|location=central_hub","Company A",2025,"fundamental","Strategy","Strategy",4.21
+"department=all|status=all|location=central_hub","Company A",2025,"fundamental","Leadership","Leadership",4.4
+"department=all|status=all|location=central_hub","Company A",2025,"fundamental","Communication","Communication",4.28
+"department=all|status=all|location=central_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.1
+"department=all|status=all|location=central_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.37
+"department=all|status=all|location=central_hub","Company A",2025,"fundamental","Performance development","Performance development",4.2
+"department=all|status=all|location=central_hub","Company A",2025,"fundamental","Safety","Safety",4.58
+"department=business_development|status=all|location=central_hub","Company A",2025,"outcome","eNPS","eNPS",70.3703703703704
+"department=business_development|status=all|location=central_hub","Company A",2025,"outcome","Burnout","Burnout",2.1358024691358
+"department=business_development|status=all|location=central_hub","Company A",2025,"outcome","Engagement","Engagement",4.42990654205607
+"department=business_development|status=all|location=central_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.4
+"department=business_development|status=all|location=central_hub","Company A",2025,"fundamental","Purpose","Purpose",4.57
+"department=business_development|status=all|location=central_hub","Company A",2025,"fundamental","Strategy","Strategy",4.21
+"department=business_development|status=all|location=central_hub","Company A",2025,"fundamental","Leadership","Leadership",4.47
+"department=business_development|status=all|location=central_hub","Company A",2025,"fundamental","Communication","Communication",4.43
+"department=business_development|status=all|location=central_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.12
+"department=business_development|status=all|location=central_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.4
+"department=business_development|status=all|location=central_hub","Company A",2025,"fundamental","Performance development","Performance development",4.25
+"department=business_development|status=all|location=central_hub","Company A",2025,"fundamental","Safety","Safety",4.54
+"department=completions_strategy|status=all|location=central_hub","Company A",2025,"outcome","eNPS","eNPS",57.1428571428571
+"department=completions_strategy|status=all|location=central_hub","Company A",2025,"outcome","Burnout","Burnout",1.97029702970297
+"department=completions_strategy|status=all|location=central_hub","Company A",2025,"outcome","Engagement","Engagement",4.33823529411765
+"department=completions_strategy|status=all|location=central_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.3960396039604
+"department=completions_strategy|status=all|location=central_hub","Company A",2025,"fundamental","Purpose","Purpose",4.57
+"department=completions_strategy|status=all|location=central_hub","Company A",2025,"fundamental","Strategy","Strategy",4.31
+"department=completions_strategy|status=all|location=central_hub","Company A",2025,"fundamental","Leadership","Leadership",4.45
+"department=completions_strategy|status=all|location=central_hub","Company A",2025,"fundamental","Communication","Communication",4.39
+"department=completions_strategy|status=all|location=central_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.14
+"department=completions_strategy|status=all|location=central_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.47
+"department=completions_strategy|status=all|location=central_hub","Company A",2025,"fundamental","Performance development","Performance development",4.26
+"department=completions_strategy|status=all|location=central_hub","Company A",2025,"fundamental","Safety","Safety",4.54
+"department=corporate_services|status=all|location=central_hub","Company A",2025,"outcome","eNPS","eNPS",63.6363636363636
+"department=corporate_services|status=all|location=central_hub","Company A",2025,"outcome","Burnout","Burnout",2.16417910447761
+"department=corporate_services|status=all|location=central_hub","Company A",2025,"outcome","Engagement","Engagement",4.17391304347826
+"department=corporate_services|status=all|location=central_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.26086956521739
+"department=corporate_services|status=all|location=central_hub","Company A",2025,"fundamental","Purpose","Purpose",4.47
+"department=corporate_services|status=all|location=central_hub","Company A",2025,"fundamental","Strategy","Strategy",4.12
+"department=corporate_services|status=all|location=central_hub","Company A",2025,"fundamental","Leadership","Leadership",4.36
+"department=corporate_services|status=all|location=central_hub","Company A",2025,"fundamental","Communication","Communication",4.13
+"department=corporate_services|status=all|location=central_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.99
+"department=corporate_services|status=all|location=central_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.27
+"department=corporate_services|status=all|location=central_hub","Company A",2025,"fundamental","Performance development","Performance development",4.24
+"department=corporate_services|status=all|location=central_hub","Company A",2025,"fundamental","Safety","Safety",4.57
+"department=cross_functional_groups|status=all|location=central_hub","Company A",2025,"outcome","eNPS","eNPS",60.4938271604938
+"department=cross_functional_groups|status=all|location=central_hub","Company A",2025,"outcome","Burnout","Burnout",2.15570469798658
+"department=cross_functional_groups|status=all|location=central_hub","Company A",2025,"outcome","Engagement","Engagement",4.2894472361809
+"department=cross_functional_groups|status=all|location=central_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.39892904953146
+"department=cross_functional_groups|status=all|location=central_hub","Company A",2025,"fundamental","Purpose","Purpose",4.51
+"department=cross_functional_groups|status=all|location=central_hub","Company A",2025,"fundamental","Strategy","Strategy",4.25
+"department=cross_functional_groups|status=all|location=central_hub","Company A",2025,"fundamental","Leadership","Leadership",4.42
+"department=cross_functional_groups|status=all|location=central_hub","Company A",2025,"fundamental","Communication","Communication",4.29
+"department=cross_functional_groups|status=all|location=central_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.12
+"department=cross_functional_groups|status=all|location=central_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.4
+"department=cross_functional_groups|status=all|location=central_hub","Company A",2025,"fundamental","Performance development","Performance development",4.23
+"department=cross_functional_groups|status=all|location=central_hub","Company A",2025,"fundamental","Safety","Safety",4.6
+"department=operations_delivery|status=all|location=central_hub","Company A",2025,"outcome","eNPS","eNPS",68.1818181818182
+"department=operations_delivery|status=all|location=central_hub","Company A",2025,"outcome","Burnout","Burnout",2.27272727272727
+"department=operations_delivery|status=all|location=central_hub","Company A",2025,"outcome","Engagement","Engagement",3.95454545454545
+"department=operations_delivery|status=all|location=central_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",3.98484848484848
+"department=operations_delivery|status=all|location=central_hub","Company A",2025,"fundamental","Purpose","Purpose",4.16
+"department=operations_delivery|status=all|location=central_hub","Company A",2025,"fundamental","Strategy","Strategy",3.64
+"department=operations_delivery|status=all|location=central_hub","Company A",2025,"fundamental","Leadership","Leadership",3.95
+"department=operations_delivery|status=all|location=central_hub","Company A",2025,"fundamental","Communication","Communication",3.9
+"department=operations_delivery|status=all|location=central_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.81
+"department=operations_delivery|status=all|location=central_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",3.93
+"department=operations_delivery|status=all|location=central_hub","Company A",2025,"fundamental","Performance development","Performance development",3.75
+"department=operations_delivery|status=all|location=central_hub","Company A",2025,"fundamental","Safety","Safety",4.45
+"department=all|status=full_time|location=central_hub","Company A",2025,"outcome","eNPS","eNPS",61.6045845272206
+"department=all|status=full_time|location=central_hub","Company A",2025,"outcome","Burnout","Burnout",2.14433962264151
+"department=all|status=full_time|location=central_hub","Company A",2025,"outcome","Engagement","Engagement",4.27644569816643
+"department=all|status=full_time|location=central_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.36406396989652
+"department=all|status=full_time|location=central_hub","Company A",2025,"fundamental","Purpose","Purpose",4.5
+"department=all|status=full_time|location=central_hub","Company A",2025,"fundamental","Strategy","Strategy",4.21
+"department=all|status=full_time|location=central_hub","Company A",2025,"fundamental","Leadership","Leadership",4.4
+"department=all|status=full_time|location=central_hub","Company A",2025,"fundamental","Communication","Communication",4.28
+"department=all|status=full_time|location=central_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.1
+"department=all|status=full_time|location=central_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.37
+"department=all|status=full_time|location=central_hub","Company A",2025,"fundamental","Performance development","Performance development",4.2
+"department=all|status=full_time|location=central_hub","Company A",2025,"fundamental","Safety","Safety",4.58
+"department=business_development|status=full_time|location=central_hub","Company A",2025,"outcome","eNPS","eNPS",70.3703703703704
+"department=business_development|status=full_time|location=central_hub","Company A",2025,"outcome","Burnout","Burnout",2.1358024691358
+"department=business_development|status=full_time|location=central_hub","Company A",2025,"outcome","Engagement","Engagement",4.42990654205607
+"department=business_development|status=full_time|location=central_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.4
+"department=business_development|status=full_time|location=central_hub","Company A",2025,"fundamental","Purpose","Purpose",4.57
+"department=business_development|status=full_time|location=central_hub","Company A",2025,"fundamental","Strategy","Strategy",4.21
+"department=business_development|status=full_time|location=central_hub","Company A",2025,"fundamental","Leadership","Leadership",4.47
+"department=business_development|status=full_time|location=central_hub","Company A",2025,"fundamental","Communication","Communication",4.43
+"department=business_development|status=full_time|location=central_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.12
+"department=business_development|status=full_time|location=central_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.4
+"department=business_development|status=full_time|location=central_hub","Company A",2025,"fundamental","Performance development","Performance development",4.25
+"department=business_development|status=full_time|location=central_hub","Company A",2025,"fundamental","Safety","Safety",4.54
+"department=completions_strategy|status=full_time|location=central_hub","Company A",2025,"outcome","eNPS","eNPS",57.1428571428571
+"department=completions_strategy|status=full_time|location=central_hub","Company A",2025,"outcome","Burnout","Burnout",1.97029702970297
+"department=completions_strategy|status=full_time|location=central_hub","Company A",2025,"outcome","Engagement","Engagement",4.33823529411765
+"department=completions_strategy|status=full_time|location=central_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.3960396039604
+"department=completions_strategy|status=full_time|location=central_hub","Company A",2025,"fundamental","Purpose","Purpose",4.57
+"department=completions_strategy|status=full_time|location=central_hub","Company A",2025,"fundamental","Strategy","Strategy",4.31
+"department=completions_strategy|status=full_time|location=central_hub","Company A",2025,"fundamental","Leadership","Leadership",4.45
+"department=completions_strategy|status=full_time|location=central_hub","Company A",2025,"fundamental","Communication","Communication",4.39
+"department=completions_strategy|status=full_time|location=central_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.14
+"department=completions_strategy|status=full_time|location=central_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.47
+"department=completions_strategy|status=full_time|location=central_hub","Company A",2025,"fundamental","Performance development","Performance development",4.26
+"department=completions_strategy|status=full_time|location=central_hub","Company A",2025,"fundamental","Safety","Safety",4.54
+"department=corporate_services|status=full_time|location=central_hub","Company A",2025,"outcome","eNPS","eNPS",63.6363636363636
+"department=corporate_services|status=full_time|location=central_hub","Company A",2025,"outcome","Burnout","Burnout",2.16417910447761
+"department=corporate_services|status=full_time|location=central_hub","Company A",2025,"outcome","Engagement","Engagement",4.17391304347826
+"department=corporate_services|status=full_time|location=central_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.26086956521739
+"department=corporate_services|status=full_time|location=central_hub","Company A",2025,"fundamental","Purpose","Purpose",4.47
+"department=corporate_services|status=full_time|location=central_hub","Company A",2025,"fundamental","Strategy","Strategy",4.12
+"department=corporate_services|status=full_time|location=central_hub","Company A",2025,"fundamental","Leadership","Leadership",4.36
+"department=corporate_services|status=full_time|location=central_hub","Company A",2025,"fundamental","Communication","Communication",4.13
+"department=corporate_services|status=full_time|location=central_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.99
+"department=corporate_services|status=full_time|location=central_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.27
+"department=corporate_services|status=full_time|location=central_hub","Company A",2025,"fundamental","Performance development","Performance development",4.24
+"department=corporate_services|status=full_time|location=central_hub","Company A",2025,"fundamental","Safety","Safety",4.57
+"department=cross_functional_groups|status=full_time|location=central_hub","Company A",2025,"outcome","eNPS","eNPS",60.4938271604938
+"department=cross_functional_groups|status=full_time|location=central_hub","Company A",2025,"outcome","Burnout","Burnout",2.15570469798658
+"department=cross_functional_groups|status=full_time|location=central_hub","Company A",2025,"outcome","Engagement","Engagement",4.2894472361809
+"department=cross_functional_groups|status=full_time|location=central_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.39892904953146
+"department=cross_functional_groups|status=full_time|location=central_hub","Company A",2025,"fundamental","Purpose","Purpose",4.51
+"department=cross_functional_groups|status=full_time|location=central_hub","Company A",2025,"fundamental","Strategy","Strategy",4.25
+"department=cross_functional_groups|status=full_time|location=central_hub","Company A",2025,"fundamental","Leadership","Leadership",4.42
+"department=cross_functional_groups|status=full_time|location=central_hub","Company A",2025,"fundamental","Communication","Communication",4.29
+"department=cross_functional_groups|status=full_time|location=central_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.12
+"department=cross_functional_groups|status=full_time|location=central_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.4
+"department=cross_functional_groups|status=full_time|location=central_hub","Company A",2025,"fundamental","Performance development","Performance development",4.23
+"department=cross_functional_groups|status=full_time|location=central_hub","Company A",2025,"fundamental","Safety","Safety",4.6
+"department=operations_delivery|status=full_time|location=central_hub","Company A",2025,"outcome","eNPS","eNPS",68.1818181818182
+"department=operations_delivery|status=full_time|location=central_hub","Company A",2025,"outcome","Burnout","Burnout",2.27272727272727
+"department=operations_delivery|status=full_time|location=central_hub","Company A",2025,"outcome","Engagement","Engagement",3.95454545454545
+"department=operations_delivery|status=full_time|location=central_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",3.98484848484848
+"department=operations_delivery|status=full_time|location=central_hub","Company A",2025,"fundamental","Purpose","Purpose",4.16
+"department=operations_delivery|status=full_time|location=central_hub","Company A",2025,"fundamental","Strategy","Strategy",3.64
+"department=operations_delivery|status=full_time|location=central_hub","Company A",2025,"fundamental","Leadership","Leadership",3.95
+"department=operations_delivery|status=full_time|location=central_hub","Company A",2025,"fundamental","Communication","Communication",3.9
+"department=operations_delivery|status=full_time|location=central_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.81
+"department=operations_delivery|status=full_time|location=central_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",3.93
+"department=operations_delivery|status=full_time|location=central_hub","Company A",2025,"fundamental","Performance development","Performance development",3.75
+"department=operations_delivery|status=full_time|location=central_hub","Company A",2025,"fundamental","Safety","Safety",4.45
+"department=all|status=all|location=prairie_hub","Company A",2025,"outcome","eNPS","eNPS",64.4859813084112
+"department=all|status=all|location=prairie_hub","Company A",2025,"outcome","Burnout","Burnout",2.36697247706422
+"department=all|status=all|location=prairie_hub","Company A",2025,"outcome","Engagement","Engagement",4.1875
+"department=all|status=all|location=prairie_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.38208955223881
+"department=all|status=all|location=prairie_hub","Company A",2025,"fundamental","Purpose","Purpose",4.18
+"department=all|status=all|location=prairie_hub","Company A",2025,"fundamental","Strategy","Strategy",3.94
+"department=all|status=all|location=prairie_hub","Company A",2025,"fundamental","Leadership","Leadership",4.16
+"department=all|status=all|location=prairie_hub","Company A",2025,"fundamental","Communication","Communication",3.98
+"department=all|status=all|location=prairie_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.94
+"department=all|status=all|location=prairie_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.06
+"department=all|status=all|location=prairie_hub","Company A",2025,"fundamental","Performance development","Performance development",3.83
+"department=all|status=all|location=prairie_hub","Company A",2025,"fundamental","Safety","Safety",4.43
+"department=capital_programs|status=all|location=prairie_hub","Company A",2025,"outcome","eNPS","eNPS",33.3333333333333
+"department=capital_programs|status=all|location=prairie_hub","Company A",2025,"outcome","Burnout","Burnout",3.22222222222222
+"department=capital_programs|status=all|location=prairie_hub","Company A",2025,"outcome","Engagement","Engagement",4.91666666666667
+"department=capital_programs|status=all|location=prairie_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",5
+"department=capital_programs|status=all|location=prairie_hub","Company A",2025,"fundamental","Purpose","Purpose",4.39
+"department=capital_programs|status=all|location=prairie_hub","Company A",2025,"fundamental","Strategy","Strategy",4.09
+"department=capital_programs|status=all|location=prairie_hub","Company A",2025,"fundamental","Leadership","Leadership",4.32
+"department=capital_programs|status=all|location=prairie_hub","Company A",2025,"fundamental","Communication","Communication",4.17
+"department=capital_programs|status=all|location=prairie_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.04
+"department=capital_programs|status=all|location=prairie_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.26
+"department=capital_programs|status=all|location=prairie_hub","Company A",2025,"fundamental","Performance development","Performance development",4.07
+"department=capital_programs|status=all|location=prairie_hub","Company A",2025,"fundamental","Safety","Safety",4.51
+"department=cross_functional_groups|status=all|location=prairie_hub","Company A",2025,"outcome","eNPS","eNPS",50
+"department=cross_functional_groups|status=all|location=prairie_hub","Company A",2025,"outcome","Burnout","Burnout",2.52631578947368
+"department=cross_functional_groups|status=all|location=prairie_hub","Company A",2025,"outcome","Engagement","Engagement",4.22368421052632
+"department=cross_functional_groups|status=all|location=prairie_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.42857142857143
+"department=cross_functional_groups|status=all|location=prairie_hub","Company A",2025,"fundamental","Purpose","Purpose",4.31
+"department=cross_functional_groups|status=all|location=prairie_hub","Company A",2025,"fundamental","Strategy","Strategy",4.04
+"department=cross_functional_groups|status=all|location=prairie_hub","Company A",2025,"fundamental","Leadership","Leadership",4.3
+"department=cross_functional_groups|status=all|location=prairie_hub","Company A",2025,"fundamental","Communication","Communication",4.17
+"department=cross_functional_groups|status=all|location=prairie_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.97
+"department=cross_functional_groups|status=all|location=prairie_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.18
+"department=cross_functional_groups|status=all|location=prairie_hub","Company A",2025,"fundamental","Performance development","Performance development",3.91
+"department=cross_functional_groups|status=all|location=prairie_hub","Company A",2025,"fundamental","Safety","Safety",4.48
+"department=data_insights|status=all|location=prairie_hub","Company A",2025,"outcome","eNPS","eNPS",68.2352941176471
+"department=data_insights|status=all|location=prairie_hub","Company A",2025,"outcome","Burnout","Burnout",2.3062015503876
+"department=data_insights|status=all|location=prairie_hub","Company A",2025,"outcome","Engagement","Engagement",4.16292134831461
+"department=data_insights|status=all|location=prairie_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.36704119850187
+"department=data_insights|status=all|location=prairie_hub","Company A",2025,"fundamental","Purpose","Purpose",4.14
+"department=data_insights|status=all|location=prairie_hub","Company A",2025,"fundamental","Strategy","Strategy",3.9
+"department=data_insights|status=all|location=prairie_hub","Company A",2025,"fundamental","Leadership","Leadership",4.11
+"department=data_insights|status=all|location=prairie_hub","Company A",2025,"fundamental","Communication","Communication",3.92
+"department=data_insights|status=all|location=prairie_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.9
+"department=data_insights|status=all|location=prairie_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.03
+"department=data_insights|status=all|location=prairie_hub","Company A",2025,"fundamental","Performance development","Performance development",3.79
+"department=data_insights|status=all|location=prairie_hub","Company A",2025,"fundamental","Safety","Safety",4.41
+"department=operations_delivery|status=all|location=prairie_hub","Company A",2025,"outcome","eNPS","eNPS",100
+"department=operations_delivery|status=all|location=prairie_hub","Company A",2025,"outcome","Burnout","Burnout",2
+"department=operations_delivery|status=all|location=prairie_hub","Company A",2025,"outcome","Engagement","Engagement",3.5
+"department=operations_delivery|status=all|location=prairie_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",3
+"department=operations_delivery|status=all|location=prairie_hub","Company A",2025,"fundamental","Purpose","Purpose",4.39
+"department=operations_delivery|status=all|location=prairie_hub","Company A",2025,"fundamental","Strategy","Strategy",4.09
+"department=operations_delivery|status=all|location=prairie_hub","Company A",2025,"fundamental","Leadership","Leadership",4.32
+"department=operations_delivery|status=all|location=prairie_hub","Company A",2025,"fundamental","Communication","Communication",4.17
+"department=operations_delivery|status=all|location=prairie_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.04
+"department=operations_delivery|status=all|location=prairie_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.26
+"department=operations_delivery|status=all|location=prairie_hub","Company A",2025,"fundamental","Performance development","Performance development",4.07
+"department=operations_delivery|status=all|location=prairie_hub","Company A",2025,"fundamental","Safety","Safety",4.51
+"department=all|status=full_time|location=prairie_hub","Company A",2025,"outcome","eNPS","eNPS",64.4859813084112
+"department=all|status=full_time|location=prairie_hub","Company A",2025,"outcome","Burnout","Burnout",2.36697247706422
+"department=all|status=full_time|location=prairie_hub","Company A",2025,"outcome","Engagement","Engagement",4.1875
+"department=all|status=full_time|location=prairie_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.38208955223881
+"department=all|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Purpose","Purpose",4.18
+"department=all|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Strategy","Strategy",3.94
+"department=all|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Leadership","Leadership",4.16
+"department=all|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Communication","Communication",3.98
+"department=all|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.94
+"department=all|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.06
+"department=all|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Performance development","Performance development",3.83
+"department=all|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Safety","Safety",4.43
+"department=capital_programs|status=full_time|location=prairie_hub","Company A",2025,"outcome","eNPS","eNPS",33.3333333333333
+"department=capital_programs|status=full_time|location=prairie_hub","Company A",2025,"outcome","Burnout","Burnout",3.22222222222222
+"department=capital_programs|status=full_time|location=prairie_hub","Company A",2025,"outcome","Engagement","Engagement",4.91666666666667
+"department=capital_programs|status=full_time|location=prairie_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",5
+"department=capital_programs|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Purpose","Purpose",4.39
+"department=capital_programs|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Strategy","Strategy",4.09
+"department=capital_programs|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Leadership","Leadership",4.32
+"department=capital_programs|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Communication","Communication",4.17
+"department=capital_programs|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.04
+"department=capital_programs|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.26
+"department=capital_programs|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Performance development","Performance development",4.07
+"department=capital_programs|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Safety","Safety",4.51
+"department=cross_functional_groups|status=full_time|location=prairie_hub","Company A",2025,"outcome","eNPS","eNPS",50
+"department=cross_functional_groups|status=full_time|location=prairie_hub","Company A",2025,"outcome","Burnout","Burnout",2.52631578947368
+"department=cross_functional_groups|status=full_time|location=prairie_hub","Company A",2025,"outcome","Engagement","Engagement",4.22368421052632
+"department=cross_functional_groups|status=full_time|location=prairie_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.42857142857143
+"department=cross_functional_groups|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Purpose","Purpose",4.31
+"department=cross_functional_groups|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Strategy","Strategy",4.04
+"department=cross_functional_groups|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Leadership","Leadership",4.3
+"department=cross_functional_groups|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Communication","Communication",4.17
+"department=cross_functional_groups|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.97
+"department=cross_functional_groups|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.18
+"department=cross_functional_groups|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Performance development","Performance development",3.91
+"department=cross_functional_groups|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Safety","Safety",4.48
+"department=data_insights|status=full_time|location=prairie_hub","Company A",2025,"outcome","eNPS","eNPS",68.2352941176471
+"department=data_insights|status=full_time|location=prairie_hub","Company A",2025,"outcome","Burnout","Burnout",2.3062015503876
+"department=data_insights|status=full_time|location=prairie_hub","Company A",2025,"outcome","Engagement","Engagement",4.16292134831461
+"department=data_insights|status=full_time|location=prairie_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.36704119850187
+"department=data_insights|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Purpose","Purpose",4.14
+"department=data_insights|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Strategy","Strategy",3.9
+"department=data_insights|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Leadership","Leadership",4.11
+"department=data_insights|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Communication","Communication",3.92
+"department=data_insights|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.9
+"department=data_insights|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.03
+"department=data_insights|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Performance development","Performance development",3.79
+"department=data_insights|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Safety","Safety",4.41
+"department=operations_delivery|status=full_time|location=prairie_hub","Company A",2025,"outcome","eNPS","eNPS",100
+"department=operations_delivery|status=full_time|location=prairie_hub","Company A",2025,"outcome","Burnout","Burnout",2
+"department=operations_delivery|status=full_time|location=prairie_hub","Company A",2025,"outcome","Engagement","Engagement",3.5
+"department=operations_delivery|status=full_time|location=prairie_hub","Company A",2025,"outcome","Work satisfaction","Work satisfaction",3
+"department=operations_delivery|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Purpose","Purpose",4.39
+"department=operations_delivery|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Strategy","Strategy",4.09
+"department=operations_delivery|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Leadership","Leadership",4.32
+"department=operations_delivery|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Communication","Communication",4.17
+"department=operations_delivery|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.04
+"department=operations_delivery|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.26
+"department=operations_delivery|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Performance development","Performance development",4.07
+"department=operations_delivery|status=full_time|location=prairie_hub","Company A",2025,"fundamental","Safety","Safety",4.51
+"department=all|status=all|location=regional_support_sites","Company A",2025,"outcome","eNPS","eNPS",61.5384615384615
+"department=all|status=all|location=regional_support_sites","Company A",2025,"outcome","Burnout","Burnout",2.27060931899642
+"department=all|status=all|location=regional_support_sites","Company A",2025,"outcome","Engagement","Engagement",4.19473684210526
+"department=all|status=all|location=regional_support_sites","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.32456140350877
+"department=all|status=all|location=regional_support_sites","Company A",2025,"fundamental","Purpose","Purpose",4.29
+"department=all|status=all|location=regional_support_sites","Company A",2025,"fundamental","Strategy","Strategy",4.01
+"department=all|status=all|location=regional_support_sites","Company A",2025,"fundamental","Leadership","Leadership",4.2
+"department=all|status=all|location=regional_support_sites","Company A",2025,"fundamental","Communication","Communication",4.08
+"department=all|status=all|location=regional_support_sites","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.98
+"department=all|status=all|location=regional_support_sites","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.2
+"department=all|status=all|location=regional_support_sites","Company A",2025,"fundamental","Performance development","Performance development",3.95
+"department=all|status=all|location=regional_support_sites","Company A",2025,"fundamental","Safety","Safety",4.44
+"department=capital_programs|status=all|location=regional_support_sites","Company A",2025,"outcome","eNPS","eNPS",55.1282051282051
+"department=capital_programs|status=all|location=regional_support_sites","Company A",2025,"outcome","Burnout","Burnout",2.34745762711864
+"department=capital_programs|status=all|location=regional_support_sites","Company A",2025,"outcome","Engagement","Engagement",4.12654320987654
+"department=capital_programs|status=all|location=regional_support_sites","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.29218106995885
+"department=capital_programs|status=all|location=regional_support_sites","Company A",2025,"fundamental","Purpose","Purpose",4.21
+"department=capital_programs|status=all|location=regional_support_sites","Company A",2025,"fundamental","Strategy","Strategy",3.97
+"department=capital_programs|status=all|location=regional_support_sites","Company A",2025,"fundamental","Leadership","Leadership",4.16
+"department=capital_programs|status=all|location=regional_support_sites","Company A",2025,"fundamental","Communication","Communication",4.05
+"department=capital_programs|status=all|location=regional_support_sites","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.94
+"department=capital_programs|status=all|location=regional_support_sites","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.13
+"department=capital_programs|status=all|location=regional_support_sites","Company A",2025,"fundamental","Performance development","Performance development",3.82
+"department=capital_programs|status=all|location=regional_support_sites","Company A",2025,"fundamental","Safety","Safety",4.36
+"department=completions_strategy|status=all|location=regional_support_sites","Company A",2025,"outcome","eNPS","eNPS",100
+"department=completions_strategy|status=all|location=regional_support_sites","Company A",2025,"outcome","Burnout","Burnout",2.5
+"department=completions_strategy|status=all|location=regional_support_sites","Company A",2025,"outcome","Engagement","Engagement",5
+"department=completions_strategy|status=all|location=regional_support_sites","Company A",2025,"outcome","Work satisfaction","Work satisfaction",5
+"department=completions_strategy|status=all|location=regional_support_sites","Company A",2025,"fundamental","Purpose","Purpose",4.39
+"department=completions_strategy|status=all|location=regional_support_sites","Company A",2025,"fundamental","Strategy","Strategy",4.09
+"department=completions_strategy|status=all|location=regional_support_sites","Company A",2025,"fundamental","Leadership","Leadership",4.32
+"department=completions_strategy|status=all|location=regional_support_sites","Company A",2025,"fundamental","Communication","Communication",4.17
+"department=completions_strategy|status=all|location=regional_support_sites","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.04
+"department=completions_strategy|status=all|location=regional_support_sites","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.26
+"department=completions_strategy|status=all|location=regional_support_sites","Company A",2025,"fundamental","Performance development","Performance development",4.07
+"department=completions_strategy|status=all|location=regional_support_sites","Company A",2025,"fundamental","Safety","Safety",4.51
+"department=cross_functional_groups|status=all|location=regional_support_sites","Company A",2025,"outcome","eNPS","eNPS",63.3333333333333
+"department=cross_functional_groups|status=all|location=regional_support_sites","Company A",2025,"outcome","Burnout","Burnout",2.19459459459459
+"department=cross_functional_groups|status=all|location=regional_support_sites","Company A",2025,"outcome","Engagement","Engagement",4.21774193548387
+"department=cross_functional_groups|status=all|location=regional_support_sites","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.31720430107527
+"department=cross_functional_groups|status=all|location=regional_support_sites","Company A",2025,"fundamental","Purpose","Purpose",4.42
+"department=cross_functional_groups|status=all|location=regional_support_sites","Company A",2025,"fundamental","Strategy","Strategy",4.09
+"department=cross_functional_groups|status=all|location=regional_support_sites","Company A",2025,"fundamental","Leadership","Leadership",4.33
+"department=cross_functional_groups|status=all|location=regional_support_sites","Company A",2025,"fundamental","Communication","Communication",4.18
+"department=cross_functional_groups|status=all|location=regional_support_sites","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.03
+"department=cross_functional_groups|status=all|location=regional_support_sites","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.27
+"department=cross_functional_groups|status=all|location=regional_support_sites","Company A",2025,"fundamental","Performance development","Performance development",4.14
+"department=cross_functional_groups|status=all|location=regional_support_sites","Company A",2025,"fundamental","Safety","Safety",4.58
+"department=data_insights|status=all|location=regional_support_sites","Company A",2025,"outcome","eNPS","eNPS",69.047619047619
+"department=data_insights|status=all|location=regional_support_sites","Company A",2025,"outcome","Burnout","Burnout",2.22900763358779
+"department=data_insights|status=all|location=regional_support_sites","Company A",2025,"outcome","Engagement","Engagement",4.25
+"department=data_insights|status=all|location=regional_support_sites","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.36296296296296
+"department=data_insights|status=all|location=regional_support_sites","Company A",2025,"fundamental","Purpose","Purpose",4.24
+"department=data_insights|status=all|location=regional_support_sites","Company A",2025,"fundamental","Strategy","Strategy",3.95
+"department=data_insights|status=all|location=regional_support_sites","Company A",2025,"fundamental","Leadership","Leadership",4.06
+"department=data_insights|status=all|location=regional_support_sites","Company A",2025,"fundamental","Communication","Communication",3.95
+"department=data_insights|status=all|location=regional_support_sites","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.96
+"department=data_insights|status=all|location=regional_support_sites","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.19
+"department=data_insights|status=all|location=regional_support_sites","Company A",2025,"fundamental","Performance development","Performance development",3.88
+"department=data_insights|status=all|location=regional_support_sites","Company A",2025,"fundamental","Safety","Safety",4.37
+"department=all|status=full_time|location=regional_support_sites","Company A",2025,"outcome","eNPS","eNPS",61.5384615384615
+"department=all|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Burnout","Burnout",2.27060931899642
+"department=all|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Engagement","Engagement",4.19473684210526
+"department=all|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.32456140350877
+"department=all|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Purpose","Purpose",4.29
+"department=all|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Strategy","Strategy",4.01
+"department=all|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Leadership","Leadership",4.2
+"department=all|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Communication","Communication",4.08
+"department=all|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.98
+"department=all|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.2
+"department=all|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Performance development","Performance development",3.95
+"department=all|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Safety","Safety",4.44
+"department=capital_programs|status=full_time|location=regional_support_sites","Company A",2025,"outcome","eNPS","eNPS",55.1282051282051
+"department=capital_programs|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Burnout","Burnout",2.34745762711864
+"department=capital_programs|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Engagement","Engagement",4.12654320987654
+"department=capital_programs|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.29218106995885
+"department=capital_programs|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Purpose","Purpose",4.21
+"department=capital_programs|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Strategy","Strategy",3.97
+"department=capital_programs|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Leadership","Leadership",4.16
+"department=capital_programs|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Communication","Communication",4.05
+"department=capital_programs|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.94
+"department=capital_programs|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.13
+"department=capital_programs|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Performance development","Performance development",3.82
+"department=capital_programs|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Safety","Safety",4.36
+"department=completions_strategy|status=full_time|location=regional_support_sites","Company A",2025,"outcome","eNPS","eNPS",100
+"department=completions_strategy|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Burnout","Burnout",2.5
+"department=completions_strategy|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Engagement","Engagement",5
+"department=completions_strategy|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Work satisfaction","Work satisfaction",5
+"department=completions_strategy|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Purpose","Purpose",4.39
+"department=completions_strategy|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Strategy","Strategy",4.09
+"department=completions_strategy|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Leadership","Leadership",4.32
+"department=completions_strategy|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Communication","Communication",4.17
+"department=completions_strategy|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.04
+"department=completions_strategy|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.26
+"department=completions_strategy|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Performance development","Performance development",4.07
+"department=completions_strategy|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Safety","Safety",4.51
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","Company A",2025,"outcome","eNPS","eNPS",63.3333333333333
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Burnout","Burnout",2.19459459459459
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Engagement","Engagement",4.21774193548387
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.31720430107527
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Purpose","Purpose",4.42
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Strategy","Strategy",4.09
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Leadership","Leadership",4.33
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Communication","Communication",4.18
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.03
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.27
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Performance development","Performance development",4.14
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Safety","Safety",4.58
+"department=data_insights|status=full_time|location=regional_support_sites","Company A",2025,"outcome","eNPS","eNPS",69.047619047619
+"department=data_insights|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Burnout","Burnout",2.22900763358779
+"department=data_insights|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Engagement","Engagement",4.25
+"department=data_insights|status=full_time|location=regional_support_sites","Company A",2025,"outcome","Work satisfaction","Work satisfaction",4.36296296296296
+"department=data_insights|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Purpose","Purpose",4.24
+"department=data_insights|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Strategy","Strategy",3.95
+"department=data_insights|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Leadership","Leadership",4.06
+"department=data_insights|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Communication","Communication",3.95
+"department=data_insights|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.96
+"department=data_insights|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.19
+"department=data_insights|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Performance development","Performance development",3.88
+"department=data_insights|status=full_time|location=regional_support_sites","Company A",2025,"fundamental","Safety","Safety",4.37

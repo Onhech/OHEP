@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OHEP Demo Report</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main-region">
+      <header class="topbar">
+        <div class="topbar-title">
+          <h1 id="report-title">OHEP Demo Report</h1>
+          <p id="report-subtitle"></p>
+        </div>
+        <div class="filters">
+          <label class="filter-control">
+            <span>Department</span>
+            <select id="filter-department"></select>
+          </label>
+          <label class="filter-control">
+            <span>Full-Time Status</span>
+            <select id="filter-full-time-status"></select>
+          </label>
+          <label class="filter-control">
+            <span>Location Cluster</span>
+            <select id="filter-location-cluster"></select>
+          </label>
+        </div>
+      </header>
+      <section class="stage-wrap">
+        <div class="page-stage">
+          <iframe id="slide-frame" title="Slide Stage"></iframe>
+        </div>
+      </section>
+      <footer class="controls">
+        <button id="prev-btn" type="button">Previous</button>
+        <div id="slide-count">Slide 1 / 1</div>
+        <button id="next-btn" type="button">Next</button>
+      </footer>
+    </main>
+  </div>
+  <script src="./demo-data.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

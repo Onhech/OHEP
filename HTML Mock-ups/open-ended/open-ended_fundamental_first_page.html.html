@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verbatim Feedback Gallery - 16:9</title>
+
+<style>
+  * { box-sizing: border-box; }
+
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    background: #E2E8F0; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    min-height: 100vh;
+    margin: 0; 
+  }
+
+  /* --- STRICT 16:9 SLIDE CONTAINER --- */
+  .slide-container {
+    width: 1280px; 
+    height: 720px; /* Locked height */
+    background: #F8FAFC; 
+    padding: 36px 48px; 
+    border-radius: 8px; 
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1); 
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+  }
+
+  /* --- HEADER SECTION --- */
+  .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 2px solid #0D9488;
+    padding-bottom: 12px;
+    margin-bottom: 24px;
+    flex-shrink: 0;
+  }
+
+  .title-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .theme-kicker { 
+    font-size: 14px; 
+    font-weight: 800; 
+    color: #0D9488; 
+    text-transform: uppercase; 
+    letter-spacing: 1.5px; 
+    margin-bottom: 4px; 
+  }
+
+  .theme-title { 
+    font-size: 32px; 
+    font-weight: 900; 
+    color: #0F172A; 
+    margin: 0 0 4px 0; 
+    letter-spacing: -0.5px; 
+  }
+
+  .theme-intro {
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 600;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* --- MASONRY GRID (CSS Columns) --- */
+  .masonry-grid {
+    column-count: 3;
+    column-gap: 24px;
+    flex: 1;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  /* --- UNIFORM QUOTE CARD --- */
+  .comment-card {
+    break-inside: avoid; /* Prevents cards from breaking across columns */
+    page-break-inside: avoid;
+    margin-bottom: 24px;
+    background: white;
+    padding: 24px 28px 24px 24px;
+    border-radius: 10px;
+    border: 1px solid #E2E8F0;
+    border-left: 5px solid #0D9488; 
+    box-shadow: 0 4px 12px rgba(15,23,42,0.03);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Subtle Quote Icon Watermark */
+  .comment-card::before {
+    content: "“";
+    position: absolute;
+    top: -12px; 
+    left: 12px;
+    font-size: 70px;
+    color: #F1F5F9;
+    font-family: Georgia, serif;
+    line-height: 1;
+    z-index: 0;
+  }
+
+  .comment-text {
+    position: relative;
+    z-index: 1;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #334155;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  /* --- FOOTER --- */
+  .footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    flex-shrink: 0;
+    margin-top: auto;
+  }
+  
+  .brand {
+    font-size: 18px;
+    font-weight: 800;
+    color: #334155;
+    letter-spacing: -0.5px;
+  }
+  .brand-dot { color: #0EA5E9; }
+
+</style>
+</head>
+<body>
+
+<div class="slide-container">
+
+  <div class="header-section">
+    <div class="title-group">
+      <div class="theme-kicker">Qualitative Feedback</div>
+      <h1 class="theme-title">Purpose</h1>
+      <p class="theme-intro">Verbatim & Unedited Employee Comments</p>
+    </div>
+  </div>
+
+  <div class="masonry-grid">
+
+    <div class="comment-card">
+      <p class="comment-text">
+        We need to ensure our corporate purpose is known by all and understood. If things change it needs to be communicated to people. Ideally we should see it in everything we do - that is not always the case and can lead to doubt.
+      </p>
+    </div>
+
+    <div class="comment-card">
+      <p class="comment-text">
+        Am so proud and grateful to be part of this organization, whose leadership and commitment upholds the interest of the community, the organization and the Company as a whole.
+      </p>
+    </div>
+
+    <div class="comment-card">
+      <p class="comment-text">
+        Sometimes it is difficult to figure out what our company's purpose is when we engage in M&A and other decisions/larger transactions and the reason is not widely disclosed to employees.
+      </p>
+    </div>
+
+    <div class="comment-card">
+      <p class="comment-text">
+        Surge does an excellent job on creating value in communities in which we operate in.
+      </p>
+    </div>
+
+    <div class="comment-card">
+      <p class="comment-text">
+        i enjoy my job and postion
+      </p>
+    </div>
+
+    <div class="comment-card">
+      <p class="comment-text">
+        Where does the company want to be in 5yrs?
+      </p>
+    </div>
+
+    <div class="comment-card">
+      <p class="comment-text">
+        Our relationships with the community and Third party service providers is admirable. Extremely proud to work for this company.
+      </p>
+    </div>
+
+    <div class="comment-card">
+      <p class="comment-text">
+        good job
+      </p>
+    </div>
+
+    <div class="comment-card">
+      <p class="comment-text">
+        There’s an opportunity to revisit the purpose and make sure it reflects the company’s current direction and challenges.
+      </p>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="brand"><span class="brand-dot">•</span> monark</div>
+  </div>
+
+</div>
+
+</body>
+</html>

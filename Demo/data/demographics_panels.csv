@@ -1,0 +1,405 @@
+"filter_id","panel_slot","panel_type","category","label","count","pct","sort_order"
+"department=all|status=all|location=all","tl","categorical_bar","Cross-Functional Groups","demo_department",360,52,1
+"department=all|status=all|location=all","tl","categorical_bar","Data & Insights","demo_department",146,21.1,2
+"department=all|status=all|location=all","tl","categorical_bar","Capital Programs","demo_department",91,13.2,3
+"department=all|status=all|location=all","tl","categorical_bar","Completions Strategy","demo_department",39,5.6,4
+"department=all|status=all|location=all","tl","categorical_bar","Business Development","demo_department",29,4.2,5
+"department=all|status=all|location=all","tl","categorical_bar","Corporate Services","demo_department",27,3.9,6
+"department=all|status=all|location=all","tr","categorical_bar","Central Hub","demo_location",389,54.4,1
+"department=all|status=all|location=all","tr","categorical_bar","Regional Support Sites","demo_location",205,28.7,2
+"department=all|status=all|location=all","tr","categorical_bar","Prairie Hub","demo_location",121,16.9,3
+"department=all|status=all|location=all","bl","categorical_bar","Full-Time","employeeGroup",715,100,1
+"department=all|status=all|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",210,29.4,1
+"department=all|status=all|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",162,22.7,2
+"department=all|status=all|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",155,21.7,3
+"department=all|status=all|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",128,17.9,4
+"department=all|status=all|location=all","br","categorical_bar","Tenure Group 05","demo_tenure",60,8.4,5
+"department=business_development|status=all|location=all","tl","categorical_bar","Business Development","demo_department",29,100,1
+"department=business_development|status=all|location=all","tr","categorical_bar","Central Hub","demo_location",29,100,1
+"department=business_development|status=all|location=all","bl","categorical_bar","Full-Time","employeeGroup",29,100,1
+"department=business_development|status=all|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",14,48.3,1
+"department=business_development|status=all|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",9,31,2
+"department=business_development|status=all|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",5,17.2,3
+"department=business_development|status=all|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",1,3.4,4
+"department=capital_programs|status=all|location=all","tl","categorical_bar","Capital Programs","demo_department",91,100,1
+"department=capital_programs|status=all|location=all","tr","categorical_bar","Regional Support Sites","demo_location",88,96.7,1
+"department=capital_programs|status=all|location=all","tr","categorical_bar","Prairie Hub","demo_location",3,3.3,2
+"department=capital_programs|status=all|location=all","bl","categorical_bar","Full-Time","employeeGroup",91,100,1
+"department=capital_programs|status=all|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",29,31.9,1
+"department=capital_programs|status=all|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",27,29.7,2
+"department=capital_programs|status=all|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",14,15.4,3
+"department=capital_programs|status=all|location=all","br","categorical_bar","Tenure Group 05","demo_tenure",11,12.1,4
+"department=capital_programs|status=all|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",10,11,5
+"department=completions_strategy|status=all|location=all","tl","categorical_bar","Completions Strategy","demo_department",39,100,1
+"department=completions_strategy|status=all|location=all","tr","categorical_bar","Central Hub","demo_location",37,94.9,1
+"department=completions_strategy|status=all|location=all","tr","categorical_bar","Regional Support Sites","demo_location",2,5.1,2
+"department=completions_strategy|status=all|location=all","bl","categorical_bar","Full-Time","employeeGroup",39,100,1
+"department=completions_strategy|status=all|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",19,48.7,1
+"department=completions_strategy|status=all|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",10,25.6,2
+"department=completions_strategy|status=all|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",8,20.5,3
+"department=completions_strategy|status=all|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",1,2.6,4
+"department=completions_strategy|status=all|location=all","br","categorical_bar","Tenure Group 05","demo_tenure",1,2.6,5
+"department=corporate_services|status=all|location=all","tl","categorical_bar","Corporate Services","demo_department",27,100,1
+"department=corporate_services|status=all|location=all","tr","categorical_bar","Central Hub","demo_location",27,100,1
+"department=corporate_services|status=all|location=all","bl","categorical_bar","Full-Time","employeeGroup",27,100,1
+"department=corporate_services|status=all|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",17,63,1
+"department=corporate_services|status=all|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",4,14.8,2
+"department=corporate_services|status=all|location=all","br","categorical_bar","Tenure Group 05","demo_tenure",3,11.1,3
+"department=corporate_services|status=all|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",2,7.4,4
+"department=corporate_services|status=all|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",1,3.7,5
+"department=cross_functional_groups|status=all|location=all","tl","categorical_bar","Cross-Functional Groups","demo_department",360,100,1
+"department=cross_functional_groups|status=all|location=all","tr","categorical_bar","Central Hub","demo_location",274,76.1,1
+"department=cross_functional_groups|status=all|location=all","tr","categorical_bar","Regional Support Sites","demo_location",67,18.6,2
+"department=cross_functional_groups|status=all|location=all","tr","categorical_bar","Prairie Hub","demo_location",19,5.3,3
+"department=cross_functional_groups|status=all|location=all","bl","categorical_bar","Full-Time","employeeGroup",360,100,1
+"department=cross_functional_groups|status=all|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",102,28.3,1
+"department=cross_functional_groups|status=all|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",88,24.4,2
+"department=cross_functional_groups|status=all|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",74,20.6,3
+"department=cross_functional_groups|status=all|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",68,18.9,4
+"department=cross_functional_groups|status=all|location=all","br","categorical_bar","Tenure Group 05","demo_tenure",28,7.8,5
+"department=data_insights|status=all|location=all","tl","categorical_bar","Data & Insights","demo_department",146,100,1
+"department=data_insights|status=all|location=all","tr","categorical_bar","Prairie Hub","demo_location",98,67.1,1
+"department=data_insights|status=all|location=all","tr","categorical_bar","Regional Support Sites","demo_location",48,32.9,2
+"department=data_insights|status=all|location=all","bl","categorical_bar","Full-Time","employeeGroup",146,100,1
+"department=data_insights|status=all|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",43,29.5,1
+"department=data_insights|status=all|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",33,22.6,2
+"department=data_insights|status=all|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",31,21.2,3
+"department=data_insights|status=all|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",24,16.4,4
+"department=data_insights|status=all|location=all","br","categorical_bar","Tenure Group 05","demo_tenure",15,10.3,5
+"department=operations_delivery|status=all|location=all","tl","categorical_bar","Operations Delivery","demo_department",23,100,1
+"department=operations_delivery|status=all|location=all","tr","categorical_bar","Central Hub","demo_location",22,95.7,1
+"department=operations_delivery|status=all|location=all","tr","categorical_bar","Prairie Hub","demo_location",1,4.3,2
+"department=operations_delivery|status=all|location=all","bl","categorical_bar","Full-Time","employeeGroup",23,100,1
+"department=operations_delivery|status=all|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",7,30.4,1
+"department=operations_delivery|status=all|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",5,21.7,2
+"department=operations_delivery|status=all|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",5,21.7,3
+"department=operations_delivery|status=all|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",4,17.4,4
+"department=operations_delivery|status=all|location=all","br","categorical_bar","Tenure Group 05","demo_tenure",2,8.7,5
+"department=all|status=full_time|location=all","tl","categorical_bar","Cross-Functional Groups","demo_department",360,52,1
+"department=all|status=full_time|location=all","tl","categorical_bar","Data & Insights","demo_department",146,21.1,2
+"department=all|status=full_time|location=all","tl","categorical_bar","Capital Programs","demo_department",91,13.2,3
+"department=all|status=full_time|location=all","tl","categorical_bar","Completions Strategy","demo_department",39,5.6,4
+"department=all|status=full_time|location=all","tl","categorical_bar","Business Development","demo_department",29,4.2,5
+"department=all|status=full_time|location=all","tl","categorical_bar","Corporate Services","demo_department",27,3.9,6
+"department=all|status=full_time|location=all","tr","categorical_bar","Central Hub","demo_location",389,54.4,1
+"department=all|status=full_time|location=all","tr","categorical_bar","Regional Support Sites","demo_location",205,28.7,2
+"department=all|status=full_time|location=all","tr","categorical_bar","Prairie Hub","demo_location",121,16.9,3
+"department=all|status=full_time|location=all","bl","categorical_bar","Full-Time","employeeGroup",715,100,1
+"department=all|status=full_time|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",210,29.4,1
+"department=all|status=full_time|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",162,22.7,2
+"department=all|status=full_time|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",155,21.7,3
+"department=all|status=full_time|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",128,17.9,4
+"department=all|status=full_time|location=all","br","categorical_bar","Tenure Group 05","demo_tenure",60,8.4,5
+"department=business_development|status=full_time|location=all","tl","categorical_bar","Business Development","demo_department",29,100,1
+"department=business_development|status=full_time|location=all","tr","categorical_bar","Central Hub","demo_location",29,100,1
+"department=business_development|status=full_time|location=all","bl","categorical_bar","Full-Time","employeeGroup",29,100,1
+"department=business_development|status=full_time|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",14,48.3,1
+"department=business_development|status=full_time|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",9,31,2
+"department=business_development|status=full_time|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",5,17.2,3
+"department=business_development|status=full_time|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",1,3.4,4
+"department=capital_programs|status=full_time|location=all","tl","categorical_bar","Capital Programs","demo_department",91,100,1
+"department=capital_programs|status=full_time|location=all","tr","categorical_bar","Regional Support Sites","demo_location",88,96.7,1
+"department=capital_programs|status=full_time|location=all","tr","categorical_bar","Prairie Hub","demo_location",3,3.3,2
+"department=capital_programs|status=full_time|location=all","bl","categorical_bar","Full-Time","employeeGroup",91,100,1
+"department=capital_programs|status=full_time|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",29,31.9,1
+"department=capital_programs|status=full_time|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",27,29.7,2
+"department=capital_programs|status=full_time|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",14,15.4,3
+"department=capital_programs|status=full_time|location=all","br","categorical_bar","Tenure Group 05","demo_tenure",11,12.1,4
+"department=capital_programs|status=full_time|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",10,11,5
+"department=completions_strategy|status=full_time|location=all","tl","categorical_bar","Completions Strategy","demo_department",39,100,1
+"department=completions_strategy|status=full_time|location=all","tr","categorical_bar","Central Hub","demo_location",37,94.9,1
+"department=completions_strategy|status=full_time|location=all","tr","categorical_bar","Regional Support Sites","demo_location",2,5.1,2
+"department=completions_strategy|status=full_time|location=all","bl","categorical_bar","Full-Time","employeeGroup",39,100,1
+"department=completions_strategy|status=full_time|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",19,48.7,1
+"department=completions_strategy|status=full_time|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",10,25.6,2
+"department=completions_strategy|status=full_time|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",8,20.5,3
+"department=completions_strategy|status=full_time|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",1,2.6,4
+"department=completions_strategy|status=full_time|location=all","br","categorical_bar","Tenure Group 05","demo_tenure",1,2.6,5
+"department=corporate_services|status=full_time|location=all","tl","categorical_bar","Corporate Services","demo_department",27,100,1
+"department=corporate_services|status=full_time|location=all","tr","categorical_bar","Central Hub","demo_location",27,100,1
+"department=corporate_services|status=full_time|location=all","bl","categorical_bar","Full-Time","employeeGroup",27,100,1
+"department=corporate_services|status=full_time|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",17,63,1
+"department=corporate_services|status=full_time|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",4,14.8,2
+"department=corporate_services|status=full_time|location=all","br","categorical_bar","Tenure Group 05","demo_tenure",3,11.1,3
+"department=corporate_services|status=full_time|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",2,7.4,4
+"department=corporate_services|status=full_time|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",1,3.7,5
+"department=cross_functional_groups|status=full_time|location=all","tl","categorical_bar","Cross-Functional Groups","demo_department",360,100,1
+"department=cross_functional_groups|status=full_time|location=all","tr","categorical_bar","Central Hub","demo_location",274,76.1,1
+"department=cross_functional_groups|status=full_time|location=all","tr","categorical_bar","Regional Support Sites","demo_location",67,18.6,2
+"department=cross_functional_groups|status=full_time|location=all","tr","categorical_bar","Prairie Hub","demo_location",19,5.3,3
+"department=cross_functional_groups|status=full_time|location=all","bl","categorical_bar","Full-Time","employeeGroup",360,100,1
+"department=cross_functional_groups|status=full_time|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",102,28.3,1
+"department=cross_functional_groups|status=full_time|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",88,24.4,2
+"department=cross_functional_groups|status=full_time|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",74,20.6,3
+"department=cross_functional_groups|status=full_time|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",68,18.9,4
+"department=cross_functional_groups|status=full_time|location=all","br","categorical_bar","Tenure Group 05","demo_tenure",28,7.8,5
+"department=data_insights|status=full_time|location=all","tl","categorical_bar","Data & Insights","demo_department",146,100,1
+"department=data_insights|status=full_time|location=all","tr","categorical_bar","Prairie Hub","demo_location",98,67.1,1
+"department=data_insights|status=full_time|location=all","tr","categorical_bar","Regional Support Sites","demo_location",48,32.9,2
+"department=data_insights|status=full_time|location=all","bl","categorical_bar","Full-Time","employeeGroup",146,100,1
+"department=data_insights|status=full_time|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",43,29.5,1
+"department=data_insights|status=full_time|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",33,22.6,2
+"department=data_insights|status=full_time|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",31,21.2,3
+"department=data_insights|status=full_time|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",24,16.4,4
+"department=data_insights|status=full_time|location=all","br","categorical_bar","Tenure Group 05","demo_tenure",15,10.3,5
+"department=operations_delivery|status=full_time|location=all","tl","categorical_bar","Operations Delivery","demo_department",23,100,1
+"department=operations_delivery|status=full_time|location=all","tr","categorical_bar","Central Hub","demo_location",22,95.7,1
+"department=operations_delivery|status=full_time|location=all","tr","categorical_bar","Prairie Hub","demo_location",1,4.3,2
+"department=operations_delivery|status=full_time|location=all","bl","categorical_bar","Full-Time","employeeGroup",23,100,1
+"department=operations_delivery|status=full_time|location=all","br","categorical_bar","Tenure Group 03","demo_tenure",7,30.4,1
+"department=operations_delivery|status=full_time|location=all","br","categorical_bar","Tenure Group 01","demo_tenure",5,21.7,2
+"department=operations_delivery|status=full_time|location=all","br","categorical_bar","Tenure Group 04","demo_tenure",5,21.7,3
+"department=operations_delivery|status=full_time|location=all","br","categorical_bar","Tenure Group 02","demo_tenure",4,17.4,4
+"department=operations_delivery|status=full_time|location=all","br","categorical_bar","Tenure Group 05","demo_tenure",2,8.7,5
+"department=all|status=all|location=central_hub","tl","categorical_bar","Cross-Functional Groups","demo_department",274,70.4,1
+"department=all|status=all|location=central_hub","tl","categorical_bar","Completions Strategy","demo_department",37,9.5,2
+"department=all|status=all|location=central_hub","tl","categorical_bar","Business Development","demo_department",29,7.5,3
+"department=all|status=all|location=central_hub","tl","categorical_bar","Corporate Services","demo_department",27,6.9,4
+"department=all|status=all|location=central_hub","tl","categorical_bar","Operations Delivery","demo_department",22,5.7,5
+"department=all|status=all|location=central_hub","tr","categorical_bar","Central Hub","demo_location",389,100,1
+"department=all|status=all|location=central_hub","bl","categorical_bar","Full-Time","employeeGroup",389,100,1
+"department=all|status=all|location=central_hub","br","categorical_bar","Tenure Group 04","demo_tenure",143,36.8,1
+"department=all|status=all|location=central_hub","br","categorical_bar","Tenure Group 02","demo_tenure",75,19.3,2
+"department=all|status=all|location=central_hub","br","categorical_bar","Tenure Group 03","demo_tenure",75,19.3,3
+"department=all|status=all|location=central_hub","br","categorical_bar","Tenure Group 01","demo_tenure",68,17.5,4
+"department=all|status=all|location=central_hub","br","categorical_bar","Tenure Group 05","demo_tenure",28,7.2,5
+"department=business_development|status=all|location=central_hub","tl","categorical_bar","Business Development","demo_department",29,100,1
+"department=business_development|status=all|location=central_hub","tr","categorical_bar","Central Hub","demo_location",29,100,1
+"department=business_development|status=all|location=central_hub","bl","categorical_bar","Full-Time","employeeGroup",29,100,1
+"department=business_development|status=all|location=central_hub","br","categorical_bar","Tenure Group 04","demo_tenure",14,48.3,1
+"department=business_development|status=all|location=central_hub","br","categorical_bar","Tenure Group 03","demo_tenure",9,31,2
+"department=business_development|status=all|location=central_hub","br","categorical_bar","Tenure Group 01","demo_tenure",5,17.2,3
+"department=business_development|status=all|location=central_hub","br","categorical_bar","Tenure Group 02","demo_tenure",1,3.4,4
+"department=completions_strategy|status=all|location=central_hub","tl","categorical_bar","Completions Strategy","demo_department",37,100,1
+"department=completions_strategy|status=all|location=central_hub","tr","categorical_bar","Central Hub","demo_location",37,100,1
+"department=completions_strategy|status=all|location=central_hub","bl","categorical_bar","Full-Time","employeeGroup",37,100,1
+"department=completions_strategy|status=all|location=central_hub","br","categorical_bar","Tenure Group 04","demo_tenure",18,48.6,1
+"department=completions_strategy|status=all|location=central_hub","br","categorical_bar","Tenure Group 03","demo_tenure",10,27,2
+"department=completions_strategy|status=all|location=central_hub","br","categorical_bar","Tenure Group 02","demo_tenure",7,18.9,3
+"department=completions_strategy|status=all|location=central_hub","br","categorical_bar","Tenure Group 01","demo_tenure",1,2.7,4
+"department=completions_strategy|status=all|location=central_hub","br","categorical_bar","Tenure Group 05","demo_tenure",1,2.7,5
+"department=corporate_services|status=all|location=central_hub","tl","categorical_bar","Corporate Services","demo_department",27,100,1
+"department=corporate_services|status=all|location=central_hub","tr","categorical_bar","Central Hub","demo_location",27,100,1
+"department=corporate_services|status=all|location=central_hub","bl","categorical_bar","Full-Time","employeeGroup",27,100,1
+"department=corporate_services|status=all|location=central_hub","br","categorical_bar","Tenure Group 04","demo_tenure",17,63,1
+"department=corporate_services|status=all|location=central_hub","br","categorical_bar","Tenure Group 01","demo_tenure",4,14.8,2
+"department=corporate_services|status=all|location=central_hub","br","categorical_bar","Tenure Group 05","demo_tenure",3,11.1,3
+"department=corporate_services|status=all|location=central_hub","br","categorical_bar","Tenure Group 03","demo_tenure",2,7.4,4
+"department=corporate_services|status=all|location=central_hub","br","categorical_bar","Tenure Group 02","demo_tenure",1,3.7,5
+"department=cross_functional_groups|status=all|location=central_hub","tl","categorical_bar","Cross-Functional Groups","demo_department",274,100,1
+"department=cross_functional_groups|status=all|location=central_hub","tr","categorical_bar","Central Hub","demo_location",274,100,1
+"department=cross_functional_groups|status=all|location=central_hub","bl","categorical_bar","Full-Time","employeeGroup",274,100,1
+"department=cross_functional_groups|status=all|location=central_hub","br","categorical_bar","Tenure Group 04","demo_tenure",90,32.8,1
+"department=cross_functional_groups|status=all|location=central_hub","br","categorical_bar","Tenure Group 02","demo_tenure",62,22.6,2
+"department=cross_functional_groups|status=all|location=central_hub","br","categorical_bar","Tenure Group 01","demo_tenure",53,19.3,3
+"department=cross_functional_groups|status=all|location=central_hub","br","categorical_bar","Tenure Group 03","demo_tenure",47,17.2,4
+"department=cross_functional_groups|status=all|location=central_hub","br","categorical_bar","Tenure Group 05","demo_tenure",22,8,5
+"department=operations_delivery|status=all|location=central_hub","tl","categorical_bar","Operations Delivery","demo_department",22,100,1
+"department=operations_delivery|status=all|location=central_hub","tr","categorical_bar","Central Hub","demo_location",22,100,1
+"department=operations_delivery|status=all|location=central_hub","bl","categorical_bar","Full-Time","employeeGroup",22,100,1
+"department=operations_delivery|status=all|location=central_hub","br","categorical_bar","Tenure Group 03","demo_tenure",7,31.8,1
+"department=operations_delivery|status=all|location=central_hub","br","categorical_bar","Tenure Group 01","demo_tenure",5,22.7,2
+"department=operations_delivery|status=all|location=central_hub","br","categorical_bar","Tenure Group 02","demo_tenure",4,18.2,3
+"department=operations_delivery|status=all|location=central_hub","br","categorical_bar","Tenure Group 04","demo_tenure",4,18.2,4
+"department=operations_delivery|status=all|location=central_hub","br","categorical_bar","Tenure Group 05","demo_tenure",2,9.1,5
+"department=all|status=full_time|location=central_hub","tl","categorical_bar","Cross-Functional Groups","demo_department",274,70.4,1
+"department=all|status=full_time|location=central_hub","tl","categorical_bar","Completions Strategy","demo_department",37,9.5,2
+"department=all|status=full_time|location=central_hub","tl","categorical_bar","Business Development","demo_department",29,7.5,3
+"department=all|status=full_time|location=central_hub","tl","categorical_bar","Corporate Services","demo_department",27,6.9,4
+"department=all|status=full_time|location=central_hub","tl","categorical_bar","Operations Delivery","demo_department",22,5.7,5
+"department=all|status=full_time|location=central_hub","tr","categorical_bar","Central Hub","demo_location",389,100,1
+"department=all|status=full_time|location=central_hub","bl","categorical_bar","Full-Time","employeeGroup",389,100,1
+"department=all|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 04","demo_tenure",143,36.8,1
+"department=all|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 02","demo_tenure",75,19.3,2
+"department=all|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 03","demo_tenure",75,19.3,3
+"department=all|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 01","demo_tenure",68,17.5,4
+"department=all|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 05","demo_tenure",28,7.2,5
+"department=business_development|status=full_time|location=central_hub","tl","categorical_bar","Business Development","demo_department",29,100,1
+"department=business_development|status=full_time|location=central_hub","tr","categorical_bar","Central Hub","demo_location",29,100,1
+"department=business_development|status=full_time|location=central_hub","bl","categorical_bar","Full-Time","employeeGroup",29,100,1
+"department=business_development|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 04","demo_tenure",14,48.3,1
+"department=business_development|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 03","demo_tenure",9,31,2
+"department=business_development|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 01","demo_tenure",5,17.2,3
+"department=business_development|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 02","demo_tenure",1,3.4,4
+"department=completions_strategy|status=full_time|location=central_hub","tl","categorical_bar","Completions Strategy","demo_department",37,100,1
+"department=completions_strategy|status=full_time|location=central_hub","tr","categorical_bar","Central Hub","demo_location",37,100,1
+"department=completions_strategy|status=full_time|location=central_hub","bl","categorical_bar","Full-Time","employeeGroup",37,100,1
+"department=completions_strategy|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 04","demo_tenure",18,48.6,1
+"department=completions_strategy|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 03","demo_tenure",10,27,2
+"department=completions_strategy|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 02","demo_tenure",7,18.9,3
+"department=completions_strategy|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 01","demo_tenure",1,2.7,4
+"department=completions_strategy|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 05","demo_tenure",1,2.7,5
+"department=corporate_services|status=full_time|location=central_hub","tl","categorical_bar","Corporate Services","demo_department",27,100,1
+"department=corporate_services|status=full_time|location=central_hub","tr","categorical_bar","Central Hub","demo_location",27,100,1
+"department=corporate_services|status=full_time|location=central_hub","bl","categorical_bar","Full-Time","employeeGroup",27,100,1
+"department=corporate_services|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 04","demo_tenure",17,63,1
+"department=corporate_services|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 01","demo_tenure",4,14.8,2
+"department=corporate_services|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 05","demo_tenure",3,11.1,3
+"department=corporate_services|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 03","demo_tenure",2,7.4,4
+"department=corporate_services|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 02","demo_tenure",1,3.7,5
+"department=cross_functional_groups|status=full_time|location=central_hub","tl","categorical_bar","Cross-Functional Groups","demo_department",274,100,1
+"department=cross_functional_groups|status=full_time|location=central_hub","tr","categorical_bar","Central Hub","demo_location",274,100,1
+"department=cross_functional_groups|status=full_time|location=central_hub","bl","categorical_bar","Full-Time","employeeGroup",274,100,1
+"department=cross_functional_groups|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 04","demo_tenure",90,32.8,1
+"department=cross_functional_groups|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 02","demo_tenure",62,22.6,2
+"department=cross_functional_groups|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 01","demo_tenure",53,19.3,3
+"department=cross_functional_groups|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 03","demo_tenure",47,17.2,4
+"department=cross_functional_groups|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 05","demo_tenure",22,8,5
+"department=operations_delivery|status=full_time|location=central_hub","tl","categorical_bar","Operations Delivery","demo_department",22,100,1
+"department=operations_delivery|status=full_time|location=central_hub","tr","categorical_bar","Central Hub","demo_location",22,100,1
+"department=operations_delivery|status=full_time|location=central_hub","bl","categorical_bar","Full-Time","employeeGroup",22,100,1
+"department=operations_delivery|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 03","demo_tenure",7,31.8,1
+"department=operations_delivery|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 01","demo_tenure",5,22.7,2
+"department=operations_delivery|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 02","demo_tenure",4,18.2,3
+"department=operations_delivery|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 04","demo_tenure",4,18.2,4
+"department=operations_delivery|status=full_time|location=central_hub","br","categorical_bar","Tenure Group 05","demo_tenure",2,9.1,5
+"department=all|status=all|location=prairie_hub","tl","categorical_bar","Data & Insights","demo_department",98,81,1
+"department=all|status=all|location=prairie_hub","tl","categorical_bar","Cross-Functional Groups","demo_department",19,15.7,2
+"department=all|status=all|location=prairie_hub","tl","categorical_bar","Capital Programs","demo_department",3,2.5,3
+"department=all|status=all|location=prairie_hub","tl","categorical_bar","Operations Delivery","demo_department",1,0.8,4
+"department=all|status=all|location=prairie_hub","tr","categorical_bar","Prairie Hub","demo_location",121,100,1
+"department=all|status=all|location=prairie_hub","bl","categorical_bar","Full-Time","employeeGroup",121,100,1
+"department=all|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 02","demo_tenure",42,34.7,1
+"department=all|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 03","demo_tenure",32,26.4,2
+"department=all|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 01","demo_tenure",21,17.4,3
+"department=all|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 05","demo_tenure",17,14,4
+"department=all|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 04","demo_tenure",9,7.4,5
+"department=capital_programs|status=all|location=prairie_hub","tl","categorical_bar","Capital Programs","demo_department",3,100,1
+"department=capital_programs|status=all|location=prairie_hub","tr","categorical_bar","Prairie Hub","demo_location",3,100,1
+"department=capital_programs|status=all|location=prairie_hub","bl","categorical_bar","Full-Time","employeeGroup",3,100,1
+"department=capital_programs|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 01","demo_tenure",2,66.7,1
+"department=capital_programs|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 04","demo_tenure",1,33.3,2
+"department=cross_functional_groups|status=all|location=prairie_hub","tl","categorical_bar","Cross-Functional Groups","demo_department",19,100,1
+"department=cross_functional_groups|status=all|location=prairie_hub","tr","categorical_bar","Prairie Hub","demo_location",19,100,1
+"department=cross_functional_groups|status=all|location=prairie_hub","bl","categorical_bar","Full-Time","employeeGroup",19,100,1
+"department=cross_functional_groups|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 02","demo_tenure",7,36.8,1
+"department=cross_functional_groups|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 03","demo_tenure",7,36.8,2
+"department=cross_functional_groups|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 04","demo_tenure",2,10.5,3
+"department=cross_functional_groups|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 05","demo_tenure",2,10.5,4
+"department=cross_functional_groups|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 01","demo_tenure",1,5.3,5
+"department=data_insights|status=all|location=prairie_hub","tl","categorical_bar","Data & Insights","demo_department",98,100,1
+"department=data_insights|status=all|location=prairie_hub","tr","categorical_bar","Prairie Hub","demo_location",98,100,1
+"department=data_insights|status=all|location=prairie_hub","bl","categorical_bar","Full-Time","employeeGroup",98,100,1
+"department=data_insights|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 02","demo_tenure",35,35.7,1
+"department=data_insights|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 03","demo_tenure",25,25.5,2
+"department=data_insights|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 01","demo_tenure",18,18.4,3
+"department=data_insights|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 05","demo_tenure",15,15.3,4
+"department=data_insights|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 04","demo_tenure",5,5.1,5
+"department=operations_delivery|status=all|location=prairie_hub","tl","categorical_bar","Operations Delivery","demo_department",1,100,1
+"department=operations_delivery|status=all|location=prairie_hub","tr","categorical_bar","Prairie Hub","demo_location",1,100,1
+"department=operations_delivery|status=all|location=prairie_hub","bl","categorical_bar","Full-Time","employeeGroup",1,100,1
+"department=operations_delivery|status=all|location=prairie_hub","br","categorical_bar","Tenure Group 04","demo_tenure",1,100,1
+"department=all|status=full_time|location=prairie_hub","tl","categorical_bar","Data & Insights","demo_department",98,81,1
+"department=all|status=full_time|location=prairie_hub","tl","categorical_bar","Cross-Functional Groups","demo_department",19,15.7,2
+"department=all|status=full_time|location=prairie_hub","tl","categorical_bar","Capital Programs","demo_department",3,2.5,3
+"department=all|status=full_time|location=prairie_hub","tl","categorical_bar","Operations Delivery","demo_department",1,0.8,4
+"department=all|status=full_time|location=prairie_hub","tr","categorical_bar","Prairie Hub","demo_location",121,100,1
+"department=all|status=full_time|location=prairie_hub","bl","categorical_bar","Full-Time","employeeGroup",121,100,1
+"department=all|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 02","demo_tenure",42,34.7,1
+"department=all|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 03","demo_tenure",32,26.4,2
+"department=all|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 01","demo_tenure",21,17.4,3
+"department=all|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 05","demo_tenure",17,14,4
+"department=all|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 04","demo_tenure",9,7.4,5
+"department=capital_programs|status=full_time|location=prairie_hub","tl","categorical_bar","Capital Programs","demo_department",3,100,1
+"department=capital_programs|status=full_time|location=prairie_hub","tr","categorical_bar","Prairie Hub","demo_location",3,100,1
+"department=capital_programs|status=full_time|location=prairie_hub","bl","categorical_bar","Full-Time","employeeGroup",3,100,1
+"department=capital_programs|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 01","demo_tenure",2,66.7,1
+"department=capital_programs|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 04","demo_tenure",1,33.3,2
+"department=cross_functional_groups|status=full_time|location=prairie_hub","tl","categorical_bar","Cross-Functional Groups","demo_department",19,100,1
+"department=cross_functional_groups|status=full_time|location=prairie_hub","tr","categorical_bar","Prairie Hub","demo_location",19,100,1
+"department=cross_functional_groups|status=full_time|location=prairie_hub","bl","categorical_bar","Full-Time","employeeGroup",19,100,1
+"department=cross_functional_groups|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 02","demo_tenure",7,36.8,1
+"department=cross_functional_groups|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 03","demo_tenure",7,36.8,2
+"department=cross_functional_groups|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 04","demo_tenure",2,10.5,3
+"department=cross_functional_groups|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 05","demo_tenure",2,10.5,4
+"department=cross_functional_groups|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 01","demo_tenure",1,5.3,5
+"department=data_insights|status=full_time|location=prairie_hub","tl","categorical_bar","Data & Insights","demo_department",98,100,1
+"department=data_insights|status=full_time|location=prairie_hub","tr","categorical_bar","Prairie Hub","demo_location",98,100,1
+"department=data_insights|status=full_time|location=prairie_hub","bl","categorical_bar","Full-Time","employeeGroup",98,100,1
+"department=data_insights|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 02","demo_tenure",35,35.7,1
+"department=data_insights|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 03","demo_tenure",25,25.5,2
+"department=data_insights|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 01","demo_tenure",18,18.4,3
+"department=data_insights|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 05","demo_tenure",15,15.3,4
+"department=data_insights|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 04","demo_tenure",5,5.1,5
+"department=operations_delivery|status=full_time|location=prairie_hub","tl","categorical_bar","Operations Delivery","demo_department",1,100,1
+"department=operations_delivery|status=full_time|location=prairie_hub","tr","categorical_bar","Prairie Hub","demo_location",1,100,1
+"department=operations_delivery|status=full_time|location=prairie_hub","bl","categorical_bar","Full-Time","employeeGroup",1,100,1
+"department=operations_delivery|status=full_time|location=prairie_hub","br","categorical_bar","Tenure Group 04","demo_tenure",1,100,1
+"department=all|status=all|location=regional_support_sites","tl","categorical_bar","Capital Programs","demo_department",88,42.9,1
+"department=all|status=all|location=regional_support_sites","tl","categorical_bar","Cross-Functional Groups","demo_department",67,32.7,2
+"department=all|status=all|location=regional_support_sites","tl","categorical_bar","Data & Insights","demo_department",48,23.4,3
+"department=all|status=all|location=regional_support_sites","tl","categorical_bar","Completions Strategy","demo_department",2,1,4
+"department=all|status=all|location=regional_support_sites","tr","categorical_bar","Regional Support Sites","demo_location",205,100,1
+"department=all|status=all|location=regional_support_sites","bl","categorical_bar","Full-Time","employeeGroup",205,100,1
+"department=all|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 04","demo_tenure",58,28.3,1
+"department=all|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 03","demo_tenure",55,26.8,2
+"department=all|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 01","demo_tenure",39,19,3
+"department=all|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 02","demo_tenure",38,18.5,4
+"department=all|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 05","demo_tenure",15,7.3,5
+"department=capital_programs|status=all|location=regional_support_sites","tl","categorical_bar","Capital Programs","demo_department",88,100,1
+"department=capital_programs|status=all|location=regional_support_sites","tr","categorical_bar","Regional Support Sites","demo_location",88,100,1
+"department=capital_programs|status=all|location=regional_support_sites","bl","categorical_bar","Full-Time","employeeGroup",88,100,1
+"department=capital_programs|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 04","demo_tenure",28,31.8,1
+"department=capital_programs|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 03","demo_tenure",27,30.7,2
+"department=capital_programs|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 01","demo_tenure",12,13.6,3
+"department=capital_programs|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 05","demo_tenure",11,12.5,4
+"department=capital_programs|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 02","demo_tenure",10,11.4,5
+"department=completions_strategy|status=all|location=regional_support_sites","tl","categorical_bar","Completions Strategy","demo_department",2,100,1
+"department=completions_strategy|status=all|location=regional_support_sites","tr","categorical_bar","Regional Support Sites","demo_location",2,100,1
+"department=completions_strategy|status=all|location=regional_support_sites","bl","categorical_bar","Full-Time","employeeGroup",2,100,1
+"department=completions_strategy|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 02","demo_tenure",1,50,1
+"department=completions_strategy|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 04","demo_tenure",1,50,2
+"department=cross_functional_groups|status=all|location=regional_support_sites","tl","categorical_bar","Cross-Functional Groups","demo_department",67,100,1
+"department=cross_functional_groups|status=all|location=regional_support_sites","tr","categorical_bar","Regional Support Sites","demo_location",67,100,1
+"department=cross_functional_groups|status=all|location=regional_support_sites","bl","categorical_bar","Full-Time","employeeGroup",67,100,1
+"department=cross_functional_groups|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 03","demo_tenure",20,29.9,1
+"department=cross_functional_groups|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 02","demo_tenure",19,28.4,2
+"department=cross_functional_groups|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 01","demo_tenure",14,20.9,3
+"department=cross_functional_groups|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 04","demo_tenure",10,14.9,4
+"department=cross_functional_groups|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 05","demo_tenure",4,6,5
+"department=data_insights|status=all|location=regional_support_sites","tl","categorical_bar","Data & Insights","demo_department",48,100,1
+"department=data_insights|status=all|location=regional_support_sites","tr","categorical_bar","Regional Support Sites","demo_location",48,100,1
+"department=data_insights|status=all|location=regional_support_sites","bl","categorical_bar","Full-Time","employeeGroup",48,100,1
+"department=data_insights|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 04","demo_tenure",19,39.6,1
+"department=data_insights|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 01","demo_tenure",13,27.1,2
+"department=data_insights|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 02","demo_tenure",8,16.7,3
+"department=data_insights|status=all|location=regional_support_sites","br","categorical_bar","Tenure Group 03","demo_tenure",8,16.7,4
+"department=all|status=full_time|location=regional_support_sites","tl","categorical_bar","Capital Programs","demo_department",88,42.9,1
+"department=all|status=full_time|location=regional_support_sites","tl","categorical_bar","Cross-Functional Groups","demo_department",67,32.7,2
+"department=all|status=full_time|location=regional_support_sites","tl","categorical_bar","Data & Insights","demo_department",48,23.4,3
+"department=all|status=full_time|location=regional_support_sites","tl","categorical_bar","Completions Strategy","demo_department",2,1,4
+"department=all|status=full_time|location=regional_support_sites","tr","categorical_bar","Regional Support Sites","demo_location",205,100,1
+"department=all|status=full_time|location=regional_support_sites","bl","categorical_bar","Full-Time","employeeGroup",205,100,1
+"department=all|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 04","demo_tenure",58,28.3,1
+"department=all|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 03","demo_tenure",55,26.8,2
+"department=all|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 01","demo_tenure",39,19,3
+"department=all|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 02","demo_tenure",38,18.5,4
+"department=all|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 05","demo_tenure",15,7.3,5
+"department=capital_programs|status=full_time|location=regional_support_sites","tl","categorical_bar","Capital Programs","demo_department",88,100,1
+"department=capital_programs|status=full_time|location=regional_support_sites","tr","categorical_bar","Regional Support Sites","demo_location",88,100,1
+"department=capital_programs|status=full_time|location=regional_support_sites","bl","categorical_bar","Full-Time","employeeGroup",88,100,1
+"department=capital_programs|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 04","demo_tenure",28,31.8,1
+"department=capital_programs|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 03","demo_tenure",27,30.7,2
+"department=capital_programs|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 01","demo_tenure",12,13.6,3
+"department=capital_programs|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 05","demo_tenure",11,12.5,4
+"department=capital_programs|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 02","demo_tenure",10,11.4,5
+"department=completions_strategy|status=full_time|location=regional_support_sites","tl","categorical_bar","Completions Strategy","demo_department",2,100,1
+"department=completions_strategy|status=full_time|location=regional_support_sites","tr","categorical_bar","Regional Support Sites","demo_location",2,100,1
+"department=completions_strategy|status=full_time|location=regional_support_sites","bl","categorical_bar","Full-Time","employeeGroup",2,100,1
+"department=completions_strategy|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 02","demo_tenure",1,50,1
+"department=completions_strategy|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 04","demo_tenure",1,50,2
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","tl","categorical_bar","Cross-Functional Groups","demo_department",67,100,1
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","tr","categorical_bar","Regional Support Sites","demo_location",67,100,1
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","bl","categorical_bar","Full-Time","employeeGroup",67,100,1
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 03","demo_tenure",20,29.9,1
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 02","demo_tenure",19,28.4,2
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 01","demo_tenure",14,20.9,3
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 04","demo_tenure",10,14.9,4
+"department=cross_functional_groups|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 05","demo_tenure",4,6,5
+"department=data_insights|status=full_time|location=regional_support_sites","tl","categorical_bar","Data & Insights","demo_department",48,100,1
+"department=data_insights|status=full_time|location=regional_support_sites","tr","categorical_bar","Regional Support Sites","demo_location",48,100,1
+"department=data_insights|status=full_time|location=regional_support_sites","bl","categorical_bar","Full-Time","employeeGroup",48,100,1
+"department=data_insights|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 04","demo_tenure",19,39.6,1
+"department=data_insights|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 01","demo_tenure",13,27.1,2
+"department=data_insights|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 02","demo_tenure",8,16.7,3
+"department=data_insights|status=full_time|location=regional_support_sites","br","categorical_bar","Tenure Group 03","demo_tenure",8,16.7,4
