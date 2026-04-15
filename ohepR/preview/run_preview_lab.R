@@ -1143,4 +1143,6 @@ if (sys.nframe() == 0L) {
   run_item_distribution_preview()
   run_model_preview()
   run_demographics_preview()
+  source(file.path("preview", "run_open_ended_preview.R"))
+  run_open_ended_preview()
 }

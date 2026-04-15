@@ -1508,6 +1508,27 @@
   .demo-ob-axis { display: flex; gap: 4px; margin-top: 8px; }
   .demo-ob-axis-lbl { font-size: 10px; color: var(--demo-ob-axis-label); font-weight: 700; text-align: center; line-height: 1.1; }
 
+  .oe-root {
+    width: 1120px;
+    background: var(--oe-slide-bg);
+    border: 1px solid var(--oe-border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    color: var(--oe-title);
+  }
+  .oe-kicker { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--oe-brand); margin: 0 0 8px; }
+  .oe-title { margin: 0; font-size: 30px; line-height: 1.15; font-weight: 900; color: var(--oe-title); }
+  .oe-meta { margin-top: 6px; font-size: 12px; color: var(--oe-muted); font-weight: 700; }
+  .oe-grid { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .oe-card { background: var(--oe-card-bg); border: 1px solid var(--oe-border); border-radius: 10px; padding: 12px; }
+  .oe-body { margin: 0; color: var(--oe-sub); font-size: 14px; line-height: 1.45; }
+  .oe-score { display: inline-flex; align-items: baseline; gap: 8px; border-radius: 999px; padding: 6px 10px; background: var(--oe-brand-soft); color: var(--oe-title); font-size: 12px; font-weight: 800; }
+  .oe-score .val { color: var(--oe-brand); font-size: 18px; }
+  .oe-q { margin: 10px 0 0; padding: 10px 12px; border-left: 4px solid var(--oe-brand); border-radius: 8px; background: #f8fdff; color: var(--oe-title); font-size: 13px; line-height: 1.4; font-style: italic; }
+  .oe-pill { display: inline-flex; align-items: center; border-radius: 999px; border: 1px solid var(--oe-border); background: #fff; color: var(--oe-muted); font-size: 11px; font-weight: 800; padding: 5px 8px; margin-right: 6px; }
+  .oe-pill.warn { color: var(--oe-warn); }
+  .oe-pill.good { color: var(--oe-good); }
+
   .placeholder {
     border: 2px dashed var(--border-default);
     border-radius: 12px;
@@ -1543,6 +1564,7 @@
           <option value="privacy">Privacy States</option>
           <option value="decision_matrix">Decision Matrix</option>
           <option value="enps">eNPS</option>
+          <option value="open_ended">Open Ended</option>
           <option value="heatmap">Heatmap</option>
           <option value="item_distribution">Item Distribution</option>
           <option value="model">Model Representation</option>
@@ -2386,6 +2408,32 @@
         </div>
       </section>
 
+      <section class="template" data-template="open_ended">
+        <div class="oe-root">
+          <div class="oe-kicker">Qualitative Insights</div>
+          <h2 class="oe-title">Open-Ended Narrative Summary</h2>
+          <div class="oe-meta">Department: All | Full-Time Status: All | Location: All | n = 126</div>
+          <div class="oe-grid">
+            <div class="oe-card">
+              <p class="oe-body">
+                Employees report stronger execution when priorities are sequenced clearly and tradeoffs are explained.
+                Cross-team handoffs remain uneven in lower-scoring cuts, and workload pacing is a recurring concern.
+              </p>
+              <div class="oe-q">"When leaders explain why priorities changed, the team adapts faster."</div>
+            </div>
+            <div class="oe-card">
+              <div class="oe-score">Avg Fundamental Score <span class="val">3.7</span></div>
+              <p class="oe-body" style="margin-top:10px;">Theme evidence combines narrative synthesis with supporting quotes and score context.</p>
+              <div style="margin-top:10px;">
+                <span class="oe-pill">Leadership 3.85</span>
+                <span class="oe-pill good">Above Standard</span>
+                <span class="oe-pill warn">Watch Workload</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="template" data-template="demographics">
         <div class="demo-root">
           <div class="demo-header">
@@ -2734,6 +2782,23 @@ const MODEL_SECTION = {
         "model_point_ni", "model_point_is", "model_point_as", "model_point_il",
         "model_point_border", "model_point_ghost_bg", "model_point_ghost_border", "model_legend_text_on"
       ]
+    }
+  ]
+};
+
+const OPEN_ENDED_SECTION = {
+  id: "open-ended-specific",
+  title: "Open Ended: Graph-Specific Colors",
+  templates: ["open_ended"],
+  open: true,
+  subsections: [
+    {
+      title: "Surface & Typography",
+      keys: ["oe_slide_bg", "oe_card_bg", "oe_border", "oe_title", "oe_sub", "oe_muted"]
+    },
+    {
+      title: "Brand & Emphasis",
+      keys: ["oe_brand", "oe_brand_soft", "oe_warn", "oe_good"]
     }
   ]
 };
@@ -3677,6 +3742,14 @@ function buildControls() {
     tokens.forEach(token => assignedKeys.add(token.key));
   });
   graphShellBody.appendChild(modelDetails);
+
+  const { details: openEndedDetails, body: openEndedBody } = createControlSection(OPEN_ENDED_SECTION);
+  OPEN_ENDED_SECTION.subsections.forEach(subsection => {
+    const tokens = subsection.keys.map(key => tokenByKey.get(key)).filter(Boolean);
+    appendSubsection(openEndedBody, subsection.title, tokens, { visibleTemplates: OPEN_ENDED_SECTION.templates });
+    tokens.forEach(token => assignedKeys.add(token.key));
+  });
+  graphShellBody.appendChild(openEndedDetails);
 
   const { details: demographicsDetails, body: demographicsBody } = createControlSection(DEMOGRAPHICS_SECTION);
   DEMOGRAPHICS_SECTION.subsections.forEach(subsection => {

@@ -351,6 +351,19 @@ ohepRDisplayr <- function() {
       model_legend_text_on = base[["text_on_dark"]]
     )
 
+    openended <- c(
+      oe_slide_bg = base[["bg_canvas"]],
+      oe_card_bg = base[["bg_card"]],
+      oe_border = base[["border_default"]],
+      oe_title = base[["text_primary"]],
+      oe_sub = base[["text_secondary"]],
+      oe_muted = base[["text_muted"]],
+      oe_brand = base[["text_accent"]],
+      oe_brand_soft = "rgba(15,134,148,0.12)",
+      oe_warn = base[["delta_neg_text"]],
+      oe_good = base[["delta_pos_text"]]
+    )
+
     demographics <- c(
       demo_page_bg = base[["bg_canvas"]],
       demo_grid_gap = "#E2E8F0",
@@ -400,7 +413,7 @@ ohepRDisplayr <- function() {
       demo_ob_seg_text_light = base[["text_on_dark"]]
     )
 
-    c(base, matrix, enps, heatmap, itemdist, model, demographics)
+    c(base, matrix, enps, heatmap, itemdist, model, openended, demographics)
   }
 
   env$read_brand_colors <- function(graph = "fundamental") {
@@ -1436,6 +1449,545 @@ ohepRDisplayr <- function() {
     )
   }
 
+  env$validate_open_ended_data <- function(open_ended_data) {
+    if (!is.list(open_ended_data)) {
+      stop("`open_ended_data` must be a named list.", call. = FALSE)
+    }
+
+    required_sections <- c("summary", "takeaways", "theme_evidence", "quotes", "verbatim")
+    missing_sections <- setdiff(required_sections, names(open_ended_data))
+    if (length(missing_sections) > 0L) {
+      stop(
+        sprintf("`open_ended_data` missing section(s): %s.", paste(missing_sections, collapse = ", ")),
+        call. = FALSE
+      )
+    }
+
+    section_cols <- list(
+      summary = c("title", "kicker", "narrative"),
+      takeaways = c("takeaway_id", "title", "narrative"),
+      theme_evidence = c("takeaway_id", "theme_title", "context_text"),
+      quotes = c("quote_id", "takeaway_id", "quote_text"),
+      verbatim = c("comment_id", "comment_text")
+    )
+
+    for (nm in required_sections) {
+      part <- open_ended_data[[nm]]
+      if (!is.data.frame(part)) {
+        stop(sprintf("`open_ended_data$%s` must be a data frame.", nm), call. = FALSE)
+      }
+      miss <- setdiff(section_cols[[nm]], names(part))
+      if (length(miss) > 0L) {
+        stop(
+          sprintf("`open_ended_data$%s` missing required column(s): %s.", nm, paste(miss, collapse = ", ")),
+          call. = FALSE
+        )
+      }
+    }
+
+    if ("meta" %in% names(open_ended_data) && !is.null(open_ended_data$meta) && !is.data.frame(open_ended_data$meta)) {
+      stop("`open_ended_data$meta` must be a data frame when provided.", call. = FALSE)
+    }
+
+    invisible(open_ended_data)
+  }
+
+  env$normalize_open_ended_data <- function(open_ended_data) {
+    env$validate_open_ended_data(open_ended_data)
+
+    normalize_chr <- function(df, cols) {
+      for (col in cols) {
+        if (!col %in% names(df)) next
+        df[[col]] <- trimws(as.character(df[[col]]))
+      }
+      df
+    }
+
+    safe_default_df <- function(df, required_cols, defaults) {
+      out <- df
+      if (nrow(out) < 1L) {
+        out <- as.data.frame(defaults, stringsAsFactors = FALSE)
+      }
+      for (col in required_cols) {
+        if (!col %in% names(out)) out[[col]] <- ""
+      }
+      out[, unique(c(required_cols, names(out))), drop = FALSE]
+    }
+
+    summary_df <- safe_default_df(
+      normalize_chr(open_ended_data$summary, c("title", "kicker", "narrative", "score_label", "context_note")),
+      c("title", "kicker", "narrative"),
+      list(
+        title = "Open-Ended Insights",
+        kicker = "Qualitative Summary",
+        narrative = "No summary text is available for this view."
+      )
+    )
+    summary_df <- summary_df[1, , drop = FALSE]
+
+    takeaways_df <- safe_default_df(
+      normalize_chr(open_ended_data$takeaways, c("takeaway_id", "title", "narrative", "accent_key")),
+      c("takeaway_id", "title", "narrative"),
+      list(
+        takeaway_id = "takeaway_1",
+        title = "Key Takeaway",
+        narrative = "No takeaway narrative is available."
+      )
+    )
+    if (!("rank" %in% names(takeaways_df))) {
+      takeaways_df$rank <- seq_len(nrow(takeaways_df))
+    }
+    takeaways_df$rank <- suppressWarnings(as.integer(takeaways_df$rank))
+    takeaways_df$rank[!is.finite(takeaways_df$rank)] <- seq_len(sum(!is.finite(takeaways_df$rank)))
+    takeaways_df <- takeaways_df[order(takeaways_df$rank, takeaways_df$title), , drop = FALSE]
+
+    theme_df <- normalize_chr(
+      open_ended_data$theme_evidence,
+      c("takeaway_id", "theme_title", "context_text", "metric_label", "metric_status")
+    )
+    theme_df$metric_value <- if ("metric_value" %in% names(theme_df)) suppressWarnings(as.numeric(theme_df$metric_value)) else NA_real_
+    if (nrow(theme_df) > 0L) {
+      theme_df <- theme_df[order(theme_df$takeaway_id, theme_df$theme_title), , drop = FALSE]
+      theme_df <- theme_df[!duplicated(paste(theme_df$takeaway_id, theme_df$theme_title, sep = "||")), , drop = FALSE]
+    }
+
+    quotes_df <- normalize_chr(
+      open_ended_data$quotes,
+      c("quote_id", "takeaway_id", "theme_title", "quote_text", "source_tag")
+    )
+    quotes_df$score <- if ("score" %in% names(quotes_df)) suppressWarnings(as.numeric(quotes_df$score)) else NA_real_
+    if (nrow(quotes_df) > 0L) {
+      quotes_df <- quotes_df[nzchar(quotes_df$quote_text), , drop = FALSE]
+      quotes_df <- quotes_df[order(quotes_df$takeaway_id, quotes_df$theme_title, quotes_df$quote_id), , drop = FALSE]
+    }
+
+    verbatim_df <- normalize_chr(
+      open_ended_data$verbatim,
+      c("comment_id", "takeaway_id", "fundamental", "comment_text")
+    )
+    if (!("sort_order" %in% names(verbatim_df))) {
+      verbatim_df$sort_order <- seq_len(nrow(verbatim_df))
+    }
+    verbatim_df$sort_order <- suppressWarnings(as.integer(verbatim_df$sort_order))
+    verbatim_df$sort_order[!is.finite(verbatim_df$sort_order)] <- seq_len(sum(!is.finite(verbatim_df$sort_order)))
+    if (nrow(verbatim_df) > 0L) {
+      verbatim_df <- verbatim_df[nzchar(verbatim_df$comment_text), , drop = FALSE]
+      verbatim_df <- verbatim_df[order(verbatim_df$takeaway_id, verbatim_df$fundamental, verbatim_df$sort_order, verbatim_df$comment_id), , drop = FALSE]
+    }
+
+    meta_df <- if ("meta" %in% names(open_ended_data) && is.data.frame(open_ended_data$meta) && nrow(open_ended_data$meta) > 0L) {
+      as.data.frame(open_ended_data$meta[1, , drop = FALSE], stringsAsFactors = FALSE)
+    } else {
+      data.frame(stringsAsFactors = FALSE)
+    }
+    if (!("filter_label" %in% names(meta_df))) meta_df$filter_label <- ""
+    if (!("n_responses" %in% names(meta_df))) meta_df$n_responses <- NA_integer_
+    meta_df$filter_label <- trimws(as.character(meta_df$filter_label))
+    meta_df$n_responses <- suppressWarnings(as.integer(meta_df$n_responses))
+
+    list(
+      summary = summary_df,
+      takeaways = takeaways_df,
+      theme_evidence = theme_df,
+      quotes = quotes_df,
+      verbatim = verbatim_df,
+      meta = meta_df
+    )
+  }
+
+  env$open_ended_theme_pages <- function(dat, quotes_per_page = 4L) {
+    themes <- dat$theme_evidence
+    if (nrow(themes) < 1L) return(data.frame())
+
+    out <- list()
+    page_no <- 1L
+    for (i in seq_len(nrow(themes))) {
+      t_row <- themes[i, , drop = FALSE]
+      t_id <- as.character(t_row$takeaway_id[[1]])
+      t_theme <- as.character(t_row$theme_title[[1]])
+      q <- dat$quotes[dat$quotes$takeaway_id == t_id, , drop = FALSE]
+      if ("theme_title" %in% names(q) && nzchar(t_theme)) {
+        q_theme <- q[trimws(as.character(q$theme_title)) == t_theme, , drop = FALSE]
+        if (nrow(q_theme) > 0L) q <- q_theme
+      }
+      n_q <- nrow(q)
+      n_pages <- max(1L, ceiling(n_q / as.integer(quotes_per_page)))
+      for (p in seq_len(n_pages)) {
+        from <- if (n_q < 1L) 1L else ((p - 1L) * as.integer(quotes_per_page) + 1L)
+        to <- if (n_q < 1L) 0L else min(n_q, p * as.integer(quotes_per_page))
+        out[[length(out) + 1L]] <- data.frame(
+          page_index = page_no,
+          takeaway_id = t_id,
+          theme_title = t_theme,
+          quote_from = from,
+          quote_to = to,
+          is_continuation = p > 1L,
+          stringsAsFactors = FALSE
+        )
+        page_no <- page_no + 1L
+      }
+    }
+    do.call(rbind, out)
+  }
+
+  env$open_ended_verbatim_pages <- function(dat, first_page_capacity = 10L, compact_page_capacity = 24L) {
+    v <- dat$verbatim
+    if (nrow(v) < 1L) {
+      empty_first <- data.frame(
+        page_index = 1L, group_key = "all_comments", group_label = "All Comments",
+        comment_from = 1L, comment_to = 0L, stringsAsFactors = FALSE
+      )
+      empty_compact <- data.frame(
+        page_index = integer(0), group_key = character(0), group_label = character(0),
+        comment_from = integer(0), comment_to = integer(0), stringsAsFactors = FALSE
+      )
+      return(list(first = empty_first, compact = empty_compact))
+    }
+
+    key <- if ("takeaway_id" %in% names(v)) trimws(as.character(v$takeaway_id)) else rep("", nrow(v))
+    key[!nzchar(key)] <- if ("fundamental" %in% names(v)) trimws(as.character(v$fundamental[!nzchar(key)])) else ""
+    key[!nzchar(key)] <- "all_comments"
+    v$.__group_key <- key
+
+    groups <- unique(v$.__group_key)
+    first_rows <- list()
+    compact_rows <- list()
+    compact_page_no <- 1L
+
+    for (i in seq_along(groups)) {
+      g <- groups[[i]]
+      vg <- v[v$.__group_key == g, , drop = FALSE]
+      n <- nrow(vg)
+      first_to <- min(n, as.integer(first_page_capacity))
+      group_label <- if (identical(g, "all_comments")) "All Comments" else g
+
+      first_rows[[length(first_rows) + 1L]] <- data.frame(
+        page_index = i,
+        group_key = g,
+        group_label = group_label,
+        comment_from = 1L,
+        comment_to = first_to,
+        stringsAsFactors = FALSE
+      )
+
+      if (n > first_to) {
+        rem <- n - first_to
+        compact_pages <- ceiling(rem / as.integer(compact_page_capacity))
+        for (p in seq_len(compact_pages)) {
+          from <- first_to + ((p - 1L) * as.integer(compact_page_capacity)) + 1L
+          to <- min(n, first_to + p * as.integer(compact_page_capacity))
+          compact_rows[[length(compact_rows) + 1L]] <- data.frame(
+            page_index = compact_page_no,
+            group_key = g,
+            group_label = group_label,
+            comment_from = from,
+            comment_to = to,
+            stringsAsFactors = FALSE
+          )
+          compact_page_no <- compact_page_no + 1L
+        }
+      }
+    }
+
+    compact_df <- if (length(compact_rows) > 0L) do.call(rbind, compact_rows) else {
+      data.frame(
+        page_index = integer(0), group_key = character(0), group_label = character(0),
+        comment_from = integer(0), comment_to = integer(0), stringsAsFactors = FALSE
+      )
+    }
+
+    list(first = do.call(rbind, first_rows), compact = compact_df)
+  }
+
+  env$open_ended_page_css <- function(id, colors = NULL) {
+    scope <- paste0("#", id)
+    if (is.null(colors)) {
+      colors <- env$resolve_brand_colors(graph = "open_ended")
+    }
+    c <- as.list(colors)
+    glue::glue(
+      "
+{scope}, {scope} * {{ box-sizing: border-box; }}
+{scope}.ohep-open-ended-root {{
+  --oe-bg: {c$oe_slide_bg};
+  --oe-card-bg: {c$oe_card_bg};
+  --oe-border: {c$oe_border};
+  --oe-title: {c$oe_title};
+  --oe-sub: {c$oe_sub};
+  --oe-muted: {c$oe_muted};
+  --oe-brand: {c$oe_brand};
+  --oe-brand-soft: {c$oe_brand_soft};
+  --oe-warn: {c$oe_warn};
+  --oe-good: {c$oe_good};
+  width: 100%;
+  min-height: 680px;
+  background: var(--oe-bg);
+  padding: 20px 24px;
+  border-radius: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
+}}
+{scope} .oe-kicker {{ font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--oe-brand); font-weight: 800; margin-bottom: 6px; }}
+{scope} .oe-title {{ margin: 0; font-size: 34px; line-height: 1.14; letter-spacing: -.4px; color: var(--oe-title); }}
+{scope} .oe-meta {{ margin-top: 6px; font-size: 13px; color: var(--oe-sub); font-weight: 600; }}
+{scope} .oe-grid {{ display: grid; gap: 14px; margin-top: 16px; }}
+{scope} .oe-grid.three {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
+{scope} .oe-grid.two {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+{scope} .oe-card {{ background: var(--oe-card-bg); border: 1px solid var(--oe-border); border-radius: 12px; padding: 16px; }}
+{scope} .oe-narrative {{ font-size: 17px; line-height: 1.55; color: var(--oe-sub); margin: 0; white-space: pre-wrap; }}
+{scope} .oe-score {{ display: inline-flex; align-items: baseline; gap: 8px; border-radius: 999px; padding: 6px 12px; background: var(--oe-brand-soft); color: var(--oe-title); font-weight: 800; font-size: 13px; }}
+{scope} .oe-score .val {{ font-size: 18px; color: var(--oe-brand); }}
+{scope} .oe-tk-rank {{ font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--oe-muted); font-weight: 800; }}
+{scope} .oe-tk-title {{ margin: 6px 0; font-size: 20px; color: var(--oe-title); line-height: 1.2; }}
+{scope} .oe-tk-copy {{ margin: 0; color: var(--oe-sub); line-height: 1.48; font-size: 15px; }}
+{scope} .oe-theme-title {{ margin: 0 0 8px 0; font-size: 24px; color: var(--oe-title); }}
+{scope} .oe-context {{ margin: 0; color: var(--oe-sub); line-height: 1.5; font-size: 15px; }}
+{scope} .oe-pill {{ display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--oe-border); background: #f8fafc; font-size: 12px; color: var(--oe-sub); font-weight: 700; }}
+{scope} .oe-pill strong {{ color: var(--oe-title); }}
+{scope} .oe-quotes {{ margin-top: 14px; display: grid; gap: 10px; }}
+{scope} .oe-quote {{ margin: 0; padding: 12px 14px; border-left: 4px solid var(--oe-brand); background: #f8fdff; border-radius: 8px; }}
+{scope} .oe-quote p {{ margin: 0; color: var(--oe-title); font-size: 15px; line-height: 1.45; font-style: italic; }}
+{scope} .oe-quote .src {{ margin-top: 8px; font-size: 12px; color: var(--oe-muted); font-style: normal; font-weight: 700; }}
+{scope} .oe-page-note {{ margin-top: 8px; color: var(--oe-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }}
+{scope} .oe-verbatim-feature {{ margin-top: 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }}
+{scope} .oe-verbatim-feature .quote {{ background: #fff; border: 1px solid var(--oe-border); border-radius: 12px; padding: 14px; font-size: 15px; line-height: 1.45; color: var(--oe-title); }}
+{scope} .oe-verbatim-rest {{ margin-top: 10px; display: grid; gap: 8px; }}
+{scope} .oe-verbatim-rest .row {{ border: 1px solid var(--oe-border); border-radius: 10px; padding: 10px 12px; background: #fff; color: var(--oe-sub); font-size: 14px; line-height: 1.4; }}
+{scope} .oe-compact-grid {{ margin-top: 12px; columns: 2; column-gap: 10px; }}
+{scope} .oe-compact-item {{ break-inside: avoid; margin: 0 0 8px 0; border: 1px solid var(--oe-border); border-radius: 8px; padding: 8px 10px; background: #fff; font-size: 13px; color: var(--oe-sub); line-height: 1.35; }}
+{scope} .oe-empty {{ margin-top: 14px; border: 1px dashed var(--oe-border); border-radius: 12px; padding: 16px; background: #fff; color: var(--oe-muted); font-weight: 700; }}
+@media (max-width: 1050px) {{
+  {scope} .oe-grid.three {{ grid-template-columns: 1fr; }}
+  {scope} .oe-grid.two {{ grid-template-columns: 1fr; }}
+  {scope} .oe-verbatim-feature {{ grid-template-columns: 1fr; }}
+  {scope} .oe-compact-grid {{ columns: 1; }}
+}}
+"
+    )
+  }
+
+  env$render_open_ended_page <- function(
+    open_ended_data,
+    page_type = c("overall_summary", "three_takeaways", "theme_evidence", "verbatim_first", "verbatim_compact"),
+    page_index = 1,
+    id = "ohep-open-ended-page",
+    color_overrides = NULL,
+    ...
+  ) {
+    page_type <- match.arg(page_type)
+    inline_overrides <- list(...)
+    colors <- env$resolve_brand_colors(
+      color_overrides = color_overrides,
+      extra_overrides = inline_overrides,
+      graph = "open_ended"
+    )
+    dat <- env$normalize_open_ended_data(open_ended_data)
+    page_index <- suppressWarnings(as.integer(page_index))
+    if (!is.finite(page_index) || page_index < 1L) page_index <- 1L
+
+    first_or <- function(x, default = "") {
+      if (length(x) < 1L || is.na(x[[1]]) || !nzchar(trimws(as.character(x[[1]])))) return(default)
+      as.character(x[[1]])
+    }
+
+    title <- first_or(dat$summary$title, "Open-Ended Insights")
+    kicker <- first_or(dat$summary$kicker, "Qualitative Summary")
+    filter_lbl <- first_or(dat$meta$filter_label, "")
+    n_txt <- if (is.finite(dat$meta$n_responses[[1]])) paste0("n = ", dat$meta$n_responses[[1]]) else ""
+    meta_line <- trimws(paste(filter_lbl, n_txt, sep = if (nzchar(filter_lbl) && nzchar(n_txt)) " | " else ""))
+
+    header_html <- function(k = kicker, t = title, m = meta_line) {
+      glue::glue(
+        "<div class=\"oe-kicker\">{env$escape_text(k)}</div>
+         <h1 class=\"oe-title\">{env$escape_text(t)}</h1>
+         {if (nzchar(m)) glue::glue('<div class=\"oe-meta\">{env$escape_text(m)}</div>') else ''}"
+      )
+    }
+
+    body_html <- switch(
+      page_type,
+      overall_summary = {
+        summary_txt <- first_or(dat$summary$narrative, "")
+        score_label <- if ("score_label" %in% names(dat$summary)) first_or(dat$summary$score_label, "") else ""
+        score_val <- if ("overall_score" %in% names(dat$summary)) suppressWarnings(as.numeric(dat$summary$overall_score[[1]])) else NA_real_
+        context_note <- if ("context_note" %in% names(dat$summary)) first_or(dat$summary$context_note, "") else ""
+        glue::glue(
+          "{header_html()}
+           <div class=\"oe-grid two\">
+             <div class=\"oe-card\">
+               <p class=\"oe-narrative\">{env$escape_text(summary_txt)}</p>
+             </div>
+             <div class=\"oe-card\">
+               {if (is.finite(score_val) || nzchar(score_label)) glue::glue('<div class=\"oe-score\">{if (nzchar(score_label)) env$escape_text(score_label) else \"Score\"} <span class=\"val\">{if (is.finite(score_val)) sprintf(\"%.1f\", score_val) else \"n/a\"}</span></div>') else '<div class=\"oe-score\">Narrative-first summary</div>'}
+               <p class=\"oe-narrative\" style=\"margin-top:12px;\">{env$escape_text(if (nzchar(context_note)) context_note else 'This page summarizes recurring themes from open-ended comments for the current filter cut.')}</p>
+             </div>
+           </div>"
+        )
+      },
+      three_takeaways = {
+        tk <- dat$takeaways
+        tk <- tk[order(tk$rank), , drop = FALSE]
+        if (nrow(tk) < 3L) {
+          pad_n <- 3L - nrow(tk)
+          if (pad_n > 0L) {
+            tk <- rbind(
+              tk,
+              data.frame(
+                takeaway_id = paste0("placeholder_", seq_len(pad_n)),
+                title = rep("Additional takeaway", pad_n),
+                narrative = rep("No narrative was supplied for this takeaway.", pad_n),
+                rank = seq(from = nrow(tk) + 1L, length.out = pad_n),
+                stringsAsFactors = FALSE
+              )
+            )
+          }
+        }
+        tk <- tk[seq_len(min(3L, nrow(tk))), , drop = FALSE]
+        cards <- vapply(seq_len(nrow(tk)), function(i) {
+          glue::glue(
+            "<div class=\"oe-card\">
+               <div class=\"oe-tk-rank\">Takeaway {as.integer(tk$rank[[i]])}</div>
+               <h2 class=\"oe-tk-title\">{env$escape_text(tk$title[[i]])}</h2>
+               <p class=\"oe-tk-copy\">{env$escape_text(tk$narrative[[i]])}</p>
+             </div>"
+          )
+        }, character(1))
+        glue::glue(
+          "{header_html(k = 'Three Key Takeaways', t = 'What People Are Telling Us')}
+           <div class=\"oe-grid three\">{glue::glue_collapse(cards, sep = '')}</div>"
+        )
+      },
+      theme_evidence = {
+        page_map <- env$open_ended_theme_pages(dat = dat, quotes_per_page = 4L)
+        if (nrow(page_map) < 1L || page_index > nrow(page_map)) {
+          glue::glue("{header_html(k = 'Theme Evidence', t = 'Theme Evidence')}<div class=\"oe-empty\">No theme evidence is available for this page.</div>")
+        } else {
+          p_row <- page_map[page_index, , drop = FALSE]
+          theme_row <- dat$theme_evidence[
+            dat$theme_evidence$takeaway_id == p_row$takeaway_id[[1]] &
+              dat$theme_evidence$theme_title == p_row$theme_title[[1]],
+            ,
+            drop = FALSE
+          ]
+          if (nrow(theme_row) < 1L) theme_row <- dat$theme_evidence[1, , drop = FALSE]
+          tk_row <- dat$takeaways[dat$takeaways$takeaway_id == p_row$takeaway_id[[1]], , drop = FALSE]
+          tk_title <- if (nrow(tk_row) > 0L) as.character(tk_row$title[[1]]) else as.character(p_row$takeaway_id[[1]])
+
+          q <- dat$quotes[dat$quotes$takeaway_id == p_row$takeaway_id[[1]], , drop = FALSE]
+          if ("theme_title" %in% names(q)) {
+            q_theme <- q[trimws(as.character(q$theme_title)) == as.character(p_row$theme_title[[1]]), , drop = FALSE]
+            if (nrow(q_theme) > 0L) q <- q_theme
+          }
+          if (nrow(q) > 0L && p_row$quote_to[[1]] >= p_row$quote_from[[1]]) {
+            q <- q[seq.int(p_row$quote_from[[1]], p_row$quote_to[[1]]), , drop = FALSE]
+          } else {
+            q <- q[0, , drop = FALSE]
+          }
+          q_html <- if (nrow(q) > 0L) {
+            paste(vapply(seq_len(nrow(q)), function(i) {
+              src <- if ("source_tag" %in% names(q)) first_or(q$source_tag[i], "") else ""
+              glue::glue(
+                "<blockquote class=\"oe-quote\"><p>\"{env$escape_text(q$quote_text[[i]])}\"</p>{if (nzchar(src)) glue::glue('<div class=\"src\">{env$escape_text(src)}</div>') else ''}</blockquote>"
+              )
+            }, character(1)), collapse = "")
+          } else {
+            "<div class=\"oe-empty\">No quotes available for this evidence page.</div>"
+          }
+
+          metric_lbl <- if ("metric_label" %in% names(theme_row)) first_or(theme_row$metric_label, "") else ""
+          metric_val <- if ("metric_value" %in% names(theme_row)) suppressWarnings(as.numeric(theme_row$metric_value[[1]])) else NA_real_
+          metric_status <- if ("metric_status" %in% names(theme_row)) first_or(theme_row$metric_status, "") else ""
+
+          glue::glue(
+            "{header_html(k = 'Theme Evidence', t = paste0(tk_title, ' - ', as.character(theme_row$theme_title[[1]])))}
+             <div class=\"oe-card\">
+               <h2 class=\"oe-theme-title\">{env$escape_text(as.character(theme_row$theme_title[[1]]))}</h2>
+               <p class=\"oe-context\">{env$escape_text(as.character(theme_row$context_text[[1]]))}</p>
+               <div style=\"margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;\">
+                 {if (nzchar(metric_lbl) || is.finite(metric_val)) glue::glue('<span class=\"oe-pill\"><strong>{env$escape_text(if (nzchar(metric_lbl)) metric_lbl else \"Score\")}</strong> {if (is.finite(metric_val)) sprintf(\"%.2f\", metric_val) else \"n/a\"}</span>') else ''}
+                 {if (nzchar(metric_status)) glue::glue('<span class=\"oe-pill\">{env$escape_text(metric_status)}</span>') else ''}
+               </div>
+               <div class=\"oe-quotes\">{q_html}</div>
+               {if (isTRUE(p_row$is_continuation[[1]])) '<div class=\"oe-page-note\">Continuation page</div>' else ''}
+             </div>"
+          )
+        }
+      },
+      verbatim_first = {
+        maps <- env$open_ended_verbatim_pages(dat = dat, first_page_capacity = 10L, compact_page_capacity = 24L)
+        m <- maps$first
+        if (nrow(m) < 1L || page_index > nrow(m)) {
+          glue::glue("{header_html(k = 'Verbatim Appendix', t = 'Verbatim Comments')}<div class=\"oe-empty\">No verbatim comments are available for this page.</div>")
+        } else {
+          p_row <- m[page_index, , drop = FALSE]
+          vv <- dat$verbatim
+          gk <- as.character(p_row$group_key[[1]])
+          key <- trimws(as.character(vv$takeaway_id))
+          key[!nzchar(key)] <- trimws(as.character(vv$fundamental[!nzchar(key)]))
+          key[!nzchar(key)] <- "all_comments"
+          vg <- vv[key == gk, , drop = FALSE]
+          if (nrow(vg) > 0L && p_row$comment_to[[1]] >= p_row$comment_from[[1]]) {
+            vg <- vg[seq.int(p_row$comment_from[[1]], p_row$comment_to[[1]]), , drop = FALSE]
+          } else {
+            vg <- vg[0, , drop = FALSE]
+          }
+          featured <- utils::head(vg$comment_text, 2L)
+          rest <- if (length(vg$comment_text) > 2L) vg$comment_text[3:length(vg$comment_text)] else character(0)
+          feat_html <- if (length(featured) > 0L) {
+            paste(vapply(featured, function(txt) {
+              glue::glue("<div class=\"quote\">\"{env$escape_text(txt)}\"</div>")
+            }, character(1)), collapse = "")
+          } else {
+            "<div class=\"oe-empty\">No comments in this verbatim group.</div>"
+          }
+          rest_html <- if (length(rest) > 0L) {
+            paste(vapply(rest, function(txt) {
+              glue::glue("<div class=\"row\">{env$escape_text(txt)}</div>")
+            }, character(1)), collapse = "")
+          } else {
+            ""
+          }
+          glue::glue(
+            "{header_html(k = 'Verbatim Appendix', t = as.character(p_row$group_label[[1]]))}
+             <div class=\"oe-verbatim-feature\">{feat_html}</div>
+             {if (nzchar(rest_html)) glue::glue('<div class=\"oe-verbatim-rest\">{rest_html}</div>') else ''}"
+          )
+        }
+      },
+      verbatim_compact = {
+        maps <- env$open_ended_verbatim_pages(dat = dat, first_page_capacity = 10L, compact_page_capacity = 24L)
+        m <- maps$compact
+        if (nrow(m) < 1L || page_index > nrow(m)) {
+          glue::glue("{header_html(k = 'Verbatim Appendix', t = 'Verbatim Continuation')}<div class=\"oe-empty\">No continuation pages are required for this filter.</div>")
+        } else {
+          p_row <- m[page_index, , drop = FALSE]
+          vv <- dat$verbatim
+          key <- trimws(as.character(vv$takeaway_id))
+          key[!nzchar(key)] <- trimws(as.character(vv$fundamental[!nzchar(key)]))
+          key[!nzchar(key)] <- "all_comments"
+          vg <- vv[key == as.character(p_row$group_key[[1]]), , drop = FALSE]
+          if (nrow(vg) > 0L && p_row$comment_to[[1]] >= p_row$comment_from[[1]]) {
+            vg <- vg[seq.int(p_row$comment_from[[1]], p_row$comment_to[[1]]), , drop = FALSE]
+          } else {
+            vg <- vg[0, , drop = FALSE]
+          }
+          items <- if (nrow(vg) > 0L) paste(vapply(vg$comment_text, function(txt) {
+            glue::glue("<div class=\"oe-compact-item\">{env$escape_text(txt)}</div>")
+          }, character(1)), collapse = "") else "<div class=\"oe-empty\">No comments available.</div>"
+          glue::glue(
+            "{header_html(k = 'Verbatim Appendix', t = paste0(as.character(p_row$group_label[[1]]), ' (Continuation)'))}
+             <div class=\"oe-compact-grid\">{items}</div>"
+          )
+        }
+      }
+    )
+
+    css <- env$open_ended_page_css(id, colors = colors)
+    htmltools::tagList(
+      htmltools::tags$style(htmltools::HTML(css)),
+      htmltools::HTML(glue::glue("<div id=\"{env$escape_text(id)}\" class=\"ohep-open-ended-root\">{body_html}</div>"))
+    )
+  }
+
   env$validate_enps_data <- function(enps_data) {
     if (!is.list(enps_data)) {
       stop("`enps_data` must be a named list.", call. = FALSE)
@@ -1462,6 +2014,18 @@ ohepRDisplayr <- function() {
     total <- sum(pcts)
     if (abs(total - 100) > 1.01) {
       stop("`distribution$pct` must sum to ~100.", call. = FALSE)
+    }
+    if ("drivers" %in% names(enps_data) && !is.null(enps_data$drivers)) {
+      if (!is.data.frame(enps_data$drivers)) {
+        stop("`enps_data$drivers` must be a data frame when provided.", call. = FALSE)
+      }
+      if (nrow(enps_data$drivers) > 0L) {
+        needed_drv <- c("fundamental")
+        miss_drv <- setdiff(needed_drv, names(enps_data$drivers))
+        if (length(miss_drv) > 0L) {
+          stop(sprintf("`enps_data$drivers` missing: %s", paste(miss_drv, collapse = ", ")), call. = FALSE)
+        }
+      }
     }
     invisible(enps_data)
   }
@@ -1501,6 +2065,27 @@ ohepRDisplayr <- function() {
     subtitle <- if ("subtitle" %in% names(summary)) as.character(summary$subtitle[[1]]) else "Calculated difference between promoters and detractors."
     delta_label <- if ("delta_label" %in% names(summary)) as.character(summary$delta_label[[1]]) else "vs benchmark"
 
+    drivers <- if ("drivers" %in% names(enps_data) && is.data.frame(enps_data$drivers) && nrow(enps_data$drivers) > 0L) {
+      d <- enps_data$drivers
+      d$fundamental <- as.character(d$fundamental)
+      d$rank <- if ("rank" %in% names(d)) suppressWarnings(as.integer(d$rank)) else seq_len(nrow(d))
+      d$percentile <- if ("percentile" %in% names(d)) suppressWarnings(as.numeric(d$percentile)) else NA_real_
+      d$status_label <- if ("status_label" %in% names(d)) as.character(d$status_label) else ifelse(
+        is.finite(d$percentile) & d$percentile < 40, "Area for Growth",
+        ifelse(is.finite(d$percentile) & d$percentile < 60, "Industry Standard", "Above Standard")
+      )
+      d <- d[order(d$rank), c("rank", "fundamental", "percentile", "status_label"), drop = FALSE]
+      utils::head(d, 5L)
+    } else {
+      data.frame(
+        rank = 1:3,
+        fundamental = c("Purpose", "Leadership", "Performance development"),
+        percentile = c(42, 32, 68),
+        status_label = c("Industry Standard", "Area for Growth", "Above Standard"),
+        stringsAsFactors = FALSE
+      )
+    }
+
     list(
       title = title,
       subtitle = subtitle,
@@ -1510,7 +2095,8 @@ ohepRDisplayr <- function() {
       promoters_pct = promoters_pct,
       passives_pct = passives_pct,
       detractors_pct = detractors_pct,
-      distribution = dist
+      distribution = dist,
+      drivers = drivers
     )
   }
 
@@ -1547,71 +2133,75 @@ ohepRDisplayr <- function() {
   --enps-det-text: {c$enps_det_text};
   --enps-pas-text: {c$enps_pas_text};
   --enps-pro-text: {c$enps_pro_text};
-  width: 1280px;
-  height: 720px;
+  width: 100%;
+  min-height: 680px;
   background: var(--enps-slide-bg);
-  padding: 34px 42px;
+  padding: 20px 24px;
   border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
-  display: flex;
   font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
 }}
-{scope} .enps-card {{
-  width: 100%;
-  border: 1px solid var(--enps-card-border);
-  border-radius: 16px;
+{scope} .top-row {{ display:flex; gap:20px; min-height:280px; }}
+{scope} .bottom-row {{ margin-top:18px; }}
+{scope} .card {{
   background: var(--enps-card-bg);
-  box-shadow: 0 10px 25px var(--enps-card-shadow);
-  padding: 34px 40px;
+  border: 1px solid var(--enps-card-border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px var(--enps-card-shadow);
   display: flex;
   flex-direction: column;
 }}
-{scope} .card-header {{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 34px; }}
-{scope} .title-group {{ display: flex; flex-direction: column; gap: 6px; }}
-{scope} .card-title {{ margin: 0; font-size: 26px; font-weight: 900; color: var(--enps-title); letter-spacing: -0.3px; }}
-{scope} .card-sub {{ margin: 0; font-size: 14px; color: var(--enps-subtitle); font-weight: 600; }}
-{scope} .score-display {{ display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }}
-{scope} .score-label {{ font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .8px; color: var(--enps-score-label); }}
-{scope} .big-score {{ font-size: 64px; line-height: 1; margin: 0; font-weight: 900; color: var(--enps-score-value); letter-spacing: -2px; }}
-{scope} .delta-pill {{ display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; letter-spacing: .3px; background: var(--enps-delta-bg); color: var(--enps-delta-text); }}
-{scope} .tug-wrap {{ display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }}
-{scope} .tug-axis {{ position: relative; height: 58px; }}
-{scope} .tug-mid {{ position: absolute; top: -8px; left: 50%; width: 2px; height: 74px; transform: translateX(-50%); background: var(--enps-axis-baseline); z-index: 2; }}
-{scope} .tug-mid-label {{ position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; letter-spacing: .5px; color: var(--enps-axis-baseline-label); text-transform: uppercase; }}
-{scope} .tug-left, {scope} .tug-right {{ position: absolute; top: 5px; height: 48px; display: flex; align-items: center; font-size: 17px; font-weight: 900; color: var(--enps-tug-text-on); }}
-{scope} .tug-left {{ right: 50%; justify-content: flex-end; padding-right: 14px; border-radius: 8px 0 0 8px; background: var(--enps-tug-detractor-bg); }}
-{scope} .tug-right {{ left: 50%; justify-content: flex-start; padding-left: 14px; border-radius: 0 8px 8px 0; background: var(--enps-tug-promoter-bg); }}
-{scope} .tug-labels {{ display: flex; justify-content: space-between; align-items: center; }}
-{scope} .t-group {{ display: flex; flex-direction: column; gap: 2px; }}
-{scope} .t-group.left {{ align-items: flex-start; }}
-{scope} .t-group.right {{ align-items: flex-end; }}
-{scope} .t-title {{ font-size: 13px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }}
-{scope} .t-title.det {{ color: var(--enps-det-text); }}
-{scope} .t-title.pro {{ color: var(--enps-pro-text); }}
-{scope} .t-math {{ font-size: 20px; font-weight: 900; color: var(--enps-score-value); letter-spacing: -0.4px; }}
-{scope} .section-divider {{ border: 0; border-top: 1px solid var(--enps-divider); margin: 10px 0 20px 0; }}
-{scope} .dist-title {{ margin: 0 0 4px 0; font-size: 14px; font-weight: 800; color: var(--enps-title); text-transform: uppercase; letter-spacing: .5px; }}
-{scope} .dist-sub {{ margin: 0 0 14px 0; font-size: 12px; color: var(--enps-subtitle); }}
-{scope} .dist-bars {{ display: flex; align-items: flex-end; justify-content: space-between; height: 140px; border-bottom: 2px solid var(--enps-dist-axis); }}
-{scope} .d-group {{ display: flex; align-items: flex-end; height: 100%; }}
-{scope} .d-group.det {{ width: 56%; justify-content: space-between; }}
-{scope} .d-group.pas {{ width: 18%; justify-content: space-around; }}
-{scope} .d-group.pro {{ width: 18%; justify-content: space-around; }}
-{scope} .d-bar {{ width: 38px; border-radius: 4px 4px 0 0; }}
-{scope} .d-bar.det {{ background: var(--enps-tug-detractor-bg); }}
-{scope} .d-bar.pas {{ background: var(--enps-tug-passive-bg); }}
-{scope} .d-bar.pro {{ background: var(--enps-tug-promoter-bg); }}
-{scope} .dist-labels {{ display: flex; align-items: flex-start; justify-content: space-between; margin-top: 10px; }}
-{scope} .l-group {{ display: flex; align-items: flex-start; gap: 6px; }}
-{scope} .l-group.det {{ width: 56%; justify-content: space-between; }}
-{scope} .l-group.pas {{ width: 18%; justify-content: space-around; }}
-{scope} .l-group.pro {{ width: 18%; justify-content: space-around; }}
-{scope} .d-label {{ width: 38px; text-align: center; font-size: 12px; font-weight: 800; color: var(--enps-dist-label); }}
-{scope} .dist-brackets {{ display: flex; justify-content: space-between; margin-top: 20px; }}
-{scope} .bracket {{ font-size: 12px; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; }}
-{scope} .bracket.det {{ width: 56%; text-align: left; color: var(--enps-det-text); }}
-{scope} .bracket.pas {{ width: 18%; text-align: center; color: var(--enps-pas-text); }}
-{scope} .bracket.pro {{ width: 18%; text-align: right; color: var(--enps-pro-text); }}
+{scope} .enps-card {{ flex: 1.2; }}
+{scope} .drivers-card {{ flex: 1; }}
+{scope} .title-bar {{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 10px; }}
+{scope} .card-title {{ margin:0; font-size:22px; font-weight:900; color:var(--enps-title); letter-spacing:-.4px; text-transform:uppercase; }}
+{scope} .card-sub {{ margin:4px 0 0 0; font-size:13px; color:var(--enps-subtitle); font-weight:500; }}
+{scope} .hero-label {{ font-size:12px; font-weight:800; color:var(--enps-score-label); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }}
+{scope} .hero-value {{ font-size:56px; font-weight:900; line-height:1; color:var(--enps-score-value); letter-spacing:-2px; }}
+{scope} .delta-pill {{ display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:6px; font-size:13px; font-weight:800; background:var(--enps-delta-bg); color:var(--enps-delta-text); }}
+{scope} .tug-container {{ margin-top:auto; padding-bottom: 6px; }}
+{scope} .tug-axis {{ position:relative; height:42px; display:flex; align-items:center; margin-bottom: 18px; }}
+{scope} .tug-mid {{ position:absolute; left:50%; height:56px; width:2px; background:var(--enps-axis-baseline); z-index:2; transform:translateX(-50%); }}
+{scope} .tug-mid-lbl {{ position:absolute; left:50%; top:-20px; transform:translateX(-50%); font-size:11px; font-weight:800; color:var(--enps-axis-baseline-label); text-transform:uppercase; }}
+{scope} .tug-left, {scope} .tug-right {{ position:absolute; height:100%; display:flex; align-items:center; font-size:14px; font-weight:800; color:var(--enps-tug-text-on); }}
+{scope} .tug-left {{ right:50%; justify-content:flex-end; padding-right:12px; border-radius:6px 0 0 6px; background:var(--enps-tug-detractor-bg); }}
+{scope} .tug-right {{ left:50%; justify-content:flex-start; padding-left:12px; border-radius:0 6px 6px 0; background:var(--enps-tug-promoter-bg); }}
+{scope} .tug-labels {{ display:flex; justify-content:space-between; align-items:center; }}
+{scope} .t-leg-group {{ display:flex; flex-direction:column; gap:2px; }}
+{scope} .t-leg-group.left {{ align-items:flex-start; }}
+{scope} .t-leg-group.right {{ align-items:flex-end; }}
+{scope} .t-title {{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }}
+{scope} .t-title.det {{ color:var(--enps-det-text); }}
+{scope} .t-title.pro {{ color:var(--enps-pro-text); }}
+{scope} .t-math {{ font-size:18px; font-weight:900; color:var(--enps-score-value); }}
+{scope} .table-outcomes {{ width:100%; border-collapse:collapse; margin-top:auto; }}
+{scope} .table-outcomes th {{ text-align:left; padding-bottom:10px; font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:.05em; border-bottom:2px solid #e2e8f0; }}
+{scope} .table-outcomes th.right-align {{ text-align:right; }}
+{scope} .table-outcomes td {{ padding:12px 0; border-bottom:1px solid #f1f5f9; vertical-align:middle; }}
+{scope} .table-outcomes tr:last-child td {{ border-bottom:none; padding-bottom:0; }}
+{scope} .row-rank {{ font-size:22px; font-weight:800; color:#cbd5e1; margin-right:12px; font-variant-numeric:tabular-nums; }}
+{scope} .row-name {{ font-size:15px; font-weight:800; color:#111827; }}
+{scope} .company-score-stack {{ display:flex; flex-direction:column; align-items:flex-end; }}
+{scope} .row-score-val {{ font-size:15px; font-weight:800; line-height:1; }}
+{scope} .row-status {{ font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; margin-top:4px; }}
+{scope} .color-risk {{ color:#f97316; }}
+{scope} .color-watch {{ color:#D97706; }}
+{scope} .color-good {{ color:#16A34A; }}
+{scope} .dist-wrapper {{ display:flex; flex-direction:column; width:100%; max-width:950px; margin:8px auto 0 auto; }}
+{scope} .dist-bars {{ display:flex; align-items:flex-end; justify-content:center; gap:40px; border-bottom:2px solid var(--enps-dist-axis); height:120px; }}
+{scope} .d-bar-group {{ display:flex; align-items:flex-end; gap:12px; height:100%; }}
+{scope} .d-bar {{ width:56px; border-radius:4px 4px 0 0; }}
+{scope} .d-bar.det {{ background:var(--enps-tug-detractor-bg); }}
+{scope} .d-bar.pas {{ background:var(--enps-tug-passive-bg); }}
+{scope} .d-bar.pro {{ background:var(--enps-tug-promoter-bg); }}
+{scope} .dist-labels {{ display:flex; align-items:flex-start; justify-content:center; gap:40px; margin-top:12px; }}
+{scope} .l-group {{ display:flex; align-items:flex-start; gap:12px; }}
+{scope} .d-label {{ width:56px; text-align:center; font-size:13px; font-weight:800; color:var(--enps-dist-label); }}
+{scope} .dist-brackets {{ display:flex; justify-content:center; gap:40px; margin-top:24px; border-top:1px dashed #E2E8F0; padding-top:16px; }}
+{scope} .bracket {{ text-align:center; font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }}
+{scope} .bracket.det {{ width:464px; color:var(--enps-det-text); }}
+{scope} .bracket.pas {{ width:124px; color:var(--enps-pas-text); }}
+{scope} .bracket.pro {{ width:124px; color:var(--enps-pro-text); }}
 "
     )
   }
@@ -1642,8 +2232,9 @@ ohepRDisplayr <- function() {
     tug_right <- (dat$promoters_pct / tug_den) * 46
 
     score_txt <- if (dat$score > 0) paste0("+", round(dat$score)) else as.character(round(dat$score))
+    delta_sign <- if (dat$score_delta >= 0) "▲" else "▼"
     delta_prefix <- if (dat$score_delta >= 0) "+ " else "- "
-    delta_txt <- paste0(delta_prefix, abs(round(dat$score_delta)), " ", env$escape_text(dat$delta_label))
+    delta_txt <- paste0(delta_sign, " ", delta_prefix, abs(round(dat$score_delta)), " ", env$escape_text(dat$delta_label))
 
     det_idx <- which(dist$rating <= 6)
     pas_idx <- which(dist$rating %in% c(7, 8))
@@ -1660,58 +2251,108 @@ ohepRDisplayr <- function() {
       }, character(1)), collapse = "")
     }
 
+    status_class <- function(p) {
+      if (!is.finite(p)) return("color-watch")
+      if (p < 40) return("color-risk")
+      if (p < 60) return("color-watch")
+      "color-good"
+    }
+    status_text <- function(p) {
+      if (!is.finite(p)) return("Industry Standard")
+      if (p < 40) return("Area for Growth")
+      if (p < 60) return("Industry Standard")
+      "Above Standard"
+    }
+    driver_rows <- paste(vapply(seq_len(nrow(dat$drivers)), function(i) {
+      d <- dat$drivers[i, , drop = FALSE]
+      pct <- suppressWarnings(as.numeric(d$percentile[[1]]))
+      cls <- status_class(pct)
+      st <- as.character(d$status_label[[1]])
+      if (!nzchar(st) || is.na(st)) st <- status_text(pct)
+      pct_txt <- if (is.finite(pct)) sprintf("%dth Percentile", as.integer(round(pct))) else "n/a"
+      glue::glue(
+        "<tr>
+          <td>
+            <span class=\"row-rank\">{as.integer(d$rank[[1]])}</span>
+            <span class=\"row-name\">{env$escape_text(d$fundamental[[1]])}</span>
+          </td>
+          <td class=\"right-align\">
+            <div class=\"company-score-stack\">
+              <span class=\"row-score-val {cls}\">{pct_txt}</span>
+              <span class=\"row-status {cls}\">{env$escape_text(st)}</span>
+            </div>
+          </td>
+        </tr>"
+      )
+    }, character(1)), collapse = "")
+
     body_html <- glue::glue(
       "<div id=\"{env$escape_text(id)}\" class=\"ohep-enps-root\">
-        <div class=\"enps-card\">
-          <div class=\"card-header\">
-            <div class=\"title-group\">
-              <h2 class=\"card-title\">{env$escape_text(dat$title)}</h2>
-              <p class=\"card-sub\">{env$escape_text(dat$subtitle)}</p>
-            </div>
-            <div class=\"score-display\">
-              <span class=\"score-label\">Net Score</span>
-              <span class=\"big-score\">{score_txt}</span>
-              <span class=\"delta-pill\">{delta_txt}</span>
-            </div>
-          </div>
-
-          <div class=\"tug-wrap\">
-            <div class=\"tug-axis\">
-              <div class=\"tug-mid\"><span class=\"tug-mid-label\">Baseline</span></div>
-              <div class=\"tug-left\" style=\"width:{sprintf('%.1f', tug_left)}%;\">{sprintf('%.0f%%', dat$detractors_pct)}</div>
-              <div class=\"tug-right\" style=\"width:{sprintf('%.1f', tug_right)}%;\">{sprintf('%.0f%%', dat$promoters_pct)}</div>
-            </div>
-            <div class=\"tug-labels\">
-              <div class=\"t-group left\">
-                <span class=\"t-title det\">Detractors</span>
-                <span class=\"t-math\">- {sprintf('%.0f', dat$detractors_pct)}</span>
-              </div>
-              <div class=\"t-group right\">
-                <span class=\"t-title pro\">Promoters</span>
-                <span class=\"t-math\">+ {sprintf('%.0f', dat$promoters_pct)}</span>
+        <div class=\"top-row\">
+          <div class=\"card enps-card\">
+            <div class=\"title-bar\" style=\"margin-bottom:0;\">
+              <div style=\"display:flex;flex-direction:column;\">
+                <h2 class=\"card-title\">{env$escape_text(dat$title)}</h2>
+                <p class=\"card-sub\">{env$escape_text(dat$subtitle)}</p>
               </div>
             </div>
+            <div class=\"hero-row\" style=\"display:flex;align-items:flex-end;gap:20px;margin:16px 0 20px 0;\">
+              <div>
+                <div class=\"hero-label\">Net Score</div>
+                <div class=\"hero-value\">{score_txt}</div>
+              </div>
+              <div style=\"padding-bottom:6px;\"><span class=\"delta-pill\">{delta_txt}</span></div>
+            </div>
+            <div class=\"tug-container\">
+              <div class=\"tug-axis\">
+                <div class=\"tug-mid\"><span class=\"tug-mid-lbl\">Baseline</span></div>
+                <div class=\"tug-left\" style=\"width:{sprintf('%.1f', tug_left)}%;\">{sprintf('%.0f%%', dat$detractors_pct)}</div>
+                <div class=\"tug-right\" style=\"width:{sprintf('%.1f', tug_right)}%;\">{sprintf('%.0f%%', dat$promoters_pct)}</div>
+              </div>
+              <div class=\"tug-labels\">
+                <div class=\"t-leg-group left\">
+                  <span class=\"t-title det\">Detractors</span>
+                  <span class=\"t-math\">- {sprintf('%.0f', dat$detractors_pct)}</span>
+                </div>
+                <div class=\"t-leg-group right\">
+                  <span class=\"t-title pro\">Promoters</span>
+                  <span class=\"t-math\">+ {sprintf('%.0f', dat$promoters_pct)}</span>
+                </div>
+              </div>
+            </div>
           </div>
-
-          <hr class=\"section-divider\" />
-
-          <h3 class=\"dist-title\">Population Distribution</h3>
-          <p class=\"dist-sub\">Detailed breakdown of the 0-10 rating scale</p>
-
-          <div class=\"dist-bars\">
-            <div class=\"d-group det\">{mk_bars(det_idx, 'det')}</div>
-            <div class=\"d-group pas\">{mk_bars(pas_idx, 'pas')}</div>
-            <div class=\"d-group pro\">{mk_bars(pro_idx, 'pro')}</div>
+          <div class=\"card drivers-card\">
+            <div class=\"title-bar\" style=\"margin-bottom:0;\"><h2 class=\"card-title\">Key Drivers</h2></div>
+            <p class=\"card-sub\">The fundamentals driving <strong>eNPS</strong> most.</p>
+            <table class=\"table-outcomes\">
+              <thead>
+                <tr><th>Fundamental</th><th class=\"right-align\">Your Company</th></tr>
+              </thead>
+              <tbody>{driver_rows}</tbody>
+            </table>
           </div>
-          <div class=\"dist-labels\">
-            <div class=\"l-group det\">{mk_labels(det_idx, 'det')}</div>
-            <div class=\"l-group pas\">{mk_labels(pas_idx, 'pas')}</div>
-            <div class=\"l-group pro\">{mk_labels(pro_idx, 'pro')}</div>
-          </div>
-          <div class=\"dist-brackets\">
-            <div class=\"bracket det\">Detractors ({sprintf('%.0f%%', dat$detractors_pct)})</div>
-            <div class=\"bracket pas\">Passives ({sprintf('%.0f%%', dat$passives_pct)})</div>
-            <div class=\"bracket pro\">Promoters ({sprintf('%.0f%%', dat$promoters_pct)})</div>
+        </div>
+        <div class=\"bottom-row\">
+          <div class=\"card\" style=\"width:100%;\">
+            <div class=\"title-bar\" style=\"margin-bottom:0;\"><h2 class=\"card-title\">Population Distribution</h2></div>
+            <p class=\"card-sub\">Detailed breakdown of the 0-10 rating scale across the organization.</p>
+            <div class=\"dist-wrapper\">
+              <div class=\"dist-bars\">
+                <div class=\"d-bar-group\">{mk_bars(det_idx, 'det')}</div>
+                <div class=\"d-bar-group\">{mk_bars(pas_idx, 'pas')}</div>
+                <div class=\"d-bar-group\">{mk_bars(pro_idx, 'pro')}</div>
+              </div>
+              <div class=\"dist-labels\">
+                <div class=\"l-group\">{mk_labels(det_idx, 'det')}</div>
+                <div class=\"l-group\">{mk_labels(pas_idx, 'pas')}</div>
+                <div class=\"l-group\">{mk_labels(pro_idx, 'pro')}</div>
+              </div>
+              <div class=\"dist-brackets\">
+                <div class=\"bracket det\">Detractors ({sprintf('%.0f%%', dat$detractors_pct)})</div>
+                <div class=\"bracket pas\">Passives ({sprintf('%.0f%%', dat$passives_pct)})</div>
+                <div class=\"bracket pro\">Promoters ({sprintf('%.0f%%', dat$promoters_pct)})</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>"

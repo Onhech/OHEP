@@ -13,6 +13,7 @@ run_decision_matrix_preview()
 run_item_distribution_preview()
 run_model_preview()
 run_demographics_preview()
+run_open_ended_preview()
 ```
 
 Or from shell:
@@ -51,6 +52,15 @@ Outputs are written to:
   - `preview/test_examples/Demographics/01_demographics_page.html`
   - `preview/test_examples/Demographics/01_demographics_page_data.csv`
   - `preview/test_examples/Demographics/01_demographics_page_rendered.txt`
+- Open Ended:
+  - `preview/test_examples/Open Ended/index.html`
+  - `preview/test_examples/Open Ended/01_open_ended_overall_summary.html`
+  - `preview/test_examples/Open Ended/02_open_ended_three_takeaways.html`
+  - `preview/test_examples/Open Ended/03_open_ended_theme_evidence_01.html`
+  - `preview/test_examples/Open Ended/04_open_ended_theme_evidence_02.html`
+  - `preview/test_examples/Open Ended/05_open_ended_verbatim_first_01.html`
+  - `preview/test_examples/Open Ended/06_open_ended_verbatim_compact_01.html`
+  - rendered/text artifacts and `scenario_summary.csv` alongside each HTML
 
 ## Why this exists
 
