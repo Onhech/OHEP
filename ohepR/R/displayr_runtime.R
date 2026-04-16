@@ -1755,47 +1755,57 @@ ohepRDisplayr <- function() {
 {scope} .oe-compact-grid {{ margin-top: 12px; columns: 2; column-gap: 10px; }}
 {scope} .oe-compact-item {{ break-inside: avoid; margin: 0 0 8px 0; border: 1px solid var(--oe-border); border-radius: 8px; padding: 8px 10px; background: #fff; font-size: 13px; color: var(--oe-sub); line-height: 1.35; }}
 {scope} .oe-empty {{ margin-top: 14px; border: 1px dashed var(--oe-border); border-radius: 12px; padding: 16px; background: #fff; color: var(--oe-muted); font-weight: 700; }}
-{scope} .theme-card-grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }}
+{scope} .theme-shell {{ width: 100%; max-width: 1180px; margin: 0 auto; background: #FFFFFF; border: 1px solid var(--oe-border); border-radius: 12px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); padding: 32px 36px; }}
+{scope} .theme-section {{ width: 100%; max-width: 1100px; display: flex; flex-direction: column; margin: 0 auto; }}
+{scope} .theme-page-header {{ margin-bottom: 32px; }}
+{scope} .theme-page-eyebrow {{ font-size: 11px; font-weight: 800; color: var(--oe-brand); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }}
+{scope} .theme-page-title {{ font-size: 28px; font-weight: 900; color: var(--oe-title); letter-spacing: -0.5px; margin-bottom: 16px; line-height: 1.15; }}
+{scope} .theme-divider {{ width: 100%; height: 2px; background-color: var(--oe-brand); margin-bottom: 16px; }}
+{scope} .theme-description {{ font-size: 14px; line-height: 1.5; color: var(--oe-sub); max-width: 950px; }}
+{scope} .card-grid {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }}
 {scope} .theme-card {{
   background: #FFFFFF;
   border: 1px solid var(--oe-border);
-  border-radius: 12px;
+  border-radius: 8px;
   width: 100%;
   min-height: 420px;
-  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.05);
   display: flex;
   flex-direction: column;
   padding: 24px;
 }}
 {scope} .card-header {{ margin-bottom: 16px; }}
-{scope} .theme-eyebrow {{ font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--oe-brand); font-weight: 800; margin-bottom: 6px; }}
-{scope} .card-title {{ font-size: 18px; font-weight: 800; color: var(--oe-title); margin: 0; line-height: 1.3; }}
-{scope} .card-body {{ font-size: 13px; line-height: 1.5; color: var(--oe-sub); margin-bottom: 24px; }}
-{scope} .quote-watermark {{ position: relative; padding: 12px 16px 12px 24px; margin-top: 12px; }}
+{scope} .card-eyebrow {{ font-size: 10px; font-weight: 800; color: var(--oe-brand); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }}
+{scope} .card-title {{ font-size: 16px; font-weight: 800; color: var(--oe-title); margin: 0; line-height: 1.3; }}
+{scope} .card-body {{ font-size: 12px; line-height: 1.5; color: var(--oe-sub); margin-bottom: 24px; }}
+{scope} .quote-watermark {{ position: relative; padding: 12px 16px 12px 28px; margin-top: 8px; }}
 {scope} .quote-watermark::before {{
   content: \"\\201C\";
   position: absolute;
-  top: -10px;
+  top: -12px;
   left: -4px;
-  font-size: 72px;
+  font-size: 80px;
   color: #F1F5F9;
   line-height: 1;
   font-family: Georgia, serif;
   font-weight: 900;
   z-index: 0;
 }}
-{scope} .quote-watermark .quote-text {{ position: relative; z-index: 1; font-size: 14px; font-weight: 500; color: var(--oe-title); line-height: 1.5; }}
-{scope} .card-footer {{ margin-top: auto; padding-top: 20px; border-top: 1px solid var(--oe-border); display: flex; justify-content: center; }}
+{scope} .quote-watermark .quote-text {{ position: relative; z-index: 1; font-size: 13px; font-weight: 600; color: var(--oe-title); line-height: 1.5; }}
+{scope} .card-footer {{ margin-top: auto; padding-top: 24px; border-top: 1px solid #F1F5F9; display: flex; justify-content: center; }}
 {scope} .split-pill {{ display: inline-flex; border: 1px solid var(--oe-border); border-radius: 999px; overflow: hidden; background: #fff; }}
-{scope} .pill-left {{ padding: 8px 14px; font-size: 14px; font-weight: 800; color: var(--oe-title); letter-spacing: .2px; }}
-{scope} .pill-left sup {{ font-size: 9px; font-weight: 800; margin-left: 1px; }}
-{scope} .pill-right {{ padding: 8px 12px; border-left: 1px solid var(--oe-border); background: #F8FAFC; font-size: 13px; font-weight: 800; color: var(--oe-brand); letter-spacing: .4px; text-transform: uppercase; }}
+{scope} .pill-left {{ background: #FFFFFF; padding: 6px 12px; font-size: 11px; font-weight: 800; color: var(--oe-title); text-transform: uppercase; letter-spacing: 0.5px; }}
+{scope} .pill-left sup {{ font-size: 8px; }}
+{scope} .pill-right {{ background: #FFFFFF; padding: 6px 12px; border-left: 1px solid var(--oe-border); font-size: 11px; font-weight: 800; color: var(--oe-brand); text-transform: uppercase; letter-spacing: 0.5px; }}
 @media (max-width: 1050px) {{
   {scope} .oe-grid.three {{ grid-template-columns: 1fr; }}
   {scope} .oe-grid.two {{ grid-template-columns: 1fr; }}
   {scope} .oe-verbatim-feature {{ grid-template-columns: 1fr; }}
   {scope} .oe-compact-grid {{ columns: 1; }}
-  {scope} .theme-card-grid {{ grid-template-columns: 1fr; }}
+  {scope} .card-grid {{ grid-template-columns: repeat(2, 1fr); }}
+}}
+@media (max-width: 768px) {{
+  {scope} .card-grid {{ grid-template-columns: 1fr; }}
 }}
 "
     )
@@ -1899,7 +1909,7 @@ ohepRDisplayr <- function() {
       theme_evidence = {
         page_map <- env$open_ended_theme_pages(dat = dat, quotes_per_page = 4L)
         if (nrow(page_map) < 1L || page_index > nrow(page_map)) {
-          glue::glue("{header_html(k = 'Theme Evidence', t = 'Theme Evidence')}<div class=\"oe-empty\">No theme evidence is available for this page.</div>")
+          glue::glue("<div class=\"oe-empty\">No theme evidence is available for this page.</div>")
         } else {
           p_row <- page_map[page_index, , drop = FALSE]
           theme_row <- dat$theme_evidence[
@@ -1929,19 +1939,12 @@ ohepRDisplayr <- function() {
 
           make_concept <- function(i) {
             quote_text <- first_or(q$quote_text[i], "")
-            words <- unlist(strsplit(gsub("[^A-Za-z0-9 ]", " ", quote_text), "\\s+"))
-            words <- words[nzchar(words)]
-            concept_title <- if (length(words) > 0L) {
-              paste(utils::head(words, min(5L, length(words))), collapse = " ")
-            } else {
-              paste("Theme Concept", i)
-            }
-            concept_title <- paste0(concept_title, if (i > 1L) paste0(" (", i, ")") else "")
+            concept_title <- as.character(theme_row$theme_title[[1]])
             explainer <- as.character(theme_row$context_text[[1]])
             glue::glue(
               "<div class=\"theme-card\">
                  <div class=\"card-header\">
-                   <div class=\"theme-eyebrow\">Theme Evidence</div>
+                   <div class=\"card-eyebrow\">Theme Summary</div>
                    <h3 class=\"card-title\">{env$escape_text(concept_title)}</h3>
                  </div>
                  <div class=\"card-body\">{env$escape_text(explainer)}</div>
@@ -1962,7 +1965,7 @@ ohepRDisplayr <- function() {
           } else {
             glue::glue(
               "<div class=\"theme-card\">
-                 <div class=\"card-header\"><div class=\"theme-eyebrow\">Theme Evidence</div><h3 class=\"card-title\">{env$escape_text(as.character(theme_row$theme_title[[1]]))}</h3></div>
+                 <div class=\"card-header\"><div class=\"card-eyebrow\">Theme Summary</div><h3 class=\"card-title\">{env$escape_text(as.character(theme_row$theme_title[[1]]))}</h3></div>
                  <div class=\"card-body\">{env$escape_text(as.character(theme_row$context_text[[1]]))}</div>
                  <div class=\"quote-watermark\"><div class=\"quote-text\">No quotes available for this evidence page.</div></div>
                  <div class=\"card-footer\">
@@ -1976,10 +1979,17 @@ ohepRDisplayr <- function() {
           }
 
           glue::glue(
-            "{header_html(k = 'Theme Evidence', t = 'Theme Evidence')}
-             <div class=\"oe-card\">
-               <div class=\"theme-card-grid\">{cards_html}</div>
-               {if (isTRUE(p_row$is_continuation[[1]])) '<div class=\"oe-page-note\">Continuation page</div>' else ''}
+            "<div class=\"theme-shell\">
+               <div class=\"theme-section\">
+                 <header class=\"theme-page-header\">
+                   <div class=\"theme-page-eyebrow\">Theme {page_index}</div>
+                   <h1 class=\"theme-page-title\">{env$escape_text(as.character(theme_row$theme_title[[1]]))}</h1>
+                   <div class=\"theme-divider\"></div>
+                   <p class=\"theme-description\">{env$escape_text(as.character(theme_row$context_text[[1]]))}</p>
+                 </header>
+                 <div class=\"card-grid\">{cards_html}</div>
+                 {if (isTRUE(p_row$is_continuation[[1]])) '<div class=\"oe-page-note\">Continuation page</div>' else ''}
+               </div>
              </div>"
           )
         }
