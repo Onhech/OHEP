@@ -1768,6 +1768,7 @@ ohepRDisplayr <- function() {
   padding: 24px;
 }}
 {scope} .card-header {{ margin-bottom: 16px; }}
+{scope} .theme-eyebrow {{ font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--oe-brand); font-weight: 800; margin-bottom: 6px; }}
 {scope} .card-title {{ font-size: 18px; font-weight: 800; color: var(--oe-title); margin: 0; line-height: 1.3; }}
 {scope} .card-body {{ font-size: 13px; line-height: 1.5; color: var(--oe-sub); margin-bottom: 24px; }}
 {scope} .quote-watermark {{ position: relative; padding: 12px 16px 12px 24px; margin-top: 12px; }}
@@ -1940,6 +1941,7 @@ ohepRDisplayr <- function() {
             glue::glue(
               "<div class=\"theme-card\">
                  <div class=\"card-header\">
+                   <div class=\"theme-eyebrow\">Theme Evidence</div>
                    <h3 class=\"card-title\">{env$escape_text(concept_title)}</h3>
                  </div>
                  <div class=\"card-body\">{env$escape_text(explainer)}</div>
@@ -1960,7 +1962,7 @@ ohepRDisplayr <- function() {
           } else {
             glue::glue(
               "<div class=\"theme-card\">
-                 <div class=\"card-header\"><h3 class=\"card-title\">{env$escape_text(as.character(theme_row$theme_title[[1]]))}</h3></div>
+                 <div class=\"card-header\"><div class=\"theme-eyebrow\">Theme Evidence</div><h3 class=\"card-title\">{env$escape_text(as.character(theme_row$theme_title[[1]]))}</h3></div>
                  <div class=\"card-body\">{env$escape_text(as.character(theme_row$context_text[[1]]))}</div>
                  <div class=\"quote-watermark\"><div class=\"quote-text\">No quotes available for this evidence page.</div></div>
                  <div class=\"card-footer\">
@@ -1974,10 +1976,8 @@ ohepRDisplayr <- function() {
           }
 
           glue::glue(
-            "{header_html(k = 'Theme Evidence', t = paste0(tk_title, ' - ', as.character(theme_row$theme_title[[1]])))}
+            "{header_html(k = 'Theme Evidence', t = 'Theme Evidence')}
              <div class=\"oe-card\">
-               <h2 class=\"oe-theme-title\">{env$escape_text(as.character(theme_row$theme_title[[1]]))}</h2>
-               <p class=\"oe-context\">{env$escape_text(as.character(theme_row$context_text[[1]]))}</p>
                <div class=\"theme-card-grid\">{cards_html}</div>
                {if (isTRUE(p_row$is_continuation[[1]])) '<div class=\"oe-page-note\">Continuation page</div>' else ''}
              </div>"
