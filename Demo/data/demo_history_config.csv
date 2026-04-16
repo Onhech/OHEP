@@ -1,0 +1,4 @@
+"year","display_label","include_in_history","use_as_report_year","min_n"
+2024,"2024",TRUE,FALSE,100
+2025,"2025",TRUE,TRUE,100
+2026,"2026",FALSE,FALSE,100

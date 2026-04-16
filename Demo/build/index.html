@@ -7,41 +7,123 @@
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar" id="sidebar"></aside>
-    <main class="main-region">
-      <header class="topbar">
-        <div class="topbar-title">
-          <h1 id="report-title">OHEP Demo Report</h1>
-          <p id="report-subtitle"></p>
+  <div class="demo-banner">
+    <span class="demo-badge">SANDBOX</span>
+    Interactive Demo Environment — Simulated Data
+  </div>
+
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="provider-logo"><img src="./images/MonarkLogo.jpg" alt="Monark"></div>
+        <span class="provider-name">Monark</span>
+      </div>
+
+      <nav id="sidebar-nav" class="sidebar-nav"></nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-info-wrap">
+            <div class="user-avatar"><img src="./images/profile_mock.svg" alt="Jane Doe"></div>
+            <div class="user-details">
+              <span class="user-name">Jane Doe</span>
+              <span class="user-role">HR Executive</span>
+            </div>
+          </div>
+          <button class="btn-icon" type="button" aria-label="Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </button>
         </div>
-        <div class="filters">
-          <label class="filter-control">
-            <span>Department</span>
-            <select id="filter-department"></select>
-          </label>
-          <label class="filter-control">
-            <span>Full-Time Status</span>
-            <select id="filter-full-time-status"></select>
-          </label>
-          <label class="filter-control">
-            <span>Location Cluster</span>
-            <select id="filter-location-cluster"></select>
-          </label>
+        <div class="system-meta">v2.4.1 | © 2026 Monark</div>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <header class="toolbar-header">
+        <div class="header-left">
+          <div id="client-logo" class="client-logo"><img src="./images/ASRCLogo.jpg" alt="Arctic Slope"></div>
+          <div class="v2-title-group">
+            <h1 id="report-title" class="v2-title">Arctic Slope</h1>
+            <div class="v2-divider"></div>
+            <p class="v2-subtitle">Organizational Health &amp;<br>Effectiveness Profile</p>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="filter-wrapper">
+            <div class="filter-metric-group">
+              <button id="filter-toggle" class="btn-filter-toggle" type="button" aria-haspopup="true" aria-expanded="false">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                Filters
+                <span id="filter-badge" class="filter-badge">0</span>
+              </button>
+
+              <div class="metric-display">
+                <span class="metric-label">Responses</span>
+                <span id="global-responses-value" class="metric-value">0</span>
+              </div>
+            </div>
+
+            <div id="filter-popover" class="filter-popover" hidden>
+              <div class="popover-header">
+                <h3 class="popover-title">Active Filters</h3>
+                <button id="clear-filters" class="popover-clear" type="button">Clear All</button>
+              </div>
+              <div id="filter-groups" class="popover-body"></div>
+            </div>
+          </div>
+
+          <div class="header-divider"></div>
+
+          <div class="export-wrapper">
+            <div class="btn-export">
+              <button id="export-main" class="btn-export-main" type="button">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Export
+              </button>
+              <button id="export-toggle" class="btn-export-chevron" type="button" aria-haspopup="true" aria-expanded="false">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+            </div>
+
+            <div id="export-menu" class="export-menu" hidden>
+              <button type="button" class="export-option">Export PDF</button>
+              <button type="button" class="export-option">Export PowerPoint</button>
+              <button type="button" class="export-option">Export Word</button>
+            </div>
+          </div>
+
+          <div class="header-divider"></div>
+
+          <div class="slide-nav-pill">
+            <button id="prev-btn" class="slide-nav-btn" type="button" aria-label="Previous slide">◀</button>
+            <span id="slide-count" class="slide-nav-count">1 / 1</span>
+            <button id="next-btn" class="slide-nav-btn" type="button" aria-label="Next slide">▶</button>
+          </div>
         </div>
       </header>
-      <section class="stage-wrap">
-        <div class="page-stage">
-          <iframe id="slide-frame" title="Slide Stage"></iframe>
+
+      <section class="stage-area">
+        <div class="presentation-container">
+          <div class="stage-card">
+            <iframe id="slide-frame" title="Slide Content"></iframe>
+          </div>
         </div>
       </section>
-      <footer class="controls">
-        <button id="prev-btn" type="button">Previous</button>
-        <div id="slide-count">Slide 1 / 1</div>
-        <button id="next-btn" type="button">Next</button>
-      </footer>
     </main>
   </div>
+
   <script src="./demo-data.js"></script>
   <script src="./app.js"></script>
 </body>

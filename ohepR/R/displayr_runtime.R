@@ -1755,11 +1755,46 @@ ohepRDisplayr <- function() {
 {scope} .oe-compact-grid {{ margin-top: 12px; columns: 2; column-gap: 10px; }}
 {scope} .oe-compact-item {{ break-inside: avoid; margin: 0 0 8px 0; border: 1px solid var(--oe-border); border-radius: 8px; padding: 8px 10px; background: #fff; font-size: 13px; color: var(--oe-sub); line-height: 1.35; }}
 {scope} .oe-empty {{ margin-top: 14px; border: 1px dashed var(--oe-border); border-radius: 12px; padding: 16px; background: #fff; color: var(--oe-muted); font-weight: 700; }}
+{scope} .theme-card-grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }}
+{scope} .theme-card {{
+  background: #FFFFFF;
+  border: 1px solid var(--oe-border);
+  border-radius: 12px;
+  width: 100%;
+  min-height: 420px;
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}}
+{scope} .card-header {{ margin-bottom: 16px; }}
+{scope} .card-title {{ font-size: 18px; font-weight: 800; color: var(--oe-title); margin: 0; line-height: 1.3; }}
+{scope} .card-body {{ font-size: 13px; line-height: 1.5; color: var(--oe-sub); margin-bottom: 24px; }}
+{scope} .quote-watermark {{ position: relative; padding: 12px 16px 12px 24px; margin-top: 12px; }}
+{scope} .quote-watermark::before {{
+  content: \"\\201C\";
+  position: absolute;
+  top: -10px;
+  left: -4px;
+  font-size: 72px;
+  color: #F1F5F9;
+  line-height: 1;
+  font-family: Georgia, serif;
+  font-weight: 900;
+  z-index: 0;
+}}
+{scope} .quote-watermark .quote-text {{ position: relative; z-index: 1; font-size: 14px; font-weight: 500; color: var(--oe-title); line-height: 1.5; }}
+{scope} .card-footer {{ margin-top: auto; padding-top: 20px; border-top: 1px solid var(--oe-border); display: flex; justify-content: center; }}
+{scope} .split-pill {{ display: inline-flex; border: 1px solid var(--oe-border); border-radius: 999px; overflow: hidden; background: #fff; }}
+{scope} .pill-left {{ padding: 8px 14px; font-size: 14px; font-weight: 800; color: var(--oe-title); letter-spacing: .2px; }}
+{scope} .pill-left sup {{ font-size: 9px; font-weight: 800; margin-left: 1px; }}
+{scope} .pill-right {{ padding: 8px 12px; border-left: 1px solid var(--oe-border); background: #F8FAFC; font-size: 13px; font-weight: 800; color: var(--oe-brand); letter-spacing: .4px; text-transform: uppercase; }}
 @media (max-width: 1050px) {{
   {scope} .oe-grid.three {{ grid-template-columns: 1fr; }}
   {scope} .oe-grid.two {{ grid-template-columns: 1fr; }}
   {scope} .oe-verbatim-feature {{ grid-template-columns: 1fr; }}
   {scope} .oe-compact-grid {{ columns: 1; }}
+  {scope} .theme-card-grid {{ grid-template-columns: 1fr; }}
 }}
 "
     )
@@ -1788,12 +1823,16 @@ ohepRDisplayr <- function() {
       if (length(x) < 1L || is.na(x[[1]]) || !nzchar(trimws(as.character(x[[1]])))) return(default)
       as.character(x[[1]])
     }
+    ordinal <- function(x) {
+      x <- suppressWarnings(as.integer(round(x)))
+      if (!is.finite(x) || is.na(x)) return("n/a")
+      suffix <- if ((x %% 100L) %in% c(11L, 12L, 13L)) "th" else switch(as.character(x %% 10L), `1` = "st", `2` = "nd", `3` = "rd", "th")
+      paste0(x, suffix)
+    }
 
     title <- first_or(dat$summary$title, "Open-Ended Insights")
     kicker <- first_or(dat$summary$kicker, "Qualitative Summary")
-    filter_lbl <- first_or(dat$meta$filter_label, "")
-    n_txt <- if (is.finite(dat$meta$n_responses[[1]])) paste0("n = ", dat$meta$n_responses[[1]]) else ""
-    meta_line <- trimws(paste(filter_lbl, n_txt, sep = if (nzchar(filter_lbl) && nzchar(n_txt)) " | " else ""))
+    meta_line <- ""
 
     header_html <- function(k = kicker, t = title, m = meta_line) {
       glue::glue(
@@ -1882,31 +1921,64 @@ ohepRDisplayr <- function() {
           } else {
             q <- q[0, , drop = FALSE]
           }
-          q_html <- if (nrow(q) > 0L) {
-            paste(vapply(seq_len(nrow(q)), function(i) {
-              src <- if ("source_tag" %in% names(q)) first_or(q$source_tag[i], "") else ""
-              glue::glue(
-                "<blockquote class=\"oe-quote\"><p>\"{env$escape_text(q$quote_text[[i]])}\"</p>{if (nzchar(src)) glue::glue('<div class=\"src\">{env$escape_text(src)}</div>') else ''}</blockquote>"
-              )
-            }, character(1)), collapse = "")
-          } else {
-            "<div class=\"oe-empty\">No quotes available for this evidence page.</div>"
-          }
-
           metric_lbl <- if ("metric_label" %in% names(theme_row)) first_or(theme_row$metric_label, "") else ""
           metric_val <- if ("metric_value" %in% names(theme_row)) suppressWarnings(as.numeric(theme_row$metric_value[[1]])) else NA_real_
           metric_status <- if ("metric_status" %in% names(theme_row)) first_or(theme_row$metric_status, "") else ""
+          metric_pct <- if (is.finite(metric_val)) pmax(1, pmin(99, round((metric_val / 5) * 100))) else NA_real_
+
+          make_concept <- function(i) {
+            quote_text <- first_or(q$quote_text[i], "")
+            words <- unlist(strsplit(gsub("[^A-Za-z0-9 ]", " ", quote_text), "\\s+"))
+            words <- words[nzchar(words)]
+            concept_title <- if (length(words) > 0L) {
+              paste(utils::head(words, min(5L, length(words))), collapse = " ")
+            } else {
+              paste("Theme Concept", i)
+            }
+            concept_title <- paste0(concept_title, if (i > 1L) paste0(" (", i, ")") else "")
+            explainer <- as.character(theme_row$context_text[[1]])
+            glue::glue(
+              "<div class=\"theme-card\">
+                 <div class=\"card-header\">
+                   <h3 class=\"card-title\">{env$escape_text(concept_title)}</h3>
+                 </div>
+                 <div class=\"card-body\">{env$escape_text(explainer)}</div>
+                 <div class=\"quote-watermark\"><div class=\"quote-text\">{env$escape_text(quote_text)}</div></div>
+                 <div class=\"card-footer\">
+                   <div class=\"split-pill\">
+                     <div class=\"pill-left\">{if (is.finite(metric_pct)) glue::glue('{ordinal(metric_pct)}<sup>PCTL</sup>') else 'n/a'}</div>
+                     <div class=\"pill-right\">{if (is.finite(metric_val)) glue::glue('Score {sprintf(\"%.1f\", metric_val)}') else if (nzchar(metric_status)) env$escape_text(metric_status) else 'Score n/a'}</div>
+                   </div>
+                 </div>
+               </div>"
+            )
+          }
+
+          cards_html <- if (nrow(q) > 0L) {
+            keep_n <- min(3L, nrow(q))
+            paste(vapply(seq_len(keep_n), make_concept, character(1)), collapse = "")
+          } else {
+            glue::glue(
+              "<div class=\"theme-card\">
+                 <div class=\"card-header\"><h3 class=\"card-title\">{env$escape_text(as.character(theme_row$theme_title[[1]]))}</h3></div>
+                 <div class=\"card-body\">{env$escape_text(as.character(theme_row$context_text[[1]]))}</div>
+                 <div class=\"quote-watermark\"><div class=\"quote-text\">No quotes available for this evidence page.</div></div>
+                 <div class=\"card-footer\">
+                   <div class=\"split-pill\">
+                     <div class=\"pill-left\">{if (is.finite(metric_pct)) glue::glue('{ordinal(metric_pct)}<sup>PCTL</sup>') else 'n/a'}</div>
+                     <div class=\"pill-right\">{if (is.finite(metric_val)) glue::glue('Score {sprintf(\"%.1f\", metric_val)}') else if (nzchar(metric_status)) env$escape_text(metric_status) else 'Score n/a'}</div>
+                   </div>
+                 </div>
+               </div>"
+            )
+          }
 
           glue::glue(
             "{header_html(k = 'Theme Evidence', t = paste0(tk_title, ' - ', as.character(theme_row$theme_title[[1]])))}
              <div class=\"oe-card\">
                <h2 class=\"oe-theme-title\">{env$escape_text(as.character(theme_row$theme_title[[1]]))}</h2>
                <p class=\"oe-context\">{env$escape_text(as.character(theme_row$context_text[[1]]))}</p>
-               <div style=\"margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;\">
-                 {if (nzchar(metric_lbl) || is.finite(metric_val)) glue::glue('<span class=\"oe-pill\"><strong>{env$escape_text(if (nzchar(metric_lbl)) metric_lbl else \"Score\")}</strong> {if (is.finite(metric_val)) sprintf(\"%.2f\", metric_val) else \"n/a\"}</span>') else ''}
-                 {if (nzchar(metric_status)) glue::glue('<span class=\"oe-pill\">{env$escape_text(metric_status)}</span>') else ''}
-               </div>
-               <div class=\"oe-quotes\">{q_html}</div>
+               <div class=\"theme-card-grid\">{cards_html}</div>
                {if (isTRUE(p_row$is_continuation[[1]])) '<div class=\"oe-page-note\">Continuation page</div>' else ''}
              </div>"
           )
@@ -2446,7 +2518,7 @@ ohepRDisplayr <- function() {
   --hm-legend-text: {c$heatmap_legend_text};
   --hm-legend-start: {c$heatmap_legend_start};
   --hm-legend-mid: {c$heatmap_legend_mid};
-  --hm-legend-end: {c$heatmap_legend_end};
+  --hm-legend-end: #16A34A;
   --hm-card-bg: {c$heatmap_card_bg};
   --hm-card-border: {c$heatmap_card_border};
   --hm-card-shadow: {c$heatmap_card_shadow};
@@ -2459,8 +2531,8 @@ ohepRDisplayr <- function() {
   --hm-pill-na-bg: {c$heatmap_pill_na_bg};
   --hm-pill-na-text: {c$heatmap_pill_na_text};
   --hm-pill-na-border: {c$heatmap_pill_na_border};
-  --hm-pill-pos-strong: {c$heatmap_pill_pos_strong};
-  --hm-pill-pos-soft: {c$heatmap_pill_pos_soft};
+  --hm-pill-pos-strong: #16A34A;
+  --hm-pill-pos-soft: #DCFCE7;
   --hm-pill-neutral: {c$heatmap_pill_neutral};
   --hm-pill-neg-soft: {c$heatmap_pill_neg_soft};
   --hm-pill-neg-strong: {c$heatmap_pill_neg_strong};
@@ -2475,11 +2547,11 @@ ohepRDisplayr <- function() {
   gap: 24px;
   font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
 }}
-{scope} .hm-header {{ display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }}
+{scope} .hm-header {{ display: flex; justify-content: flex-start; align-items: flex-end; gap: 24px; flex-wrap: wrap; }}
 {scope} .hm-title {{ margin: 0; font-size: 22px; font-weight: 900; color: var(--hm-title); text-transform: uppercase; letter-spacing: 0.4px; }}
 {scope} .hm-subtitle {{ margin: 4px 0 0; font-size: 14px; color: var(--hm-subtitle); }}
 {scope} .hm-legend {{ display: flex; align-items: center; gap: 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--hm-legend-text); }}
-{scope} .hm-spectrum {{ width: 150px; height: 8px; border-radius: 5px; background: linear-gradient(to right, var(--hm-legend-start), var(--hm-legend-mid), var(--hm-legend-end)); }}
+{scope} .hm-spectrum {{ width: 180px; height: 8px; border-radius: 5px; background: linear-gradient(to right, var(--hm-legend-start), var(--hm-legend-mid), var(--hm-legend-end)); }}
 {scope} .hm-grid {{ display: grid; grid-template-columns: 1fr 0.92fr; gap: 24px; align-items: flex-start; }}
 {scope} .hm-col-right {{ display: flex; flex-direction: column; gap: 24px; }}
 {scope} .hm-card {{ background: var(--hm-card-bg); border: 1px solid var(--hm-card-border); border-radius: 12px; box-shadow: 0 4px 20px var(--hm-card-shadow); padding: 20px 24px; }}

@@ -9,6 +9,7 @@ suppressPackageStartupMessages({
 })
 
 `%||%` <- function(x, y) if (is.null(x) || length(x) < 1L) y else x
+first_or <- function(x, y) if (is.null(x) || length(x) < 1L) y else x[[1]]
 
 script_path <- tryCatch({
   arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
@@ -88,6 +89,26 @@ normalize_text <- function(x) {
   out
 }
 
+read_required_csv <- function(path, req, name) {
+  if (!file.exists(path)) {
+    stop(sprintf("Missing required demo overlay file: %s", path), call. = FALSE)
+  }
+  df <- utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
+  miss <- setdiff(req, names(df))
+  if (length(miss) > 0L) {
+    stop(sprintf("%s missing required columns: %s", name, paste(miss, collapse = ", ")), call. = FALSE)
+  }
+  if (nrow(df) < 1L) {
+    stop(sprintf("%s is empty.", name), call. = FALSE)
+  }
+  df
+}
+
+as_flag <- function(x) {
+  if (is.logical(x)) return(x)
+  tolower(trimws(as.character(x))) %in% c("true", "t", "1", "yes", "y")
+}
+
 title_case <- function(x) {
   tools::toTitleCase(tolower(x))
 }
@@ -154,17 +175,92 @@ tenure_levels <- sort(unique(raw$tenure_raw))
 tenure_map <- setNames(sprintf("Tenure Group %02d", seq_along(tenure_levels)), tenure_levels)
 raw$tenure_anon <- unname(tenure_map[raw$tenure_raw])
 
+company_levels <- c(
+  "Federal",
+  "Industrial Services",
+  "Financial Solutions",
+  "Petro Star",
+  "Energy Services",
+  "Construction & North Slope Operations"
+)
+department_levels <- c(
+  "Operations",
+  "Engineering & Technical",
+  "Maintenance & Reliability",
+  "Projects & Construction",
+  "Health, Safety & Environment (HSE)",
+  "Supply Chain & Logistics",
+  "Corporate Functions",
+  "Program / Contract Management"
+)
+identity_levels <- c(
+  "I\u00f1upiaq",
+  "Other Alaska Native",
+  "Other Indigenous (First Nations / Native American)",
+  "White",
+  "Asian",
+  "Black / African American",
+  "Hispanic / Latino",
+  "Two or more / Other",
+  "Prefer not to say"
+)
+location_levels <- c(
+  "North Slope (Prudhoe Bay / Kuparuk)",
+  "Utqia\u0121vik (Barrow)",
+  "Anchorage",
+  "Other Alaska",
+  "Lower 48 (U.S.)",
+  "Remote / Other"
+)
+employee_type_levels <- c(
+  "Field / Site",
+  "Corporate / Office",
+  "Federal Contract Staff",
+  "Craft / Trades",
+  "Manager / Supervisor"
+)
+tenure_band_levels <- c("<1 year", "1-2 years", "3-5 years", "6-10 years", "10+ years")
+work_arrangement_levels <- c("On-site", "Camp / Rotational", "Hybrid", "Remote")
+
+map_by_levels <- function(values, levels) {
+  u <- sort(unique(values))
+  idx <- ((seq_along(u) - 1L) %% length(levels)) + 1L
+  mp <- setNames(levels[idx], u)
+  unname(mp[values])
+}
+
+raw$company_filter <- map_by_levels(raw$department_anon, company_levels)
+raw$department_filter <- map_by_levels(raw$department_anon, department_levels)
+raw$location_filter <- map_by_levels(raw$location_anon, location_levels)
+
 is_manager <- grepl("manager|supervisor|lead|foreman|executive", tolower(raw$position_raw))
+is_field_like <- grepl("operations|maintenance|reliability|construction|drilling|completions|hse|supply|logistics", tolower(raw$department_anon))
 rand_u <- runif(nrow(raw))
-raw$full_time_status <- ifelse(is_manager | rand_u < 0.86, "Full-Time", ifelse(rand_u < 0.94, "Contract", "Part-Time"))
+raw$employee_type <- ifelse(
+  is_manager, "Manager / Supervisor",
+  ifelse(
+    is_field_like & rand_u < 0.45, "Field / Site",
+    ifelse(
+      is_field_like & rand_u < 0.75, "Craft / Trades",
+      ifelse(rand_u < 0.88, "Corporate / Office", "Federal Contract Staff")
+    )
+  )
+)
 
-loc_top <- names(sort(table(raw$location_anon), decreasing = TRUE))
-loc_top <- utils::head(loc_top, 4L)
-raw$location_cluster <- ifelse(raw$location_anon %in% loc_top, raw$location_anon, "Regional Support Sites")
+raw$tenure_band <- map_by_levels(raw$tenure_anon, tenure_band_levels)
 
-dept_top <- names(sort(table(raw$department_anon), decreasing = TRUE))
-dept_top <- utils::head(dept_top, 6L)
-raw$department_filter <- ifelse(raw$department_anon %in% dept_top, raw$department_anon, "Cross-Functional Groups")
+raw$work_arrangement <- ifelse(
+  raw$employee_type %in% c("Field / Site", "Craft / Trades"),
+  ifelse(runif(nrow(raw)) < 0.58, "Camp / Rotational", "On-site"),
+  ifelse(
+    raw$employee_type == "Corporate / Office",
+    ifelse(runif(nrow(raw)) < 0.55, "Hybrid", "On-site"),
+    ifelse(runif(nrow(raw)) < 0.45, "Remote", "On-site")
+  )
+)
+
+id_probs <- c(0.19, 0.13, 0.08, 0.34, 0.09, 0.05, 0.06, 0.04, 0.02)
+raw$identity_filter <- sample(identity_levels, size = nrow(raw), replace = TRUE, prob = id_probs)
 
 jitter_likert <- function(x) {
   val <- suppressWarnings(as.numeric(x))
@@ -243,25 +339,69 @@ if (!is.na(enps_col)) {
 user_data <- data.frame(
   year = raw$year,
   company = "Company A",
+  demo_company = raw$company_filter,
   demo_department = raw$department_filter,
-  demo_location = raw$location_cluster,
-  employeeGroup = raw$full_time_status,
+  demo_identity = raw$identity_filter,
+  demo_location = raw$location_filter,
+  employeeGroup = raw$employee_type,
+  demo_employee_type = raw$employee_type,
   demo_position = raw$position_anon,
-  demo_tenure = raw$tenure_anon,
+  demo_tenure = raw$tenure_band,
+  demo_work_arrangement = raw$work_arrangement,
   eNPS = enps_values,
   stringsAsFactors = FALSE
 )
 for (nm in names(user_items)) user_data[[nm]] <- user_items[[nm]]
 if (length(comment_cols) > 0L) {
+  comment_question_labels <- setNames(normalize_text(comment_cols), paste0("comment_", seq_along(comment_cols)))
   for (i in seq_along(comment_cols)) {
     ccol <- comment_cols[[i]]
     user_data[[paste0("comment_", i)]] <- normalize_text(raw[[ccol]])
   }
+} else {
+  comment_question_labels <- character(0)
 }
 
 year_counts <- sort(table(user_data$year), decreasing = TRUE)
-candidate_years <- as.integer(names(year_counts)[year_counts >= 100])
-report_year <- if (length(candidate_years) > 0L) max(candidate_years) else as.integer(names(year_counts)[[1]])
+history_cfg <- read_required_csv(
+  file.path(data_dir, "demo_history_config.csv"),
+  c("year", "display_label", "include_in_history", "use_as_report_year", "min_n"),
+  "demo_history_config.csv"
+)
+history_cfg$year <- suppressWarnings(as.integer(history_cfg$year))
+history_cfg$min_n <- suppressWarnings(as.integer(history_cfg$min_n))
+history_cfg$include_in_history <- as_flag(history_cfg$include_in_history)
+history_cfg$use_as_report_year <- as_flag(history_cfg$use_as_report_year)
+history_cfg <- history_cfg[history_cfg$year %in% as.integer(names(year_counts)), , drop = FALSE]
+history_cfg <- history_cfg[order(history_cfg$year), , drop = FALSE]
+if (nrow(history_cfg) < 1L) {
+  stop("demo_history_config.csv does not match any workbook years.", call. = FALSE)
+}
+eligible_history <- history_cfg[
+  history_cfg$include_in_history &
+    year_counts[as.character(history_cfg$year)] >= history_cfg$min_n,
+  ,
+  drop = FALSE
+]
+if (nrow(eligible_history) < 1L) {
+  stop("No workbook years satisfy demo_history_config.csv inclusion rules.", call. = FALSE)
+}
+report_candidates <- eligible_history[eligible_history$use_as_report_year, , drop = FALSE]
+report_year <- if (nrow(report_candidates) > 0L) {
+  max(report_candidates$year, na.rm = TRUE)
+} else {
+  max(eligible_history$year, na.rm = TRUE)
+}
+history_years <- eligible_history$year[eligible_history$year <= report_year]
+prior_year <- suppressWarnings(max(history_years[history_years < report_year], na.rm = TRUE))
+if (!is.finite(prior_year)) prior_year <- NA_integer_
+history_year_labels <- setNames(as.character(history_cfg$display_label), as.character(history_cfg$year))
+
+report_copy <- read_required_csv(
+  file.path(data_dir, "demo_report_copy.csv"),
+  c("report_title", "report_subtitle", "client_label", "summary_text", "orientation_text", "historical_context", "how_to_use_text"),
+  "demo_report_copy.csv"
+)
 
 index_data <- list(
   item_data = item_data,
@@ -325,46 +465,70 @@ slugify <- function(x) {
 }
 
 rows_report <- user_data[user_data$year == report_year, , drop = FALSE]
-dim_department <- sort(unique(rows_report$demo_department))
-dim_department <- dim_department[nzchar(dim_department)]
-dim_department <- c("All", dim_department)
-dim_status <- c("All", sort(unique(rows_report$employeeGroup)))
-dim_location <- c("All", sort(unique(rows_report$demo_location)))
+dim_company <- c("All", company_levels)
+dim_department <- c("All", department_levels)
+dim_identity <- c("All", identity_levels)
+dim_location <- c("All", location_levels)
+dim_employee_type <- c("All", employee_type_levels)
+dim_tenure <- c("All", tenure_band_levels)
+dim_work_arrangement <- c("All", work_arrangement_levels)
 
-filter_grid <- expand.grid(
+filter_ids <- c("company", "department", "identity", "location", "employee_type", "tenure", "work_arrangement")
+dim_options <- list(
+  company = dim_company,
   department = dim_department,
-  full_time_status = dim_status,
-  location_cluster = dim_location,
-  stringsAsFactors = FALSE
+  identity = dim_identity,
+  location = dim_location,
+  employee_type = dim_employee_type,
+  tenure = dim_tenure,
+  work_arrangement = dim_work_arrangement
 )
-filter_grid$filter_id <- paste0(
-  "department=", slugify(filter_grid$department),
-  "|status=", slugify(filter_grid$full_time_status),
-  "|location=", slugify(filter_grid$location_cluster)
+
+all_row <- as.data.frame(setNames(as.list(rep("All", length(filter_ids))), filter_ids), stringsAsFactors = FALSE)
+single_rows <- do.call(
+  rbind,
+  lapply(filter_ids, function(fid) {
+    vals <- setdiff(dim_options[[fid]], "All")
+    if (length(vals) < 1L) return(NULL)
+    out <- do.call(
+      rbind,
+      lapply(vals, function(v) {
+        rr <- as.list(rep("All", length(filter_ids)))
+        names(rr) <- filter_ids
+        rr[[fid]] <- v
+        as.data.frame(rr, stringsAsFactors = FALSE)
+      })
+    )
+    out
+  })
 )
+
+observed_rows <- unique(rows_report[, c("demo_company", "demo_department", "demo_identity", "demo_location", "demo_employee_type", "demo_tenure", "demo_work_arrangement"), drop = FALSE])
+names(observed_rows) <- filter_ids
+
+filter_grid <- unique(rbind(all_row, single_rows, observed_rows))
+filter_grid$filter_id <- apply(filter_grid, 1, function(rw) {
+  paste(vapply(filter_ids, function(fid) paste0(fid, "=", slugify(rw[[fid]])), character(1)), collapse = "|")
+})
 
 apply_filter <- function(df, row) {
   out <- df
+  if (row$company != "All") out <- out[out$demo_company == row$company, , drop = FALSE]
   if (row$department != "All") out <- out[out$demo_department == row$department, , drop = FALSE]
-  if (row$full_time_status != "All") out <- out[out$employeeGroup == row$full_time_status, , drop = FALSE]
-  if (row$location_cluster != "All") out <- out[out$demo_location == row$location_cluster, , drop = FALSE]
+  if (row$identity != "All") out <- out[out$demo_identity == row$identity, , drop = FALSE]
+  if (row$location != "All") out <- out[out$demo_location == row$location, , drop = FALSE]
+  if (row$employee_type != "All") out <- out[out$demo_employee_type == row$employee_type, , drop = FALSE]
+  if (row$tenure != "All") out <- out[out$demo_tenure == row$tenure, , drop = FALSE]
+  if (row$work_arrangement != "All") out <- out[out$demo_work_arrangement == row$work_arrangement, , drop = FALSE]
   out
 }
 
 fundamentals <- unique(item_data$fundamental_id[item_data$type == "fundamental"])
-fundamentals <- fundamentals[fundamentals %in% unique(marts$company_fundamental_year$fundamental_id)]
 fundamentals <- fundamentals[nzchar(fundamentals)]
 
-orientation_path <- file.path(data_dir, "system_orientation_text.txt")
-orientation_text <- if (file.exists(orientation_path)) {
-  paste(readLines(orientation_path, warn = FALSE), collapse = "\n")
-} else {
-  paste(
-    "This report summarizes employee sentiment, strengths, and risk areas across organizational fundamentals and outcomes.",
-    "Use the three filters to compare departments, employment status, and location clusters.",
-    "Scores are benchmarked and anonymized to preserve confidentiality while showing clear signal for decision-making."
-  )
-}
+orientation_text <- as.character(report_copy$orientation_text[[1]])
+historical_context_text <- as.character(report_copy$historical_context[[1]])
+how_to_use_text <- as.character(report_copy$how_to_use_text[[1]])
 
 html_escape <- function(x) htmltools::htmlEscape(as.character(x), attribute = FALSE)
 
@@ -374,7 +538,7 @@ slide_doc <- function(inner, title = "OHEP Demo") {
     "<title>", html_escape(title), "</title>",
     "<style>",
     "html,body{margin:0;padding:0;background:#f5f8fb;color:#0f172a;font-family:'Avenir Next','Segoe UI',sans-serif;}",
-    ".slide{padding:24px 28px 30px 28px;max-width:1220px;margin:0 auto;}",
+    ".slide{padding:24px 20px 30px 20px;max-width:1380px;margin:0 auto;}",
     ".k{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#0f8694;font-weight:700;margin-bottom:8px;}",
     ".h1{font-size:34px;line-height:1.15;margin:0 0 10px 0;}",
     ".sub{font-size:17px;color:#4b5563;line-height:1.45;}",
@@ -384,6 +548,7 @@ slide_doc <- function(inner, title = "OHEP Demo") {
     ".m{font-size:30px;font-weight:700;}",
     ".s{font-size:12px;color:#667085;}",
     ".q{font-size:16px;line-height:1.4;font-style:italic;}",
+    ".widget-wrap{display:flex;justify-content:center;align-items:flex-start;width:100%;}",
     "</style></head><body>",
     inner,
     "</body></html>"
@@ -399,121 +564,189 @@ no_data_slide <- function(msg = "Insufficient data for this filter combination."
 
 render_html_obj <- function(obj, title = "Slide") {
   tags <- htmltools::renderTags(obj)
-  slide_doc(tags$html, title)
+  slide_doc(paste0("<div class='widget-wrap'>", tags$html, "</div>"), title)
 }
 
-kpi_rows <- list()
+kpi_history_rows <- list()
+fundamental_history_rows <- list()
+outcome_history_rows <- list()
 item_rows_out <- list()
 demo_panel_rows <- list()
+
+score_value <- function(value, min_scale, max_scale, reverse) {
+  val <- suppressWarnings(as.numeric(value))
+  if (!is.finite(val)) return(NA_real_)
+  if (!is.finite(min_scale) || !is.finite(max_scale) || min_scale == max_scale) {
+    min_scale <- 1
+    max_scale <- 5
+  }
+  if (isTRUE(reverse)) min_scale + max_scale - val else val
+}
+
+outcome_meta <- item_data[item_data$type == "outcome", c("item_id", "fundamental_id", "is_reverse_scored", "response_scale_min", "response_scale_max"), drop = FALSE]
 
 for (i in seq_len(nrow(filter_grid))) {
   fr <- filter_grid[i, , drop = FALSE]
   rows_sub <- apply_filter(user_data, fr)
-  rows_curr <- rows_sub[rows_sub$year == report_year, , drop = FALSE]
-  if (nrow(rows_curr) < 1L) next
   fid <- fr$filter_id[[1]]
 
-  if ("eNPS" %in% names(rows_curr)) {
-    en <- suppressWarnings(as.numeric(rows_curr$eNPS))
-    en <- en[is.finite(en)]
-    if (length(en) > 0L) {
-      kpi_rows[[length(kpi_rows) + 1L]] <- data.frame(
-        filter_id = fid, company = "Company A", year = report_year, metric_group = "outcome",
-        metric_id = "eNPS", metric_label = "eNPS", score = 100 * (sum(en >= 9) - sum(en <= 6)) / length(en),
-        stringsAsFactors = FALSE
-      )
-    }
-  }
+  for (yr in history_years) {
+    rows_year <- rows_sub[rows_sub$year == yr, , drop = FALSE]
+    if (nrow(rows_year) < 1L) next
 
-  outcome_meta <- item_data[item_data$type == "outcome", c("item_id", "fundamental_id", "is_reverse_scored", "response_scale_min", "response_scale_max"), drop = FALSE]
-  if (nrow(outcome_meta) > 0L) {
-    score_value <- function(value, min_scale, max_scale, reverse) {
-      val <- suppressWarnings(as.numeric(value))
-      if (!is.finite(val)) return(NA_real_)
-      if (!is.finite(min_scale) || !is.finite(max_scale) || min_scale == max_scale) {
-        min_scale <- 1
-        max_scale <- 5
-      }
-      if (isTRUE(reverse)) min_scale + max_scale - val else val
-    }
-    out_vals <- list()
-    for (j in seq_len(nrow(outcome_meta))) {
-      iid <- as.character(outcome_meta$item_id[[j]])
-      if (!iid %in% names(rows_curr)) next
-      scored <- vapply(
-        rows_curr[[iid]],
-        score_value,
-        numeric(1),
-        min_scale = as.numeric(outcome_meta$response_scale_min[[j]]),
-        max_scale = as.numeric(outcome_meta$response_scale_max[[j]]),
-        reverse = as.logical(outcome_meta$is_reverse_scored[[j]])
-      )
-      out_vals[[length(out_vals) + 1L]] <- data.frame(
-        outcome = as.character(outcome_meta$fundamental_id[[j]]),
-        score = scored,
-        stringsAsFactors = FALSE
-      )
-    }
-    if (length(out_vals) > 0L) {
-      out_df <- do.call(rbind, out_vals)
-      out_agg <- stats::aggregate(score ~ outcome, data = out_df, FUN = function(x) mean(x, na.rm = TRUE))
-      for (j in seq_len(nrow(out_agg))) {
-        kpi_rows[[length(kpi_rows) + 1L]] <- data.frame(
+    if ("eNPS" %in% names(rows_year)) {
+      en <- suppressWarnings(as.numeric(rows_year$eNPS))
+      en <- en[is.finite(en)]
+      if (length(en) > 0L) {
+        enps_score <- 100 * (sum(en >= 9) - sum(en <= 6)) / length(en)
+        kpi_history_rows[[length(kpi_history_rows) + 1L]] <- data.frame(
           filter_id = fid,
           company = "Company A",
-          year = report_year,
+          year = yr,
           metric_group = "outcome",
-          metric_id = as.character(out_agg$outcome[[j]]),
-          metric_label = as.character(out_agg$outcome[[j]]),
-          score = as.numeric(out_agg$score[[j]]),
+          metric_id = "eNPS",
+          metric_label = "eNPS",
+          score = enps_score,
+          percentile = pmax(1, pmin(99, round(50 + enps_score / 2))),
+          n = length(en),
           stringsAsFactors = FALSE
         )
-      }
-    }
-  }
-
-  for (f in fundamentals) {
-    dash <- tryCatch(
-      build_dashboard_data_from_filtered_user_data(
-        company = "Company A",
-        year = report_year,
-        fundamental = f,
-        marts = marts,
-        filtered_user_data = rows_sub,
-        min_n = 10
-      ),
-      error = function(e) NULL
-    )
-    if (is.null(dash)) next
-    fs <- suppressWarnings(as.numeric(dash$fundamental$score[[1]] %||% NA))
-    if (is.finite(fs)) {
-      kpi_rows[[length(kpi_rows) + 1L]] <- data.frame(
-        filter_id = fid, company = "Company A", year = report_year,
-        metric_group = "fundamental", metric_id = f, metric_label = f, score = fs,
-        stringsAsFactors = FALSE
-      )
-    }
-    if (is.data.frame(dash$items) && nrow(dash$items) > 0L) {
-      for (r in seq_len(nrow(dash$items))) {
-        item_rows_out[[length(item_rows_out) + 1L]] <- data.frame(
+        outcome_history_rows[[length(outcome_history_rows) + 1L]] <- data.frame(
           filter_id = fid,
-          fundamental_id = f,
-          item_id = paste0("item_", r),
-          item_label = as.character(dash$items$label[[r]]),
-          mean = as.numeric(dash$items$mean[[r]]),
-          agree_pct = as.numeric(dash$items$agree_pct[[r]] %||% NA_real_),
-          neutral_pct = as.numeric(dash$items$neutral_pct[[r]] %||% NA_real_),
-          disagree_pct = as.numeric(dash$items$disagree_pct[[r]] %||% NA_real_),
-          vs_industry = as.numeric(dash$items$vs_industry[[r]] %||% NA_real_),
-          vs_prior = as.numeric(dash$items$vs_prior[[r]] %||% NA_real_),
+          year = yr,
+          outcome_id = "eNPS",
+          outcome_label = "eNPS",
+          score = enps_score,
+          percentile = pmax(1, pmin(99, round(50 + enps_score / 2))),
+          n = length(en),
           stringsAsFactors = FALSE
         )
       }
     }
+
+    if (nrow(outcome_meta) > 0L) {
+      out_vals <- list()
+      for (j in seq_len(nrow(outcome_meta))) {
+        iid <- as.character(outcome_meta$item_id[[j]])
+        if (!iid %in% names(rows_year)) next
+        scored <- vapply(
+          rows_year[[iid]],
+          score_value,
+          numeric(1),
+          min_scale = as.numeric(outcome_meta$response_scale_min[[j]]),
+          max_scale = as.numeric(outcome_meta$response_scale_max[[j]]),
+          reverse = as.logical(outcome_meta$is_reverse_scored[[j]])
+        )
+        out_vals[[length(out_vals) + 1L]] <- data.frame(
+          outcome = as.character(outcome_meta$fundamental_id[[j]]),
+          score = scored,
+          stringsAsFactors = FALSE
+        )
+      }
+      if (length(out_vals) > 0L) {
+        out_df <- do.call(rbind, out_vals)
+        out_df <- out_df[is.finite(suppressWarnings(as.numeric(out_df$score))) & nzchar(trimws(as.character(out_df$outcome))), , drop = FALSE]
+        if (!is.data.frame(out_df) || nrow(out_df) < 1L) {
+          next
+        }
+        out_agg <- stats::aggregate(score ~ outcome, data = out_df, FUN = function(x) mean(x, na.rm = TRUE))
+        out_n <- stats::aggregate(score ~ outcome, data = out_df, FUN = function(x) sum(is.finite(x)))
+        names(out_n)[2] <- "n"
+        out_agg <- merge(out_agg, out_n, by = "outcome", all.x = TRUE, sort = FALSE)
+        for (j in seq_len(nrow(out_agg))) {
+          pct <- pmax(1, pmin(99, round((as.numeric(out_agg$score[[j]]) / 5) * 100)))
+          row_out <- data.frame(
+            filter_id = fid,
+            company = "Company A",
+            year = yr,
+            metric_group = "outcome",
+            metric_id = as.character(out_agg$outcome[[j]]),
+            metric_label = as.character(out_agg$outcome[[j]]),
+            score = as.numeric(out_agg$score[[j]]),
+            percentile = pct,
+            n = as.integer(out_agg$n[[j]]),
+            stringsAsFactors = FALSE
+          )
+          kpi_history_rows[[length(kpi_history_rows) + 1L]] <- row_out
+          outcome_history_rows[[length(outcome_history_rows) + 1L]] <- data.frame(
+            filter_id = fid,
+            year = yr,
+            outcome_id = row_out$metric_id,
+            outcome_label = row_out$metric_label,
+            score = row_out$score,
+            percentile = row_out$percentile,
+            n = row_out$n,
+            stringsAsFactors = FALSE
+          )
+        }
+      }
+    }
+
+    for (f in fundamentals) {
+      dash <- tryCatch(
+        build_dashboard_data_from_filtered_user_data(
+          company = "Company A",
+          year = yr,
+          fundamental = f,
+          marts = marts,
+          filtered_user_data = rows_sub,
+          min_n = 10
+        ),
+        error = function(e) NULL
+      )
+      if (is.null(dash)) next
+      fs <- suppressWarnings(as.numeric(first_or(dash$fundamental$score, NA_real_)))
+      fp <- suppressWarnings(as.numeric(first_or(dash$fundamental$percentile, NA_real_)))
+      current_n <- if (is.list(dash$privacy) && !is.null(dash$privacy$current_n)) as.integer(dash$privacy$current_n[[1]]) else nrow(rows_year)
+      if (is.finite(fs)) {
+        row_f <- data.frame(
+          filter_id = fid,
+          company = "Company A",
+          year = yr,
+          metric_group = "fundamental",
+          metric_id = f,
+          metric_label = f,
+          score = fs,
+          percentile = fp,
+          n = current_n,
+          stringsAsFactors = FALSE
+        )
+        kpi_history_rows[[length(kpi_history_rows) + 1L]] <- row_f
+        fundamental_history_rows[[length(fundamental_history_rows) + 1L]] <- data.frame(
+          filter_id = fid,
+          year = yr,
+          fundamental_id = f,
+          fundamental_label = f,
+          score = fs,
+          percentile = fp,
+          n = current_n,
+          stringsAsFactors = FALSE
+        )
+      }
+      if (yr == report_year && is.data.frame(dash$items) && nrow(dash$items) > 0L) {
+        for (r in seq_len(nrow(dash$items))) {
+          item_rows_out[[length(item_rows_out) + 1L]] <- data.frame(
+            filter_id = fid,
+            fundamental_id = f,
+            item_id = paste0("item_", r),
+            item_label = as.character(dash$items$label[[r]]),
+            mean = as.numeric(dash$items$mean[[r]]),
+            agree_pct = as.numeric(dash$items$agree_pct[[r]] %||% NA_real_),
+            neutral_pct = as.numeric(dash$items$neutral_pct[[r]] %||% NA_real_),
+            disagree_pct = as.numeric(dash$items$disagree_pct[[r]] %||% NA_real_),
+            vs_industry = as.numeric(dash$items$vs_industry[[r]] %||% NA_real_),
+            vs_prior = as.numeric(dash$items$vs_prior[[r]] %||% NA_real_),
+            stringsAsFactors = FALSE
+          )
+        }
+      }
+    }
   }
 
+  rows_curr <- rows_sub[rows_sub$year == report_year, , drop = FALSE]
+  if (nrow(rows_curr) < 1L) next
   for (slot in c("tl", "tr", "bl", "br")) {
-    col <- switch(slot, tl = "demo_department", tr = "demo_location", bl = "employeeGroup", br = "demo_tenure")
+    col <- switch(slot, tl = "demo_company", tr = "demo_location", bl = "demo_employee_type", br = "demo_tenure")
     tab <- sort(table(rows_curr[[col]]), decreasing = TRUE)
     tab <- utils::head(tab, 6L)
     total <- sum(tab)
@@ -533,7 +766,10 @@ for (i in seq_len(nrow(filter_grid))) {
   }
 }
 
-kpi_scores <- if (length(kpi_rows) > 0L) do.call(rbind, kpi_rows) else data.frame()
+kpi_scores_history <- if (length(kpi_history_rows) > 0L) do.call(rbind, kpi_history_rows) else data.frame()
+fundamental_history <- if (length(fundamental_history_rows) > 0L) do.call(rbind, fundamental_history_rows) else data.frame()
+outcome_history <- if (length(outcome_history_rows) > 0L) do.call(rbind, outcome_history_rows) else data.frame()
+kpi_scores <- kpi_scores_history[kpi_scores_history$year == report_year, , drop = FALSE]
 item_scores <- if (length(item_rows_out) > 0L) do.call(rbind, item_rows_out) else data.frame()
 demographics_panels <- if (length(demo_panel_rows) > 0L) do.call(rbind, demo_panel_rows) else data.frame()
 
@@ -544,7 +780,7 @@ if (nrow(kpi_scores) < 1L || nrow(item_scores) < 1L || nrow(demographics_panels)
 heatmap_values <- data.frame()
 for (f in fundamentals) {
   for (dep in dim_department[dim_department != "All"]) {
-    key <- filter_grid$filter_id[filter_grid$department == dep & filter_grid$full_time_status == "All" & filter_grid$location_cluster == "All"][[1]]
+    key <- filter_grid$filter_id[filter_grid$department == dep & filter_grid$company == "All" & filter_grid$identity == "All" & filter_grid$location == "All" & filter_grid$employee_type == "All" & filter_grid$tenure == "All" & filter_grid$work_arrangement == "All"][[1]]
     score <- kpi_scores$score[kpi_scores$filter_id == key & kpi_scores$metric_group == "fundamental" & kpi_scores$metric_id == f]
     heatmap_values <- rbind(
       heatmap_values,
@@ -553,74 +789,37 @@ for (f in fundamentals) {
         row_label = f,
         segment_value_id = slugify(dep),
         segment_value_label = dep,
-        value = as.numeric(score[[1]] %||% NA_real_),
+        value = as.numeric(first_or(score, NA_real_)),
         stringsAsFactors = FALSE
       )
     )
   }
 }
 
-themes_df <- data.frame(
-  theme_id = c("theme_1", "theme_2", "theme_3"),
-  theme_label = c("Leadership Clarity", "Collaboration Friction", "Workload Sustainability"),
-  section = "Thematic Insights",
-  summary = c(
-    "Employees ask for more explicit priority-setting and forward planning.",
-    "Cross-team handoffs are inconsistent across operating groups.",
-    "Workload balance and pace are recurring concerns in lower-scoring cuts."
-  ),
-  mention_count = c(38L, 31L, 27L),
-  priority_rank = 1:3,
-  stringsAsFactors = FALSE
-)
-
-quotes_df <- data.frame(
-  quote_id = paste0("quote_", 1:9),
-  theme_id = rep(themes_df$theme_id, each = 3),
-  section = "Qualitative Insights",
-  quote_text = c(
-    "Priorities shift quickly and we need better context on tradeoffs.",
-    "I can see the strategy, but translation to team-level action is uneven.",
-    "When leadership explains the why, execution gets much easier.",
-    "Some teams collaborate really well, others still work in silos.",
-    "We lose time when handoff expectations are not explicit.",
-    "Shared workflows would reduce rework between groups.",
-    "The pace can be intense for long stretches without reset time.",
-    "Workload planning has improved but not consistently across teams.",
-    "Sustained delivery is possible when staffing and scope are aligned."
-  ),
-  sentiment = "mixed",
-  source_col = "synthetic_from_example",
-  stringsAsFactors = FALSE
-)
-
-cfy <- marts$company_fundamental_year
-cfy_curr <- cfy[cfy$company == "Company A" & cfy$year == report_year, , drop = FALSE]
-low <- cfy_curr[order(cfy_curr$percentile), , drop = FALSE]
-low <- utils::head(low, 3L)
-actions_df <- data.frame(
-  action_id = paste0("action_", seq_len(nrow(low))),
-  priority_rank = seq_len(nrow(low)),
-  action_title = paste("Improve", low$fundamental_id),
-  rationale = paste("Current percentile:", round(low$percentile), "| score:", round(low$mean, 2)),
-  owner_hint = "Business Unit + HR",
-  time_horizon = c("0-90 days", "90-180 days", "180+ days")[seq_len(nrow(low))],
-  stringsAsFactors = FALSE
-)
-
 report_meta <- data.frame(
-  report_title = "NorthRiver Energy Organizational Health Report",
-  report_subtitle = paste("Annual Workforce Insights | Reporting year", report_year),
-  client_label = "NorthRiver Energy",
+  report_title = as.character(report_copy$report_title[[1]]),
+  report_subtitle = paste0(as.character(report_copy$report_subtitle[[1]]), " | Reporting year ", report_year),
+  client_label = as.character(report_copy$client_label[[1]]),
   reporting_year = report_year,
-  summary_text = "Enterprise employee insights across fundamentals, outcomes, and segment comparisons.",
+  summary_text = as.character(report_copy$summary_text[[1]]),
   stringsAsFactors = FALSE
 )
+
+report_meta$report_title <- gsub("NorthRiver Energy", "Arctic Slope", report_meta$report_title, fixed = TRUE)
+report_meta$report_subtitle <- gsub("NorthRiver Energy", "Arctic Slope", report_meta$report_subtitle, fixed = TRUE)
+report_meta$client_label <- gsub("NorthRiver Energy", "Arctic Slope", report_meta$client_label, fixed = TRUE)
+if (!nzchar(trimws(as.character(report_meta$client_label[[1]])))) {
+  report_meta$client_label[[1]] <- "Arctic Slope"
+}
 
 segment_options <- rbind(
+  data.frame(segment_type_id = "company", segment_value_id = slugify(dim_company), segment_type_label = "Company", segment_value_label = dim_company, sort_order = seq_along(dim_company), n = NA_integer_, stringsAsFactors = FALSE),
   data.frame(segment_type_id = "department", segment_value_id = slugify(dim_department), segment_type_label = "Department", segment_value_label = dim_department, sort_order = seq_along(dim_department), n = NA_integer_, stringsAsFactors = FALSE),
-  data.frame(segment_type_id = "full_time_status", segment_value_id = slugify(dim_status), segment_type_label = "Full-Time Status", segment_value_label = dim_status, sort_order = seq_along(dim_status), n = NA_integer_, stringsAsFactors = FALSE),
-  data.frame(segment_type_id = "location_cluster", segment_value_id = slugify(dim_location), segment_type_label = "Location Cluster", segment_value_label = dim_location, sort_order = seq_along(dim_location), n = NA_integer_, stringsAsFactors = FALSE)
+  data.frame(segment_type_id = "identity", segment_value_id = slugify(dim_identity), segment_type_label = "Identity", segment_value_label = dim_identity, sort_order = seq_along(dim_identity), n = NA_integer_, stringsAsFactors = FALSE),
+  data.frame(segment_type_id = "location", segment_value_id = slugify(dim_location), segment_type_label = "Location", segment_value_label = dim_location, sort_order = seq_along(dim_location), n = NA_integer_, stringsAsFactors = FALSE),
+  data.frame(segment_type_id = "employee_type", segment_value_id = slugify(dim_employee_type), segment_type_label = "Employee Type", segment_value_label = dim_employee_type, sort_order = seq_along(dim_employee_type), n = NA_integer_, stringsAsFactors = FALSE),
+  data.frame(segment_type_id = "tenure", segment_value_id = slugify(dim_tenure), segment_type_label = "Tenure (bands)", segment_value_label = dim_tenure, sort_order = seq_along(dim_tenure), n = NA_integer_, stringsAsFactors = FALSE),
+  data.frame(segment_type_id = "work_arrangement", segment_value_id = slugify(dim_work_arrangement), segment_type_label = "Work Arrangement", segment_value_label = dim_work_arrangement, sort_order = seq_along(dim_work_arrangement), n = NA_integer_, stringsAsFactors = FALSE)
 )
 
 validate_csv <- function(df, req, name) {
@@ -632,61 +831,22 @@ validate_csv <- function(df, req, name) {
 validate_csv(report_meta, c("report_title", "report_subtitle", "client_label", "reporting_year", "summary_text"), "report_meta.csv")
 validate_csv(segment_options, c("segment_type_id", "segment_value_id", "segment_type_label", "segment_value_label"), "segment_options.csv")
 validate_csv(kpi_scores, c("filter_id", "metric_group", "metric_id", "score"), "kpi_scores.csv")
+validate_csv(kpi_scores_history, c("filter_id", "metric_group", "metric_id", "year", "score", "percentile", "n"), "kpi_scores_history.csv")
+validate_csv(outcome_history, c("filter_id", "outcome_id", "year", "score", "percentile", "n"), "outcome_history.csv")
+validate_csv(fundamental_history, c("filter_id", "fundamental_id", "year", "score", "percentile", "n"), "fundamental_history.csv")
 validate_csv(item_scores, c("filter_id", "fundamental_id", "item_label", "mean"), "item_scores.csv")
 validate_csv(demographics_panels, c("filter_id", "panel_slot", "category", "pct"), "demographics_panels.csv")
 validate_csv(heatmap_values, c("segment_type_id", "row_label", "segment_value_label", "value"), "heatmap_values.csv")
-validate_csv(themes_df, c("theme_id", "theme_label", "summary"), "themes.csv")
-validate_csv(quotes_df, c("quote_id", "quote_text"), "quotes.csv")
-validate_csv(actions_df, c("action_id", "action_title", "rationale"), "actions.csv")
 
 utils::write.csv(report_meta, file.path(data_dir, "report_meta.csv"), row.names = FALSE)
 utils::write.csv(segment_options, file.path(data_dir, "segment_options.csv"), row.names = FALSE)
 utils::write.csv(kpi_scores, file.path(data_dir, "kpi_scores.csv"), row.names = FALSE)
+utils::write.csv(kpi_scores_history, file.path(data_dir, "kpi_scores_history.csv"), row.names = FALSE)
+utils::write.csv(outcome_history, file.path(data_dir, "outcome_history.csv"), row.names = FALSE)
+utils::write.csv(fundamental_history, file.path(data_dir, "fundamental_history.csv"), row.names = FALSE)
 utils::write.csv(item_scores, file.path(data_dir, "item_scores.csv"), row.names = FALSE)
 utils::write.csv(demographics_panels, file.path(data_dir, "demographics_panels.csv"), row.names = FALSE)
 utils::write.csv(heatmap_values, file.path(data_dir, "heatmap_values.csv"), row.names = FALSE)
-utils::write.csv(themes_df, file.path(data_dir, "themes.csv"), row.names = FALSE)
-utils::write.csv(quotes_df, file.path(data_dir, "quotes.csv"), row.names = FALSE)
-utils::write.csv(actions_df, file.path(data_dir, "actions.csv"), row.names = FALSE)
-
-slides <- data.frame(
-  slide_id = c(
-    "cover", "orientation_model",
-    "survey_overview", "demographics_overview",
-    "snapshot", "strengths_risks", "priority_matrix",
-    "outcomes_overview", "engagement_deep_dive", "burnout_deep_dive", "work_satisfaction_deep_dive", "enps",
-    paste0("fundamental_", slugify(fundamentals)),
-    "segment_heatmap", "segment_gaps",
-    "theme_overview", "verbatim_quotes", "actions"
-  ),
-  slide_label = c(
-    "Cover & How To Read", "Orientation Model",
-    "Survey Overview", "Demographics",
-    "Snapshot", "Strengths & Risks", "Priority Matrix",
-    "Outcomes Overview", "Engagement", "Burnout", "Work Satisfaction", "eNPS",
-    paste("Fundamental:", fundamentals),
-    "Segment Heatmap", "Key Segment Gaps",
-    "Theme Overview", "Verbatim Quotes", "Action Priorities"
-  ),
-  section_id = c(
-    "system_orientation", "system_orientation",
-    "population_context", "population_context",
-    "system_summary", "system_summary", "system_summary",
-    "outcomes", "outcomes", "outcomes", "outcomes", "outcomes",
-    rep("drivers", length(fundamentals)),
-    "segmentation", "segmentation",
-    "thematic", "qualitative", "actions"
-  ),
-  stringsAsFactors = FALSE
-)
-slides$sort_order <- seq_len(nrow(slides))
-
-section_meta <- data.frame(
-  section_id = c("system_orientation","population_context","system_summary","outcomes","drivers","segmentation","thematic","qualitative","actions"),
-  section_label = c("System Orientation","Population Context","System-Level Summary","Outcomes","Drivers / Fundamentals","Segmentation & Comparisons","Thematic Insights","Qualitative Insights","Action & Prioritization"),
-  section_order = seq_len(9),
-  stringsAsFactors = FALSE
-)
 
 build_demographics_page <- function(fid) {
   x <- demographics_panels[demographics_panels$filter_id == fid, , drop = FALSE]
@@ -694,7 +854,7 @@ build_demographics_page <- function(fid) {
   mk <- function(slot, ttl) {
     p <- x[x$panel_slot == slot, , drop = FALSE]
     if (nrow(p) < 1L) return(NULL)
-    demo_categorical_bar(data = data.frame(category = p$category, value = p$pct, stringsAsFactors = FALSE), title = ttl, subtitle = "Distribution", sort_desc = TRUE)
+    demo_categorical_bar(data = data.frame(category = p$category, value = p$pct, stringsAsFactors = FALSE), title = ttl, subtitle = "", sort_desc = TRUE)
   }
   render_html_obj(demographics_page(
     tl = mk("tl", "Department"),
@@ -702,8 +862,25 @@ build_demographics_page <- function(fid) {
     bl = mk("bl", "Full-Time Status"),
     br = mk("br", "Tenure"),
     title = "Demographics Overview",
-    subtitle = "Current filtered population"
+    subtitle = ""
   ), "Demographics")
+}
+
+metric_history_pair <- function(df, fid, id_col, metric_id) {
+  current_row <- df[df$filter_id == fid & df[[id_col]] == metric_id & df$year == report_year, , drop = FALSE]
+  prior_row <- if (is.finite(prior_year)) df[df$filter_id == fid & df[[id_col]] == metric_id & df$year == prior_year, , drop = FALSE] else df[0, , drop = FALSE]
+  list(current = current_row, prior = prior_row)
+}
+
+fmt_delta_text <- function(delta, digits = 2L) {
+  if (!is.finite(delta) || delta == 0) return("Flat vs prior")
+  fmt <- if (digits <= 0L) "%+d" else paste0("%+.", digits, "f")
+  paste0(sprintf(fmt, if (digits <= 0L) round(delta) else delta), " vs ", if (is.finite(prior_year)) prior_year else "prior")
+}
+
+history_year_label <- function(year_value) {
+  lbl <- history_year_labels[[as.character(year_value)]]
+  if (is.null(lbl) || !nzchar(lbl)) as.character(year_value) else lbl
 }
 
 build_model_data <- function(fid) {
@@ -711,10 +888,36 @@ build_model_data <- function(fid) {
   f <- k[k$metric_group == "fundamental", , drop = FALSE]
   o <- k[k$metric_group == "outcome", , drop = FALSE]
   if (nrow(f) < 1L) return(NULL)
+  f_delta <- vapply(f$metric_id, function(mid) {
+    hist <- metric_history_pair(fundamental_history, fid, "fundamental_id", mid)
+    cur <- suppressWarnings(as.numeric(first_or(hist$current$score, NA_real_)))
+    prv <- suppressWarnings(as.numeric(first_or(hist$prior$score, NA_real_)))
+    if (is.finite(cur) && is.finite(prv)) round(cur - prv, 2) else 0
+  }, numeric(1))
+  o_prior_pct <- vapply(o$metric_id, function(mid) {
+    hist <- metric_history_pair(outcome_history, fid, "outcome_id", mid)
+    prv <- suppressWarnings(as.numeric(first_or(hist$prior$score, NA_real_)))
+    if (!is.finite(prv)) return(NA_real_)
+    if (tolower(mid) == "enps") pmax(1, pmin(99, 50 + prv / 2)) else pmax(1, pmin(99, round((prv / 5) * 100)))
+  }, numeric(1))
+  o_delta <- vapply(o$metric_id, function(mid) {
+    hist <- metric_history_pair(outcome_history, fid, "outcome_id", mid)
+    cur <- suppressWarnings(as.numeric(first_or(hist$current$score, NA_real_)))
+    prv <- suppressWarnings(as.numeric(first_or(hist$prior$score, NA_real_)))
+    if (is.finite(cur) && is.finite(prv)) round(cur - prv, 2) else 0
+  }, numeric(1))
   list(
-    summary = data.frame(title = "Organizational Health Model", subtitle = "Orientation and score architecture", fundamentals_label = "Fundamentals", outcomes_label = "Outcomes", raw_avg_label = "Score", delta_label = "vs Prior", stringsAsFactors = FALSE),
-    fundamentals = data.frame(label = f$metric_label, percentile = pmax(1, pmin(99, round((f$score / 5) * 100))), raw_avg = round(f$score, 2), delta = 0, shape = "circle", stringsAsFactors = FALSE),
-    outcomes = data.frame(label = o$metric_label, percentile = pmax(1, pmin(99, ifelse(o$metric_id == "eNPS", 50 + o$score / 2, round((o$score / 5) * 100)))), shape = "diamond", stringsAsFactors = FALSE)
+    summary = data.frame(title = "Organizational Health Model", subtitle = "", fundamentals_label = "Fundamentals", outcomes_label = "Outcomes", raw_avg_label = "Score", delta_label = paste("vs", history_year_label(if (is.finite(prior_year)) prior_year else (report_year - 1L))), stringsAsFactors = FALSE),
+    fundamentals = data.frame(label = f$metric_label, percentile = pmax(1, pmin(99, round((f$score / 5) * 100))), raw_avg = round(f$score, 2), delta = f_delta, shape = "circle", stringsAsFactors = FALSE),
+    outcomes = data.frame(
+      label = o$metric_label,
+      percentile = pmax(1, pmin(99, ifelse(o$metric_id == "eNPS", 50 + o$score / 2, round((o$score / 5) * 100)))),
+      prior_percentile = o_prior_pct,
+      raw_avg = round(o$score, 2),
+      delta = o_delta,
+      shape = "diamond",
+      stringsAsFactors = FALSE
+    )
   )
 }
 
@@ -723,6 +926,9 @@ build_matrix_points <- function(fid) {
   if (nrow(f) < 1L) return(data.frame())
   pe <- marts$predictive_edges
   pe <- pe[pe$subset == "All", , drop = FALSE]
+  if (nrow(pe) < 1L) {
+    return(data.frame(fundamental = f$metric_id, label = f$metric_label, score = f$score - 3.5, impact = rep(0.2, nrow(f)), stringsAsFactors = FALSE))
+  }
   imp <- stats::aggregate(abs(strength) ~ fundamental, data = transform(pe, strength = as.numeric(strength)), FUN = function(x) mean(x, na.rm = TRUE))
   names(imp)[2] <- "impact"
   x <- merge(f, imp, by.x = "metric_id", by.y = "fundamental", all.x = TRUE, sort = FALSE)
@@ -734,20 +940,41 @@ build_matrix_points <- function(fid) {
 build_heatmap <- function() {
   deps <- setdiff(dim_department, "All")
   if (length(deps) < 1L) return(NULL)
+  short_dep <- function(x) {
+    x <- trimws(as.character(x))
+    x <- gsub("Cross-Functional Groups", "Cross-Func", x, fixed = TRUE)
+    x <- gsub("Operations Delivery", "Ops Delivery", x, fixed = TRUE)
+    x <- gsub("Business Development", "Biz Dev", x, fixed = TRUE)
+    x <- gsub("Capital Programs", "Capital Prog", x, fixed = TRUE)
+    x <- gsub("Corporate Services", "Corp Svcs", x, fixed = TRUE)
+    x <- gsub("Data & Insights", "Data/Insights", x, fixed = TRUE)
+    if (nchar(x) > 14L) x <- paste0(substr(x, 1L, 11L), "...")
+    x
+  }
   tab <- data.frame(Category = fundamentals, stringsAsFactors = FALSE, check.names = FALSE)
   for (d in deps) {
-    key <- filter_grid$filter_id[filter_grid$department == d & filter_grid$full_time_status == "All" & filter_grid$location_cluster == "All"][[1]]
+    key <- filter_grid$filter_id[filter_grid$department == d & filter_grid$company == "All" & filter_grid$identity == "All" & filter_grid$location == "All" & filter_grid$employee_type == "All" & filter_grid$tenure == "All" & filter_grid$work_arrangement == "All"][[1]]
     vals <- sapply(fundamentals, function(fu) {
       v <- kpi_scores$score[kpi_scores$filter_id == key & kpi_scores$metric_group == "fundamental" & kpi_scores$metric_id == fu]
-      as.numeric(v[[1]] %||% NA_real_)
+      as.numeric(first_or(v, NA_real_))
     })
-    tab[[d]] <- vals
+    tab[[short_dep(d)]] <- vals
   }
-  list(title = "Department Heatmap", subtitle = "Cross-department comparison", legend_low = "Lower", legend_high = "Higher", tables = list("Fundamental Scores" = tab))
+  list(title = "Segment Analysis", subtitle = "Selected segment comparison", legend_low = "Lower", legend_high = "Higher", tables = list("Fundamental Scores" = tab))
 }
 
 filter_label <- function(fr) {
-  paste0("Department: ", fr$department, " | Full-Time Status: ", fr$full_time_status, " | Location: ", fr$location_cluster)
+  parts <- c(
+    if (fr$company != "All") paste0("Company: ", fr$company),
+    if (fr$department != "All") paste0("Department: ", fr$department),
+    if (fr$identity != "All") paste0("Identity: ", fr$identity),
+    if (fr$location != "All") paste0("Location: ", fr$location),
+    if (fr$employee_type != "All") paste0("Employee Type: ", fr$employee_type),
+    if (fr$tenure != "All") paste0("Tenure: ", fr$tenure),
+    if (fr$work_arrangement != "All") paste0("Work Arrangement: ", fr$work_arrangement)
+  )
+  if (length(parts) < 1L) return("All respondents")
+  paste(parts, collapse = " | ")
 }
 
 build_outcome_data <- function(outcome_name, rows_sub, fid) {
@@ -802,10 +1029,10 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
     bm <- marts$benchmark_item_year
     bm_now <- bm[bm$item_id == iid & bm$year == report_year, , drop = FALSE]
     bm_prev <- bm[bm$item_id == iid & bm$year == (report_year - 1L), , drop = FALSE]
-    bm_mean <- as.numeric(bm_now$mean[[1]] %||% NA_real_)
-    bm_sd <- as.numeric(bm_now$sd[[1]] %||% NA_real_)
-    bm_prev_mean <- as.numeric(bm_prev$mean[[1]] %||% NA_real_)
-    bm_prev_sd <- as.numeric(bm_prev$sd[[1]] %||% NA_real_)
+    bm_mean <- as.numeric(first_or(bm_now$mean, NA_real_))
+    bm_sd <- as.numeric(first_or(bm_now$sd, NA_real_))
+    bm_prev_mean <- as.numeric(first_or(bm_prev$mean, NA_real_))
+    bm_prev_sd <- as.numeric(first_or(bm_prev$sd, NA_real_))
     if (!is.finite(bm_sd) || bm_sd <= 0) bm_sd <- 1e-9
     if (!is.finite(bm_prev_sd) || bm_prev_sd <= 0) bm_prev_sd <- 1e-9
     cur_mean <- mean(curr_ok, na.rm = TRUE)
@@ -832,10 +1059,10 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
   items_df <- do.call(rbind, item_rows)
 
   k_now <- kpi_scores[kpi_scores$filter_id == fid & kpi_scores$metric_group == "outcome" & tolower(kpi_scores$metric_id) == tolower(outcome_name), "score", drop = TRUE]
-  score_now <- as.numeric(k_now[[1]] %||% mean(items_df$mean, na.rm = TRUE))
-  overall_id <- filter_grid$filter_id[filter_grid$department == "All" & filter_grid$full_time_status == "All" & filter_grid$location_cluster == "All"][[1]]
-  overall_score <- as.numeric(kpi_scores$score[kpi_scores$filter_id == overall_id & kpi_scores$metric_group == "outcome" & tolower(kpi_scores$metric_id) == tolower(outcome_name)][[1]] %||% score_now)
-  score_delta <- score_now - overall_score
+  score_now <- as.numeric(first_or(k_now, mean(items_df$mean, na.rm = TRUE)))
+  hist_pair <- metric_history_pair(outcome_history, fid, "outcome_id", outcome_name)
+  score_prior <- suppressWarnings(as.numeric(first_or(hist_pair$prior$score, NA_real_)))
+  score_delta <- if (is.finite(score_prior)) score_now - score_prior else 0
 
   pe <- marts$predictive_edges
   d <- pe[tolower(pe$outcome) == tolower(outcome_name) & tolower(pe$subset) == "all", , drop = FALSE]
@@ -858,8 +1085,8 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
       outcome = outcome_name,
       status_label = status_label,
       percentile = round((score_now / 5) * 100),
-      percentile_delta = round(score_delta * 10),
-      delta_label = "vs overall",
+      percentile_delta = if (is.finite(score_prior)) round((score_now - score_prior) * 20) else 0,
+      delta_label = paste0("vs. ", if (is.finite(prior_year)) prior_year else (report_year - 1L)),
       score = score_now,
       score_delta = score_delta,
       stringsAsFactors = FALSE
@@ -869,127 +1096,406 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
   )
 }
 
+build_outcomes_overview_data <- function(rows_sub, fid) {
+  outcome_names <- c("Engagement", "Burnout", "Work satisfaction")
+  detail <- lapply(outcome_names, function(nm) build_outcome_data(nm, rows_sub, fid))
+  ok <- vapply(detail, function(x) !is.null(x), logical(1))
+  detail <- detail[ok]
+  if (length(detail) < 1L) return(NULL)
+
+  scores <- vapply(detail, function(x) as.numeric(x$summary$score[[1]]), numeric(1))
+  deltas <- vapply(detail, function(x) as.numeric(x$summary$score_delta[[1]]), numeric(1))
+  score_now <- mean(scores, na.rm = TRUE)
+  score_delta <- mean(deltas, na.rm = TRUE)
+  percentile <- round((score_now / 5) * 100)
+
+  pe <- marts$predictive_edges
+  pe <- pe[tolower(pe$subset) == "all" & tolower(pe$outcome) %in% tolower(outcome_names), , drop = FALSE]
+  if (nrow(pe) > 0L) {
+    pe$strength <- suppressWarnings(as.numeric(pe$strength))
+    drv <- stats::aggregate(abs(strength) ~ fundamental, data = pe, FUN = function(x) mean(x, na.rm = TRUE))
+    names(drv)[2] <- "driver_strength"
+    drv <- drv[order(-drv$driver_strength), , drop = FALSE]
+    drv <- utils::head(drv, 5L)
+    drivers <- data.frame(
+      rank = seq_len(nrow(drv)),
+      fundamental = as.character(drv$fundamental),
+      driver_strength = as.numeric(drv$driver_strength),
+      status_label = ifelse(drv$driver_strength >= 0.45, "High", ifelse(drv$driver_strength >= 0.3, "Medium", "Low")),
+      stringsAsFactors = FALSE
+    )
+  } else {
+    drivers <- data.frame(
+      rank = 1:3,
+      fundamental = c("Leadership", "Communication", "Purpose"),
+      driver_strength = c(0.42, 0.35, 0.31),
+      status_label = c("High", "Medium", "Medium"),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  items_all <- do.call(rbind, lapply(seq_along(detail), function(i) {
+    d <- detail[[i]]
+    nm <- as.character(d$summary$outcome[[1]])
+    items <- d$items
+    items$section <- nm
+    items$section_order <- i
+    items
+  }))
+  items_all <- items_all[order(items_all$column, items_all$section_order, items_all$item_order), , drop = FALSE]
+
+  list(
+    summary = data.frame(
+      outcome = "Outcomes Overview",
+      status_label = if (percentile < 40) "Area for Growth" else if (percentile < 60) "Industry Standard" else "Above Standard",
+      percentile = percentile,
+      percentile_delta = round(score_delta * 20),
+      delta_label = paste0("vs. ", if (is.finite(prior_year)) prior_year else (report_year - 1L)),
+      score = score_now,
+      score_delta = score_delta,
+      stringsAsFactors = FALSE
+    ),
+    drivers = drivers,
+    items = items_all[, c("column", "section", "section_order", "item_order", "label", "mean", "agree_pct", "neutral_pct", "disagree_pct", "vs_industry", "vs_prior"), drop = FALSE]
+  )
+}
+
+outcome_to_dashboard_data <- function(od) {
+  drv <- od$drivers[order(od$drivers$rank), , drop = FALSE]
+  drv <- utils::head(drv, 3L)
+  out_df <- data.frame(
+    rank = seq_len(nrow(drv)),
+    outcome = as.character(drv$fundamental),
+    percentile = pmax(1, pmin(99, round(abs(as.numeric(drv$driver_strength)) * 100))),
+    stringsAsFactors = FALSE
+  )
+  items <- od$items
+  items <- items[order(items$column, items$section_order, items$item_order), , drop = FALSE]
+  left_items <- items[items$column == "left", , drop = FALSE]
+  right_items <- items[items$column == "right", , drop = FALSE]
+  left_items <- utils::head(left_items, 4L)
+  right_items <- utils::head(right_items, 4L)
+  items <- rbind(left_items, right_items)
+  items$item_order <- ave(seq_len(nrow(items)), items$column, FUN = seq_along)
+  if (!"vs_company" %in% names(items)) items$vs_company <- NA_real_
+  if (!"item_n" %in% names(items)) items$item_n <- NA_integer_
+  if (!"prior_n" %in% names(items)) items$prior_n <- NA_integer_
+  if (!"suppress_row" %in% names(items)) items$suppress_row <- FALSE
+  if (!"suppress_vs_company" %in% names(items)) items$suppress_vs_company <- TRUE
+  if (!"suppress_vs_industry" %in% names(items)) items$suppress_vs_industry <- FALSE
+  if (!"suppress_vs_prior" %in% names(items)) items$suppress_vs_prior <- FALSE
+  if (!"min_n" %in% names(items)) items$min_n <- 3L
+
+  list(
+    fundamental = data.frame(
+      fundamental_label = as.character(od$summary$outcome[[1]]),
+      drivers_table_title = "Key Drivers",
+      drivers_row_label = "Driver",
+      percentile = as.numeric(od$summary$percentile[[1]]),
+      percentile_delta = as.numeric(od$summary$percentile_delta[[1]]),
+      delta_label = as.character(od$summary$delta_label[[1]]),
+      score = as.numeric(od$summary$score[[1]]),
+      score_delta = as.numeric(od$summary$score_delta[[1]]),
+      stringsAsFactors = FALSE
+    ),
+    outcomes = out_df,
+    items = items[, c(
+      "column", "section", "section_order", "item_order", "label", "mean",
+      "disagree_pct", "neutral_pct", "agree_pct", "vs_company", "vs_industry", "vs_prior",
+      "item_n", "prior_n", "suppress_row", "suppress_vs_company", "suppress_vs_industry", "suppress_vs_prior", "min_n"
+    ), drop = FALSE]
+  )
+}
+
 comment_columns_user <- grep("^comment_[0-9]+$", names(user_data), value = TRUE)
+oe_summary_overlay <- read_required_csv(
+  file.path(data_dir, "demo_open_ended_summary.csv"),
+  c("scope_id", "title", "kicker", "narrative", "score_label", "context_note"),
+  "demo_open_ended_summary.csv"
+)
+oe_takeaways_overlay <- read_required_csv(
+  file.path(data_dir, "demo_open_ended_takeaways.csv"),
+  c("scope_id", "takeaway_id", "title", "narrative", "rank", "metric_label"),
+  "demo_open_ended_takeaways.csv"
+)
+oe_theme_overlay <- read_required_csv(
+  file.path(data_dir, "demo_open_ended_theme_evidence.csv"),
+  c("scope_id", "takeaway_id", "theme_title", "context_text", "metric_label"),
+  "demo_open_ended_theme_evidence.csv"
+)
+oe_quote_tag_overlay <- read_required_csv(
+  file.path(data_dir, "demo_open_ended_quote_tags.csv"),
+  c("priority", "pattern", "takeaway_id", "theme_title"),
+  "demo_open_ended_quote_tags.csv"
+)
+oe_comments_seed <- read_required_csv(
+  file.path(data_dir, "demo_open_ended_comments.csv"),
+  c("scope_id", "takeaway_id", "theme_title", "comment_text", "source_tag", "sort_order"),
+  "demo_open_ended_comments.csv"
+)
+oe_quote_tag_overlay$priority <- suppressWarnings(as.integer(oe_quote_tag_overlay$priority))
+oe_quote_tag_overlay <- oe_quote_tag_overlay[order(oe_quote_tag_overlay$priority), , drop = FALSE]
+
+lookup_scope_rows <- function(df, fid) {
+  exact <- df[df$scope_id == fid, , drop = FALSE]
+  if (nrow(exact) > 0L) return(exact)
+  df[df$scope_id == "Overall", , drop = FALSE]
+}
+
+sanitize_comment_text <- function(x) {
+  out <- normalize_text(x)
+  out <- gsub("\\b[A-Z]{2,}[[:space:]]+[A-Z][a-z]+\\b", "the organization", out, perl = TRUE)
+  out <- gsub("\\b(Mr|Mrs|Ms|Dr)\\.?[[:space:]]+[A-Z][a-z]+\\b", "a colleague", out, perl = TRUE)
+  out <- gsub("\\b(manager|supervisor|director|lead)[[:space:]]+[A-Z][a-z]+\\b", "\\1", out, perl = TRUE, ignore.case = TRUE)
+  out <- gsub("\\b[A-Z]{2,}-[0-9]{2,}\\b", "[id]", out, perl = TRUE)
+  out <- gsub("\\s+", " ", trimws(out))
+  out
+}
 
 extract_filter_comments <- function(rows_curr) {
-  if (length(comment_columns_user) < 1L || nrow(rows_curr) < 1L) return(character(0))
-  vals <- unlist(lapply(comment_columns_user, function(col) as.character(rows_curr[[col]])), use.names = FALSE)
-  vals <- normalize_text(vals)
-  vals <- gsub("\\s+", " ", trimws(vals))
-  vals <- vals[nzchar(vals) & nchar(vals) >= 25]
-  unique(vals)
+  if (length(comment_columns_user) < 1L || nrow(rows_curr) < 1L) {
+    return(data.frame(quote_text = character(0), question_label = character(0), stringsAsFactors = FALSE))
+  }
+  out <- lapply(comment_columns_user, function(col) {
+    vals <- sanitize_comment_text(as.character(rows_curr[[col]]))
+    vals <- vals[nzchar(vals) & nchar(vals) >= 25]
+    if (length(vals) < 1L) return(NULL)
+    data.frame(
+      quote_text = vals,
+      question_label = as.character(first_or(comment_question_labels[[col]], "General comments")),
+      stringsAsFactors = FALSE
+    )
+  })
+  out <- out[!vapply(out, is.null, logical(1))]
+  if (length(out) < 1L) {
+    return(data.frame(quote_text = character(0), question_label = character(0), stringsAsFactors = FALSE))
+  }
+  df <- do.call(rbind, out)
+  dedup <- !duplicated(tolower(df$quote_text))
+  df[dedup, , drop = FALSE]
 }
 
 assign_takeaway_id <- function(comment_text) {
   tx <- tolower(comment_text)
+  tagged <- oe_quote_tag_overlay[vapply(oe_quote_tag_overlay$pattern, function(pat) {
+    grepl(pat, tx, perl = TRUE)
+  }, logical(1)), , drop = FALSE]
+  if (nrow(tagged) > 0L) return(as.character(tagged$takeaway_id[[1]]))
   if (grepl("leader|strategy|priority|clarity|direction|plan", tx, perl = TRUE)) return("takeaway_1")
   if (grepl("team|handoff|collab|cross|silo|communication", tx, perl = TRUE)) return("takeaway_2")
   if (grepl("workload|pace|burnout|capacity|staff|time", tx, perl = TRUE)) return("takeaway_3")
   "takeaway_2"
 }
 
+assign_theme_title <- function(comment_text, takeaway_id, takeaways_df, theme_df) {
+  tx <- tolower(comment_text)
+  tagged <- oe_quote_tag_overlay[vapply(oe_quote_tag_overlay$pattern, function(pat) {
+    grepl(pat, tx, perl = TRUE)
+  }, logical(1)), , drop = FALSE]
+  if (nrow(tagged) > 0L && nzchar(as.character(tagged$theme_title[[1]]))) {
+    return(as.character(tagged$theme_title[[1]]))
+  }
+  theme_hit <- theme_df$theme_title[match(takeaway_id, theme_df$takeaway_id)]
+  if (length(theme_hit) > 0L && nzchar(theme_hit[[1]])) return(as.character(theme_hit[[1]]))
+  tak_hit <- takeaways_df$title[match(takeaway_id, takeaways_df$takeaway_id)]
+  if (length(tak_hit) > 0L) return(as.character(tak_hit[[1]]))
+  "Theme"
+}
+
+assign_comment_category <- function(comment_text) {
+  tx <- tolower(comment_text)
+  if (grepl("purpose|community|meaning|proud|value we create|broader purpose", tx, perl = TRUE)) return("Purpose")
+  if (grepl("strategy|priority|direction|objective|plan|focus|sequencing", tx, perl = TRUE)) return("Strategy")
+  if (grepl("leader|leadership|manager|management|director|decision context", tx, perl = TRUE)) return("Leadership")
+  if (grepl("communicat|transparen|clarity|information|feedback loop|townhall|message", tx, perl = TRUE)) return("Communication")
+  if (grepl("learn|innovation|idea|experiment|improve process|new way", tx, perl = TRUE)) return("Learning & innovation")
+  if (grepl("respect|care|trust|belong|support|inclusive|psychological", tx, perl = TRUE)) return("Respect, care, and trust")
+  if (grepl("career|growth|coaching|develop|recognition|goal|performance", tx, perl = TRUE)) return("Performance development")
+  if (grepl("safety|safe|hazard|incident|risk|unsafe", tx, perl = TRUE)) return("Safety")
+  "Strategy"
+}
+
+build_fallback_open_ended <- function(fid) {
+  k_now <- kpi_scores[kpi_scores$filter_id == fid, , drop = FALSE]
+  fk <- k_now[k_now$metric_group == "fundamental", c("metric_id", "metric_label", "score"), drop = FALSE]
+  if (nrow(fk) > 0L) fk <- fk[order(-fk$score), , drop = FALSE]
+  strengths <- if (nrow(fk) > 0L) paste(utils::head(fk$metric_label, 2L), collapse = ", ") else "higher-scoring fundamentals"
+  risks <- if (nrow(fk) > 0L) paste(utils::head(fk$metric_label[order(fk$score)], 2L), collapse = ", ") else "emerging risk areas"
+  list(
+    summary = data.frame(
+      scope_id = fid,
+      title = "Organizational Narrative Summary",
+      kicker = "Thematic Insights",
+      narrative = paste0(
+        "Across open-ended responses, employees report strongest experiences in ", strengths,
+        ". The most frequent concerns center on ", risks,
+        ". These themes translate comment-level feedback into practical priorities."
+      ),
+      score_label = "Average Fundamental Score",
+      context_note = "Fallback narrative generated from current scores.",
+      stringsAsFactors = FALSE
+    ),
+    takeaways = data.frame(
+      scope_id = fid,
+      takeaway_id = c("takeaway_1", "takeaway_2", "takeaway_3"),
+      title = c("Leadership and direction clarity", "Cross-team operating flow", "Workload sustainability"),
+      narrative = c(
+        "Employees respond best when leaders connect enterprise decisions to local work priorities.",
+        "Cross-functional execution is strongest when ownership and handoffs are explicit.",
+        "Workload concerns increase when pace shifts faster than teams can absorb."
+      ),
+      rank = 1:3,
+      metric_label = c("Leadership", "Communication", "Performance development"),
+      stringsAsFactors = FALSE
+    ),
+    theme = data.frame(
+      scope_id = fid,
+      takeaway_id = c("takeaway_1", "takeaway_2", "takeaway_3"),
+      theme_title = c("Leadership and direction clarity", "Cross-team operating flow", "Workload sustainability"),
+      context_text = c(
+        "Employees ask for clearer decision context and sequencing.",
+        "Comments emphasize execution friction at team boundaries.",
+        "Sustainable pace depends on planning discipline and realistic capacity."
+      ),
+      metric_label = c("Leadership", "Communication", "Performance development"),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
 build_open_ended_data <- function(fid, fr, rows_curr) {
   k_now <- kpi_scores[kpi_scores$filter_id == fid, , drop = FALSE]
   fk <- k_now[k_now$metric_group == "fundamental", c("metric_id", "metric_label", "score"), drop = FALSE]
-  if (nrow(fk) > 0L) {
-    fk <- fk[order(-fk$score), , drop = FALSE]
+  fallback_oe <- build_fallback_open_ended(fid)
+
+  summary_src <- lookup_scope_rows(oe_summary_overlay, fid)
+  if (nrow(summary_src) < 1L) summary_src <- fallback_oe$summary
+  takeaways_src <- lookup_scope_rows(oe_takeaways_overlay, fid)
+  if (nrow(takeaways_src) < 1L) takeaways_src <- fallback_oe$takeaways
+  theme_src <- lookup_scope_rows(oe_theme_overlay, fid)
+  if (nrow(theme_src) < 1L) theme_src <- fallback_oe$theme
+
+  takeaways_src$rank <- suppressWarnings(as.integer(takeaways_src$rank))
+  takeaways_src <- takeaways_src[order(takeaways_src$rank, takeaways_src$takeaway_id), , drop = FALSE]
+  takeaways_src <- utils::head(takeaways_src, 3L)
+  if (nrow(takeaways_src) < 3L) {
+    missing_takeaways <- fallback_oe$takeaways[!fallback_oe$takeaways$takeaway_id %in% takeaways_src$takeaway_id, , drop = FALSE]
+    takeaways_src <- rbind(takeaways_src, utils::head(missing_takeaways, 3L - nrow(takeaways_src)))
+  }
+
+  theme_src <- theme_src[theme_src$takeaway_id %in% takeaways_src$takeaway_id, , drop = FALSE]
+  if (nrow(theme_src) < 1L) {
+    theme_src <- fallback_oe$theme[fallback_oe$theme$takeaway_id %in% takeaways_src$takeaway_id, , drop = FALSE]
   }
 
   comments <- extract_filter_comments(rows_curr)
-  if (length(comments) < 1L) {
-    top_lbl <- paste(utils::head(fk$metric_label, 2L), collapse = ", ")
-    low_lbl <- paste(utils::head(fk$metric_label[order(fk$score)], 2L), collapse = ", ")
-    comments <- c(
-      paste("People describe strong alignment around", top_lbl, "when priorities are explicit."),
-      paste("The most common friction appears around", low_lbl, "when workload and handoffs are unclear."),
-      "Employees consistently request clearer sequencing of priorities and faster decision communication.",
-      "Cross-team execution is strongest when accountabilities and checkpoints are explicit."
+  if (nrow(comments) > 0L) {
+    quote_df <- data.frame(
+      quote_id = paste0("q_", seq_len(nrow(comments))),
+      quote_text = comments$quote_text,
+      question_label = comments$question_label,
+      takeaway_id = vapply(comments$quote_text, assign_takeaway_id, character(1)),
+      stringsAsFactors = FALSE
+    )
+  } else {
+    seed_rows <- lookup_scope_rows(oe_comments_seed, fid)
+    if (nrow(seed_rows) < 1L) seed_rows <- oe_comments_seed[oe_comments_seed$scope_id == "Overall", , drop = FALSE]
+    quote_df <- data.frame(
+      quote_id = paste0("q_", seq_len(nrow(seed_rows))),
+      quote_text = as.character(seed_rows$comment_text),
+      question_label = "General comments",
+      takeaway_id = as.character(seed_rows$takeaway_id),
+      theme_title = as.character(seed_rows$theme_title),
+      source_tag = as.character(seed_rows$source_tag),
+      score = NA_real_,
+      stringsAsFactors = FALSE
     )
   }
 
-  tak <- data.frame(
-    takeaway_id = c("takeaway_1", "takeaway_2", "takeaway_3"),
-    title = c("Leadership and direction clarity", "Cross-team operating flow", "Workload sustainability"),
-    narrative = c(
-      "Comments emphasize clearer decision context and stronger line-of-sight from strategy to team priorities.",
-      "Employees describe uneven handoffs across teams and ask for clearer ownership at boundaries.",
-      "Pace and capacity concerns are recurring in lower-scoring cuts, especially where prioritization shifts quickly."
-    ),
-    rank = 1:3,
-    stringsAsFactors = FALSE
-  )
+  if (nrow(quote_df) > 0L && !"theme_title" %in% names(quote_df)) {
+    quote_df$theme_title <- vapply(seq_len(nrow(quote_df)), function(i) {
+      assign_theme_title(quote_df$quote_text[[i]], quote_df$takeaway_id[[i]], takeaways_src, theme_src)
+    }, character(1))
+    quote_df$source_tag <- "Employee comment"
+    quote_df$score <- NA_real_
+  }
+  if (nrow(quote_df) > 0L) {
+    quote_df <- quote_df[order(match(quote_df$takeaway_id, takeaways_src$takeaway_id), quote_df$question_label, quote_df$quote_text), , drop = FALSE]
+    quote_df$comment_category <- vapply(quote_df$quote_text, assign_comment_category, character(1))
+  }
 
-  quote_df <- data.frame(
-    quote_id = paste0("q_", seq_along(comments)),
-    quote_text = comments,
-    takeaway_id = vapply(comments, assign_takeaway_id, character(1)),
-    theme_title = NA_character_,
-    source_tag = "Employee comment",
-    stringsAsFactors = FALSE
-  )
-  quote_df$theme_title <- tak$title[match(quote_df$takeaway_id, tak$takeaway_id)]
-
-  t_counts <- table(quote_df$takeaway_id)
-  tak$n_mentions <- as.integer(t_counts[match(tak$takeaway_id, names(t_counts))])
-  tak$n_mentions[is.na(tak$n_mentions)] <- 0L
-  tak$narrative <- ifelse(
-    tak$n_mentions > 0L,
-    paste0(tak$narrative, " Mention volume: ", tak$n_mentions, "."),
-    tak$narrative
-  )
-
-  metric_lookup <- c(takeaway_1 = "Leadership", takeaway_2 = "Communication", takeaway_3 = "Performance development")
-  metric_title <- function(id) metric_lookup[[id]] %||% "Purpose"
-  theme_rows <- lapply(seq_len(nrow(tak)), function(i) {
-    tid <- tak$takeaway_id[[i]]
-    mid <- metric_title(tid)
-    frow <- fk[tolower(fk$metric_id) == tolower(mid) | tolower(fk$metric_label) == tolower(mid), , drop = FALSE]
+  metric_lookup <- takeaways_src[, c("takeaway_id", "metric_label"), drop = FALSE]
+  theme_df <- lapply(seq_len(nrow(theme_src)), function(i) {
+    tid <- as.character(theme_src$takeaway_id[[i]])
+    metric_label <- as.character(first_or(theme_src$metric_label[i], first_or(metric_lookup$metric_label[match(tid, metric_lookup$takeaway_id)], "Purpose")))
+    frow <- fk[tolower(fk$metric_id) == tolower(metric_label) | tolower(fk$metric_label) == tolower(metric_label), , drop = FALSE]
     score <- if (nrow(frow) > 0L) as.numeric(frow$score[[1]]) else NA_real_
     status <- if (!is.finite(score)) "No score" else if (score < 3.2) "Area for Growth" else if (score < 3.8) "Industry Standard" else "Above Standard"
     data.frame(
       takeaway_id = tid,
-      theme_title = tak$title[[i]],
-      context_text = tak$narrative[[i]],
-      metric_label = mid,
+      theme_title = as.character(theme_src$theme_title[[i]]),
+      context_text = as.character(theme_src$context_text[[i]]),
+      metric_label = metric_label,
       metric_value = score,
       metric_status = status,
       stringsAsFactors = FALSE
     )
   })
-  theme_df <- do.call(rbind, theme_rows)
+  theme_df <- do.call(rbind, theme_df)
 
-  ord <- order(match(quote_df$takeaway_id, tak$takeaway_id))
-  quote_df <- quote_df[ord, , drop = FALSE]
-  quote_df$score <- NA_real_
-
-  verbatim_df <- data.frame(
-    comment_id = paste0("c_", seq_len(nrow(quote_df))),
-    takeaway_id = quote_df$takeaway_id,
-    fundamental = theme_df$metric_label[match(quote_df$takeaway_id, theme_df$takeaway_id)],
-    comment_text = quote_df$quote_text,
-    sort_order = seq_len(nrow(quote_df)),
+  mention_counts <- if (nrow(quote_df) > 0L) table(quote_df$takeaway_id) else integer(0)
+  takeaways_df <- data.frame(
+    takeaway_id = as.character(takeaways_src$takeaway_id),
+    title = as.character(takeaways_src$title),
+    narrative = as.character(takeaways_src$narrative),
+    rank = as.integer(takeaways_src$rank),
     stringsAsFactors = FALSE
   )
+  takeaways_df$n_mentions <- as.integer(mention_counts[match(takeaways_df$takeaway_id, names(mention_counts))])
+  takeaways_df$n_mentions[is.na(takeaways_df$n_mentions)] <- 0L
 
-  strengths <- if (nrow(fk) > 0L) paste(utils::head(fk$metric_label, 2L), collapse = ", ") else "higher-scoring fundamentals"
-  risks <- if (nrow(fk) > 0L) paste(utils::head(fk$metric_label[order(fk$score)], 2L), collapse = ", ") else "emerging risk areas"
   summary_df <- data.frame(
-    title = "Open-Ended Narrative Summary",
-    kicker = "Qualitative Insights",
-    narrative = paste0(
-      "Across open-ended responses, employees report strongest experiences in ", strengths,
-      ". The most frequent concerns center on ", risks,
-      ". The themes below translate these comments into practical priority areas."
-    ),
+    title = as.character(summary_src$title[[1]]),
+    kicker = as.character(summary_src$kicker[[1]]),
+    narrative = as.character(summary_src$narrative[[1]]),
     overall_score = if (nrow(fk) > 0L) mean(fk$score, na.rm = TRUE) else NA_real_,
-    score_label = "Avg Fundamental Score",
-    context_note = "Narratives are precomputed from available comment text and grouped into three key themes.",
+    score_label = as.character(summary_src$score_label[[1]]),
+    context_note = as.character(summary_src$context_note[[1]]),
     stringsAsFactors = FALSE
   )
+
+  takeaway_outcome_map <- c(
+    takeaway_1 = "Engagement",
+    takeaway_2 = "Work satisfaction",
+    takeaway_3 = "Burnout"
+  )
+  verbatim_df <- if (nrow(quote_df) > 0L) {
+    data.frame(
+      comment_id = paste0("c_", seq_len(nrow(quote_df))),
+      takeaway_id = quote_df$takeaway_id,
+      fundamental = as.character(quote_df$comment_category),
+      outcome = as.character(takeaway_outcome_map[quote_df$takeaway_id]),
+      question_label = as.character(quote_df$question_label),
+      comment_text = quote_df$quote_text,
+      sort_order = seq_len(nrow(quote_df)),
+      stringsAsFactors = FALSE
+    )
+  } else {
+    data.frame(
+      comment_id = character(0),
+      takeaway_id = character(0),
+      fundamental = character(0),
+      outcome = character(0),
+      question_label = character(0),
+      comment_text = character(0),
+      sort_order = integer(0),
+      stringsAsFactors = FALSE
+    )
+  }
 
   list(
     summary = summary_df,
-    takeaways = tak[, c("takeaway_id", "title", "narrative", "rank"), drop = FALSE],
+    takeaways = takeaways_df[, c("takeaway_id", "title", "narrative", "rank"), drop = FALSE],
     theme_evidence = theme_df,
     quotes = quote_df[, c("quote_id", "takeaway_id", "theme_title", "quote_text", "score", "source_tag"), drop = FALSE],
     verbatim = verbatim_df,
@@ -997,6 +1503,8 @@ build_open_ended_data <- function(fid, fr, rows_curr) {
       filter_label = filter_label(fr),
       n_responses = nrow(rows_curr),
       report_year = report_year,
+      prior_year = if (is.finite(prior_year)) prior_year else NA_integer_,
+      comment_n = nrow(verbatim_df),
       stringsAsFactors = FALSE
     )
   )
@@ -1048,17 +1556,29 @@ for (i in seq_len(nrow(filter_grid))) {
   oe_summary_rows[[length(oe_summary_rows) + 1L]] <- cbind(data.frame(filter_id = fid, stringsAsFactors = FALSE), oe$summary, stringsAsFactors = FALSE)
   oe_takeaway_rows[[length(oe_takeaway_rows) + 1L]] <- cbind(data.frame(filter_id = fid, stringsAsFactors = FALSE), oe$takeaways, stringsAsFactors = FALSE)
   oe_theme_rows[[length(oe_theme_rows) + 1L]] <- cbind(data.frame(filter_id = fid, stringsAsFactors = FALSE), oe$theme_evidence, stringsAsFactors = FALSE)
-  oe_quote_rows[[length(oe_quote_rows) + 1L]] <- cbind(data.frame(filter_id = fid, stringsAsFactors = FALSE), oe$quotes, stringsAsFactors = FALSE)
-  oe_verbatim_rows[[length(oe_verbatim_rows) + 1L]] <- cbind(data.frame(filter_id = fid, stringsAsFactors = FALSE), oe$verbatim, stringsAsFactors = FALSE)
+  if (is.data.frame(oe$quotes) && nrow(oe$quotes) > 0L) {
+    oe_quote_rows[[length(oe_quote_rows) + 1L]] <- cbind(data.frame(filter_id = fid, stringsAsFactors = FALSE), oe$quotes, stringsAsFactors = FALSE)
+  }
+  if (is.data.frame(oe$verbatim) && nrow(oe$verbatim) > 0L) {
+    oe_verbatim_rows[[length(oe_verbatim_rows) + 1L]] <- cbind(data.frame(filter_id = fid, stringsAsFactors = FALSE), oe$verbatim, stringsAsFactors = FALSE)
+  }
 }
 
 open_ended_summary <- do.call(rbind, oe_summary_rows)
 open_ended_takeaways <- do.call(rbind, oe_takeaway_rows)
 open_ended_theme_evidence <- do.call(rbind, oe_theme_rows)
-open_ended_quotes <- do.call(rbind, oe_quote_rows)
-open_ended_verbatim <- do.call(rbind, oe_verbatim_rows)
+open_ended_quotes <- if (length(oe_quote_rows) > 0L) do.call(rbind, oe_quote_rows) else data.frame()
+open_ended_verbatim <- if (length(oe_verbatim_rows) > 0L) do.call(rbind, oe_verbatim_rows) else data.frame()
 
-overall_filter_id <- filter_grid$filter_id[filter_grid$department == "All" & filter_grid$full_time_status == "All" & filter_grid$location_cluster == "All"][[1]]
+overall_filter_id <- filter_grid$filter_id[
+  filter_grid$company == "All" &
+    filter_grid$department == "All" &
+    filter_grid$identity == "All" &
+    filter_grid$location == "All" &
+    filter_grid$employee_type == "All" &
+    filter_grid$tenure == "All" &
+    filter_grid$work_arrangement == "All"
+][[1]]
 overall_oe <- open_ended_by_filter[[overall_filter_id]]
 
 themes_df <- overall_oe$theme_evidence
@@ -1073,61 +1593,91 @@ themes_df <- themes_df[, c("theme_id", "theme_label", "section", "summary", "men
 
 quotes_df <- overall_oe$quotes
 quotes_df$theme_id <- paste0("theme_", match(quotes_df$takeaway_id, overall_oe$theme_evidence$takeaway_id))
-quotes_df$section <- "Qualitative Insights"
+quotes_df$section <- "Thematic Insights"
 quotes_df$sentiment <- "mixed"
 quotes_df$source_col <- "workbook_open_ended"
 quotes_df <- quotes_df[, c("quote_id", "theme_id", "section", "quote_text", "sentiment", "source_col"), drop = FALSE]
 
 oe_theme_pages_n <- theme_page_count(overall_oe, quotes_per_page = 4L)
-oe_verbatim_pages <- verbatim_page_counts(overall_oe, first_cap = 10L, compact_cap = 24L)
-
 theme_slide_ids <- paste0("theme_evidence_", sprintf("%02d", seq_len(oe_theme_pages_n)))
-theme_slide_labels <- if (oe_theme_pages_n == 1L) "Theme Evidence" else paste("Theme Evidence", seq_len(oe_theme_pages_n))
-verb_first_ids <- paste0("verbatim_first_", sprintf("%02d", seq_len(oe_verbatim_pages$first)))
-verb_first_labels <- if (oe_verbatim_pages$first == 1L) "Verbatim (First Page)" else paste("Verbatim Intro", seq_len(oe_verbatim_pages$first))
-verb_compact_ids <- if (oe_verbatim_pages$compact > 0L) paste0("verbatim_compact_", sprintf("%02d", seq_len(oe_verbatim_pages$compact))) else character(0)
-verb_compact_labels <- if (length(verb_compact_ids) > 0L) paste("Verbatim Continued", seq_len(length(verb_compact_ids))) else character(0)
+short_theme_label <- function(x, max_chars = 30L) {
+  x <- trimws(as.character(x %||% "Theme"))
+  if (!nzchar(x)) x <- "Theme"
+  if (nchar(x, type = "chars") <= max_chars) return(x)
+  paste0(substr(x, 1L, max_chars - 3L), "...")
+}
+
+theme_titles_by_page <- character(0)
+for (i in seq_len(nrow(overall_oe$theme_evidence))) {
+  rr <- overall_oe$theme_evidence[i, , drop = FALSE]
+  q <- overall_oe$quotes[overall_oe$quotes$takeaway_id == rr$takeaway_id[[1]], , drop = FALSE]
+  if ("theme_title" %in% names(q)) {
+    qq <- q[q$theme_title == rr$theme_title[[1]], , drop = FALSE]
+    if (nrow(qq) > 0L) q <- qq
+  }
+  pages_i <- max(1L, ceiling(nrow(q) / 4L))
+  theme_titles_by_page <- c(theme_titles_by_page, rep(rr$theme_title[[1]], pages_i))
+}
+if (length(theme_titles_by_page) < oe_theme_pages_n) {
+  theme_titles_by_page <- c(theme_titles_by_page, rep("Theme", oe_theme_pages_n - length(theme_titles_by_page)))
+}
+theme_titles_by_page <- theme_titles_by_page[seq_len(oe_theme_pages_n)]
+theme_slide_labels <- vapply(theme_titles_by_page, short_theme_label, character(1))
 
 slides <- data.frame(
   slide_id = c(
-    "cover", "orientation_model",
-    "survey_overview", "demographics_overview",
-    "snapshot", "strengths_risks", "priority_matrix",
-    "outcomes_overview", "engagement_deep_dive", "burnout_deep_dive", "work_satisfaction_deep_dive", "enps",
+    "cover", "ohep_model_image", "methodology",
+    "orientation_model", "demographics_overview", "priority_matrix", "segment_heatmap",
     paste0("fundamental_", slugify(fundamentals)),
-    "segment_heatmap", "segment_gaps",
+    "outcomes_overview", "engagement_deep_dive", "burnout_deep_dive", "work_satisfaction_deep_dive", "enps",
     "open_ended_overall_summary", "open_ended_three_takeaways",
     theme_slide_ids,
-    verb_first_ids, verb_compact_ids,
-    "actions"
+    "comments_explorer"
   ),
   slide_label = c(
-    "Cover & How To Read", "Orientation Model",
-    "Survey Overview", "Demographics",
-    "Snapshot", "Strengths & Risks", "Priority Matrix",
-    "Outcomes Overview", "Engagement", "Burnout", "Work Satisfaction", "eNPS",
-    paste("Fundamental:", fundamentals),
-    "Segment Heatmap", "Key Segment Gaps",
-    "Overall Narrative Summary", "Three Key Takeaways",
+    "Introduction", "About the OHEP", "Methodology",
+    "OHEP Results", "Demographics", "Priority Matrix", "Segment Heatmap",
+    fundamentals,
+    "Overall", "Engagement", "Burnout", "Work Satisfaction", "eNPS",
+    "Themes Overview", "Three Key Takeaways",
     theme_slide_labels,
-    verb_first_labels, verb_compact_labels,
-    "Action Priorities"
+    "Comments"
   ),
   section_id = c(
-    "system_orientation", "system_orientation",
-    "population_context", "population_context",
-    "system_summary", "system_summary", "system_summary",
-    "outcomes", "outcomes", "outcomes", "outcomes", "outcomes",
+    "system_orientation", "system_orientation", "system_orientation",
+    "ohep_summary", "ohep_summary", "ohep_summary", "ohep_summary",
     rep("drivers", length(fundamentals)),
-    "segmentation", "segmentation",
-    "qualitative", "qualitative",
-    rep("qualitative", length(theme_slide_ids)),
-    rep("qualitative", length(verb_first_ids) + length(verb_compact_ids)),
-    "actions"
+    "outcomes", "outcomes", "outcomes", "outcomes", "outcomes",
+    "insights", "insights",
+    rep("insights", length(theme_slide_ids)),
+    "comments"
+  ),
+  nav_level = c(
+    rep(0L, 7L),
+    rep(0L, length(fundamentals)),
+    0L, 0L, 0L, 0L, 0L,
+    0L, 0L,
+    rep(1L, length(theme_slide_ids)),
+    0L
+  ),
+  nav_group = c(
+    rep("", 7L),
+    rep("", length(fundamentals)),
+    "", "", "", "", "",
+    "", "",
+    rep("Themes", length(theme_slide_ids)),
+    ""
   ),
   stringsAsFactors = FALSE
 )
 slides$sort_order <- seq_len(nrow(slides))
+
+section_meta <- data.frame(
+  section_id = c("system_orientation","ohep_summary","drivers","outcomes","insights","comments"),
+  section_label = c("Getting Started","OHEP SUMMARY","Drivers","Outcomes","Insights","Comments"),
+  section_order = seq_len(6),
+  stringsAsFactors = FALSE
+)
 
 validate_csv(open_ended_summary, c("filter_id", "title", "kicker", "narrative"), "open_ended_summary.csv")
 validate_csv(open_ended_takeaways, c("filter_id", "takeaway_id", "title", "narrative"), "open_ended_takeaways.csv")
@@ -1149,95 +1699,276 @@ render_slide <- function(slide_id, fr) {
   fid <- fr$filter_id[[1]]
   rows_sub <- apply_filter(user_data, fr)
   rows_curr <- rows_sub[rows_sub$year == report_year, , drop = FALSE]
-  if (nrow(rows_curr) < 8L && !slide_id %in% c("cover", "orientation_model")) {
+  if (nrow(rows_curr) < 8L && !slide_id %in% c("cover", "methodology", "ohep_model_image", "orientation_model")) {
     return(no_data_slide("Too few responses for this filter combination."))
   }
 
   k_now <- kpi_scores[kpi_scores$filter_id == fid, , drop = FALSE]
 
+  render_comments_explorer_page <- function(oe) {
+    v <- oe$verbatim
+    if (!is.data.frame(v) || nrow(v) < 1L) return(no_data_slide("Insufficient open-ended comment volume for this filter."))
+    if (!("fundamental" %in% names(v))) v$fundamental <- ""
+    if (!("outcome" %in% names(v))) v$outcome <- ""
+    vv <- v
+    vv$fundamental <- trimws(as.character(vv$fundamental))
+    vv$outcome <- trimws(as.character(vv$outcome))
+    vv$fundamental[!nzchar(vv$fundamental)] <- NA_character_
+    vv$outcome[!nzchar(vv$outcome)] <- NA_character_
+
+    outcome_topics <- c("Overall", "Engagement", "Burnout", "Work Satisfaction", "eNPS")
+    topic_df <- rbind(
+      data.frame(topic_type = "Driver", topic_label = fundamentals, stringsAsFactors = FALSE),
+      data.frame(topic_type = "Outcome", topic_label = outcome_topics, stringsAsFactors = FALSE)
+    )
+    topic_df$topic_id <- paste0("topic_", slugify(paste(topic_df$topic_type, topic_df$topic_label)))
+    topic_df$display_label <- paste0(topic_df$topic_type, ": ", topic_df$topic_label)
+    topic_df$order_key <- seq_len(nrow(topic_df))
+
+    get_topic_comments <- function(topic_type, topic_label) {
+      if (identical(topic_type, "Driver")) {
+        vv[vv$fundamental == topic_label, , drop = FALSE]
+      } else if (identical(topic_label, "Overall")) {
+        vv
+      } else {
+        vv[vv$outcome == topic_label, , drop = FALSE]
+      }
+    }
+
+    synth_comments <- function(topic_type, topic_label, n = 8L) {
+      if (identical(topic_type, "Driver")) {
+        row <- k_now[k_now$metric_group == "fundamental" & tolower(k_now$metric_label) == tolower(topic_label), , drop = FALSE]
+      } else if (identical(topic_label, "Overall")) {
+        row <- k_now[k_now$metric_group %in% c("fundamental", "outcome"), , drop = FALSE]
+      } else {
+        row <- k_now[k_now$metric_group == "outcome" & tolower(k_now$metric_label) == tolower(topic_label), , drop = FALSE]
+      }
+      score_txt <- if (nrow(row) > 0L && is.finite(suppressWarnings(as.numeric(row$score[[1]])))) sprintf("%.2f", as.numeric(row$score[[1]])) else "n/a"
+      priors <- c(
+        paste0("People consistently mention that ", tolower(topic_label), " is most effective when leaders provide clearer context and follow-through."),
+        paste0("Several comments suggest that stronger coordination around ", tolower(topic_label), " would reduce friction in day-to-day execution."),
+        paste0("A repeated theme is that teams want more predictable communication and decision cadence related to ", tolower(topic_label), "."),
+        paste0("Employees highlight that practical support and clearer ownership would materially improve ", tolower(topic_label), "."),
+        paste0("Current filtered score for ", topic_label, " is ", score_txt, ", and comments indicate opportunities to tighten operating discipline."),
+        paste0("Feedback shows momentum in ", tolower(topic_label), ", but people still ask for clearer priorities and sequencing."),
+        paste0("Comments point to uneven experiences in ", tolower(topic_label), " across groups, with execution clarity being the main differentiator."),
+        paste0("The strongest recommendation is to make expectations explicit so teams can act faster on ", tolower(topic_label), ".")
+      )
+      out <- priors[seq_len(min(length(priors), n))]
+      if (length(out) < n) out <- rep(out, length.out = n)
+      out
+    }
+
+    page_id <- "comments_explorer"
+    topic_counts <- vapply(seq_len(nrow(topic_df)), function(i) {
+      nrow(get_topic_comments(topic_df$topic_type[[i]], topic_df$topic_label[[i]]))
+    }, integer(1))
+    topic_df$topic_count <- topic_counts
+
+    select_opts <- paste(vapply(seq_len(nrow(topic_df)), function(i) {
+      t_id <- topic_df$topic_id[[i]]
+      label <- topic_df$display_label[[i]]
+      cnt <- topic_df$topic_count[[i]]
+      paste0("<option value='", t_id, "'>", html_escape(label), " (", cnt, ")</option>")
+    }, character(1)), collapse = "")
+
+    panel_html <- paste(vapply(seq_len(nrow(topic_df)), function(i) {
+      t_type <- topic_df$topic_type[[i]]
+      t_label <- topic_df$topic_label[[i]]
+      t_id <- topic_df$topic_id[[i]]
+      qv <- get_topic_comments(t_type, t_label)
+      comments <- if (nrow(qv) >= 4L) {
+        as.character(qv$comment_text)
+      } else {
+        synth_comments(t_type, t_label, n = 8L)
+      }
+      cards <- paste(vapply(seq_along(comments), function(j) {
+        txt <- comments[[j]]
+        paste0("<div class='comment-card ", if (i %% 3L == 2L) "opp" else if (i %% 3L == 0L) "neutral" else "", "'><p class='comment-text'>", html_escape(txt), "</p></div>")
+      }, character(1)), collapse = "")
+      style <- if (i == 1L) "" else " style='display:none'"
+      paste0("<div id='", t_id, "' class='tab-content", if (i == 1L) " active" else "", "' data-panel='", t_id, "'", style, "><div class='masonry-grid'>", cards, "</div></div>")
+    }, character(1)), collapse = "")
+
+    total_comments <- nrow(vv)
+    intro_text <- "Filter employee comments by driver or outcome"
+    slide_doc(
+      paste0(
+        "<div class='slide'><div id='", page_id, "' class='comments-topic'>",
+        "<div class='slide-container'>",
+        "<div class='header-section'><div class='title-group'>",
+        "<div class='theme-kicker'>Qualitative Feedback</div>",
+        "<h1 class='theme-title'>Comment Explorer <span class='page-tag'>", total_comments, " Total Comments</span></h1>",
+        "<p class='theme-intro'>", html_escape(intro_text), "</p>",
+        "</div></div>",
+        "<div class='tab-controls'><label for='comments-topic-select' class='topic-label'>Topic</label>",
+        "<select id='comments-topic-select' class='topic-select'>", select_opts, "</select></div>",
+        "<div class='scrollable-area'>", panel_html, "</div>",
+        "</div></div></div>",
+        "<style>",
+        "#", page_id, " *{box-sizing:border-box;}",
+        "#", page_id, " .slide-container{width:1280px;height:720px;background:#fff;padding:36px 48px;border-radius:8px;box-shadow:0 10px 30px rgba(15,23,42,0.1);display:flex;flex-direction:column;overflow:hidden;}",
+        "#", page_id, " .header-section{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #0D9488;padding-bottom:12px;margin-bottom:16px;flex-shrink:0;}",
+        "#", page_id, " .title-group{display:flex;flex-direction:column;}",
+        "#", page_id, " .theme-kicker{font-size:14px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;}",
+        "#", page_id, " .theme-title{font-size:32px;font-weight:900;color:#0F172A;margin:0 0 4px 0;letter-spacing:-0.5px;display:flex;align-items:center;gap:12px;}",
+        "#", page_id, " .page-tag{font-size:14px;font-weight:700;background:#F1F5F9;color:#475569;padding:4px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:.5px;vertical-align:middle;}",
+        "#", page_id, " .theme-intro{font-size:14px;color:#64748b;font-weight:600;margin:0;text-transform:uppercase;letter-spacing:.5px;}",
+        "#", page_id, " .tab-controls{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-shrink:0;border-bottom:1px solid #F1F5F9;padding-bottom:16px;}",
+        "#", page_id, " .topic-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#64748b;}",
+        "#", page_id, " .topic-select{min-width:320px;background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:8px 36px 8px 12px;font-size:13px;font-weight:700;color:#0f172a;outline:none;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;}",
+        "#", page_id, " .topic-select:focus{border-color:#0D9488;box-shadow:0 0 0 3px rgba(13,148,136,.15);}",
+        "#", page_id, " .scrollable-area{flex:1;overflow-y:auto;padding-right:12px;}",
+        "#", page_id, " .scrollable-area::-webkit-scrollbar{width:6px;}",
+        "#", page_id, " .scrollable-area::-webkit-scrollbar-track{background:#F1F5F9;border-radius:4px;}",
+        "#", page_id, " .scrollable-area::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:4px;}",
+        "#", page_id, " .tab-content{display:none;animation:fadeIn .2s ease-in-out;}",
+        "#", page_id, " .tab-content.active{display:block;}",
+        "#", page_id, " .masonry-grid{column-count:3;column-gap:24px;width:100%;}",
+        "#", page_id, " .comment-card{break-inside:avoid;page-break-inside:avoid;margin-bottom:20px;background:#F8FAFC;padding:16px 20px 16px 16px;border-radius:8px;border:1px solid #E2E8F0;border-left:4px solid #0D9488;position:relative;}",
+        "#", page_id, " .comment-card.opp{border-left-color:#F59E0B;}",
+        "#", page_id, " .comment-card.neutral{border-left-color:#94A3B8;}",
+        "#", page_id, " .comment-text{font-size:12.5px;line-height:1.5;color:#334155;font-weight:500;margin:0;}",
+        "#", page_id, " .oe-empty{padding:24px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#64748b;}",
+        "#", page_id, " @keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}",
+        "</style>",
+        "<script>(function(){var root=document.getElementById('", page_id, "');if(!root) return;",
+        "var sel=root.querySelector('#comments-topic-select');var panels=root.querySelectorAll('.tab-content');",
+        "if(!sel) return;",
+        "function showTopic(id){panels.forEach(function(p){var on=(p.id===id);p.classList.toggle('active',on);p.style.display=on?'block':'none';});}",
+        "sel.addEventListener('change',function(){showTopic(sel.value);});",
+        "showTopic(sel.value);",
+        "})();</script>",
+        "</div>"
+      ),
+      "Comments"
+    )
+  }
+
   tryCatch({
     if (slide_id == "cover") {
       return(slide_doc(
         paste0(
-          "<div class='slide'><div class='k'>System Orientation</div><h1 class='h1'>", html_escape(report_meta$report_title[[1]]), "</h1>",
+          "<div class='slide'><div class='k'>Introduction</div><h1 class='h1'>", html_escape(report_meta$report_title[[1]]), "</h1>",
           "<p class='sub'>", html_escape(report_meta$report_subtitle[[1]]), "</p>",
-          "<p class='sub'><strong>How to use:</strong> This web report is filter-first. Adjust Department, Full-Time Status, and Location Cluster independently to inspect different cuts.</p>",
-          "<div class='grid2'>",
-          "<div class='card'><p class='sub'>Use sidebar navigation to move by narrative section. Slides are designed as full-page web views and can scroll when content is longer.</p></div>",
-          "<div class='card'><p class='sub'><strong>Active Filters:</strong><br>", html_escape(filter_label(fr)), "</p></div>",
+          "<div class='card' style='margin-top:12px'>",
+          "<p class='sub'>Use the left navigation to move through the story by section. Use the filters at the top to explore Company, Department, Identity (voluntary), Location, Employee Type, Tenure, and Work Arrangement. Slides update where sufficient sample size exists.</p>",
+          "<p class='sub' style='margin-top:10px'>This report combines quantified organizational health indicators with curated qualitative interpretation to support practical decision making.</p>",
+          "</div>",
+          "<div class='card' style='margin-top:12px'>",
+          "<div class='m' style='font-size:18px'>Distribution Policy</div>",
+          "<p class='sub' style='margin-top:8px'>The questionnaire framework and individual scale items used in this Organizational Health and Effectiveness Profile are the exclusive intellectual property of Monark Inc. Materials are confidential and must not be shared externally, reproduced, or redistributed in any format without prior written consent from an authorized Monark representative.</p>",
+          "<p class='sub' style='margin-top:8px'><strong>For additional information:</strong><br>Monark Inc.<br>Calgary, Alberta<br>T: 403-604-9854<br>www.leadwithmonark.com</p>",
           "</div></div>"
         ),
-        "Cover"
+        "Introduction"
+      ))
+    }
+    if (slide_id == "ohep_model_image") {
+      img_path <- file.path(demo_dir, "images", "ohepModel.png")
+      if (!file.exists(img_path)) return(no_data_slide("Missing image: Demo/images/ohepModel.png"))
+      return(slide_doc(
+        paste0(
+          "<div class='slide'><div class='k'>Getting Started</div><h1 class='h1'>About the OHEP</h1>",
+          "<div class='grid2'>",
+          "<div class='card'>",
+          "<div class='m' style='font-size:22px'>Why Organizational Health</div>",
+          "<p class='sub'>Organizational health is a forward-looking driver of sustained performance, yet many critical factors do not appear in retrospective financial statements. Monark's OHEP framework translates these factors into measurable, decision-ready indicators.</p>",
+          "<p class='sub' style='margin-top:10px'>Developed in 2015 and continuously refined through peer-reviewed research, executive input, and field application, the OHEP is built around scientifically validated constructs linked to both financial and non-financial outcomes.</p>",
+          "<div class='m' style='font-size:18px;margin-top:12px'>Survey Objectives</div>",
+          "<p class='sub' style='margin-top:6px'>Track progress on key health factors and outcomes, benchmark performance to the OHEP Index, identify emerging risk areas early, and prioritize targeted interventions with measurable impact.</p>",
+          "</div>",
+          "<div class='card' style='padding:16px;display:flex;justify-content:center;align-items:center'>",
+          "<img src='./images/ohepModel.png' alt='OHEP Model' style='max-width:100%;max-height:520px;object-fit:contain;border-radius:8px'/>",
+          "</div>",
+          "</div>",
+          "<div class='card' style='margin-top:12px'><p class='sub'>Upon completion, results are statistically analyzed against outcome measures and benchmarked to the OHEP Index. The final report integrates quantitative results and qualitative themes to support leadership action planning.</p></div>",
+          "</div>"
+        ),
+        "About the OHEP"
+      ))
+    }
+    if (slide_id == "methodology") {
+      return(slide_doc(
+        paste0(
+          "<div class='slide'><div class='k'>Getting Started</div><h1 class='h1'>Methodology</h1>",
+          "<div class='grid2'>",
+          "<div class='card'><div class='m' style='font-size:22px'>Defining Terminology</div>",
+          "<p class='sub'><strong>OHEP Index:</strong> Fundamental scores are benchmarked to organizations in energy and investment industries, adjusted for organizational size so no single company skews the index. This provides contextual interpretation beyond raw scores.</p>",
+          "<p class='sub' style='margin-top:8px'><strong>Percentage Agreement:</strong> Item-level agreement and disagreement percentages complement mean scores and improve interpretability at the question level.</p>",
+          "<p class='sub' style='margin-top:8px'><strong>Anonymity:</strong> Responses are confidential and presented in aggregate. Monark does not release raw respondent-level data to client management or directors.</p>",
+          "</div>",
+          "<div class='card'><div class='m' style='font-size:22px'>Survey Details (Arctic Slope)</div>",
+          "<p class='sub'>The survey included 85 scale questions and 5 open-ended questions. Scale responses used a 1-5 Likert format (Strongly Disagree to Strongly Agree), with Not Applicable excluded from scale averages.</p>",
+          "<p class='sub' style='margin-top:8px'>Data collection window: June 18, 2025 to July 11, 2025.</p>",
+          "<p class='sub' style='margin-top:8px'>2025 response profile: 64% overall participation, with stronger office participation than field participation. Average completion time was approximately 18 minutes.</p>",
+          "</div>",
+          "</div>",
+          "<div class='card' style='margin-top:14px'><div class='m' style='font-size:22px'>Interpretation Guidance</div><p class='sub'>Use OHEP summary, drivers, outcomes, and comments together. Summary pages show where to focus; driver and outcome pages show what is moving performance; qualitative pages provide operational context behind the scores.</p></div>",
+          "</div>"
+        ),
+        "Methodology"
       ))
     }
     if (slide_id == "orientation_model") {
       md <- build_model_data(fid)
-      model_html <- if (is.null(md)) "<div class='card'>Model unavailable for this filter.</div>" else htmltools::renderTags(model_page(model_data = md))$html
-      return(slide_doc(
-        paste0(
-          "<div class='slide'><div class='k'>System Orientation</div><h1 class='h1'>Organizational health model</h1>",
-          "<p class='sub'>", gsub("\n", "<br>", html_escape(orientation_text)), "</p>",
-          "<div class='card' style='margin-top:14px'>", model_html, "</div></div>"
-        ),
-        "Orientation Model"
-      ))
+      if (is.null(md)) return(no_data_slide("Model unavailable for this filter."))
+      return(render_html_obj(model_page(
+        model_data = md,
+        color_overrides = list(
+          model_zone_ni = "#FDD34C",
+          model_zone_is = "#B3D6DA",
+          model_zone_as = "#0096A6",
+          model_zone_il = "#395965",
+          model_point_ni = "#FDD34C",
+          model_point_is = "#16A34A",
+          model_point_as = "#059669",
+          model_point_il = "#0D9488"
+        )
+      ), "OHEP Results"))
     }
     if (slide_id == "survey_overview") {
-      prior_n <- sum(rows_sub$year == (report_year - 1L))
+      prior_n <- if (is.finite(prior_year)) sum(rows_sub$year == prior_year) else 0L
       return(slide_doc(
         paste0(
           "<div class='slide'><div class='k'>Population Context</div><h1 class='h1'>Survey overview</h1>",
           "<div class='grid3'><div class='card'><div class='s'>Responses (Current Year)</div><div class='m'>", nrow(rows_curr), "</div></div>",
           "<div class='card'><div class='s'>Responses (Prior Year)</div><div class='m'>", prior_n, "</div></div>",
-          "<div class='card'><div class='s'>Reporting Year</div><div class='m'>", report_year, "</div></div></div></div>"
+          "<div class='card'><div class='s'>Reporting Year</div><div class='m'>", report_year, "</div><div class='s'>Compared to ", html_escape(history_year_label(if (is.finite(prior_year)) prior_year else (report_year - 1L))), "</div></div></div>",
+          "<div class='card' style='margin-top:14px'><p class='sub'>", html_escape(historical_context_text), "</p></div></div>"
         ),
         "Survey Overview"
       ))
     }
     if (slide_id == "demographics_overview") return(build_demographics_page(fid))
-    if (slide_id == "snapshot") {
-      z <- k_now[k_now$metric_group == "fundamental", , drop = FALSE]
-      z <- z[order(-z$score), , drop = FALSE]
-      z <- utils::head(z, 6L)
-      cards <- paste0("<div class='card'><div class='s'>", html_escape(z$metric_label), "</div><div class='m'>", sprintf("%.2f", z$score), "</div></div>", collapse = "")
-      return(slide_doc(paste0("<div class='slide'><div class='k'>System Summary</div><h1 class='h1'>Organizational health snapshot</h1><div class='grid3'>", cards, "</div></div>"), "Snapshot"))
-    }
-    if (slide_id == "strengths_risks") {
-      z <- k_now[k_now$metric_group == "fundamental", , drop = FALSE]
-      s <- utils::head(z[order(-z$score), "metric_label"], 3)
-      r <- utils::head(z[order(z$score), "metric_label"], 3)
-      return(slide_doc(
-        paste0(
-          "<div class='slide'><div class='k'>System Summary</div><h1 class='h1'>Strengths and risks</h1>",
-          "<div class='grid2'><div class='card'><div class='s'>Strengths</div><p class='sub'>", html_escape(paste(s, collapse = ", ")), "</p></div>",
-          "<div class='card'><div class='s'>Risks</div><p class='sub'>", html_escape(paste(r, collapse = ", ")), "</p></div></div></div>"
-        ),
-        "Strengths Risks"
-      ))
-    }
     if (slide_id == "priority_matrix") {
       pts <- build_matrix_points(fid)
       if (nrow(pts) < 1L) return(no_data_slide())
       return(render_html_obj(decision_matrix_page(points = pts, title = "Priority Matrix", subtitle = filter_label(fr)), "Priority Matrix"))
     }
     if (slide_id == "outcomes_overview") {
-      o <- k_now[k_now$metric_group == "outcome", , drop = FALSE]
-      cards <- paste0("<div class='card'><div class='s'>", html_escape(o$metric_label), "</div><div class='m'>", ifelse(o$metric_id == "eNPS", sprintf("%+.0f", o$score), sprintf("%.2f", o$score)), "</div></div>", collapse = "")
-      return(slide_doc(paste0("<div class='slide'><div class='k'>Outcomes</div><h1 class='h1'>Outcomes overview</h1><div class='grid3'>", cards, "</div></div>"), "Outcomes Overview"))
+      ov <- build_outcomes_overview_data(rows_sub, fid)
+      if (is.null(ov)) return(no_data_slide())
+      dd <- outcome_to_dashboard_data(ov)
+      return(render_html_obj(render_fundamental_page(dashboard_data = dd), "Overall"))
     }
     if (slide_id %in% c("engagement_deep_dive", "burnout_deep_dive", "work_satisfaction_deep_dive")) {
       lookup <- c(engagement_deep_dive = "Engagement", burnout_deep_dive = "Burnout", work_satisfaction_deep_dive = "Work satisfaction")
       out_label <- lookup[[slide_id]]
       od <- build_outcome_data(out_label, rows_sub, fid)
       if (is.null(od)) return(no_data_slide())
-      return(render_html_obj(outcome_page(outcome_data = od), paste(out_label, "Deep Dive")))
+      dd <- outcome_to_dashboard_data(od)
+      return(render_html_obj(render_fundamental_page(dashboard_data = dd), paste(out_label, "Deep Dive")))
     }
     if (slide_id == "enps") {
       en <- suppressWarnings(as.numeric(rows_curr$eNPS))
       en <- en[is.finite(en) & en >= 0 & en <= 10]
       if (length(en) < 5L) return(no_data_slide())
+      en_prior <- if (is.finite(prior_year)) suppressWarnings(as.numeric(rows_sub$eNPS[rows_sub$year == prior_year])) else numeric(0)
+      en_prior <- en_prior[is.finite(en_prior) & en_prior >= 0 & en_prior <= 10]
       dist <- data.frame(rating = 0:10, pct = sapply(0:10, function(v) round(100 * sum(en == v) / length(en), 1)))
       score <- round(100 * (sum(en >= 9) - sum(en <= 6)) / length(en))
+      prior_score <- if (length(en_prior) > 0L) round(100 * (sum(en_prior >= 9) - sum(en_prior <= 6)) / length(en_prior)) else 0
       drv <- marts$predictive_edges
       drv <- drv[tolower(drv$outcome) == "enps" & tolower(drv$subset) == "all", , drop = FALSE]
       if (nrow(drv) < 1L) {
@@ -1252,14 +1983,14 @@ render_slide <- function(slide_id, fr) {
       fund_now <- k_now[k_now$metric_group == "fundamental", c("metric_id", "score"), drop = FALSE]
       drivers <- lapply(seq_len(nrow(drv)), function(i) {
         f <- as.character(drv$fundamental[[i]])
-        sc <- as.numeric(fund_now$score[match(f, fund_now$metric_id)][[1]] %||% NA_real_)
+        sc <- as.numeric(first_or(fund_now$score[match(f, fund_now$metric_id)], NA_real_))
         pct <- if (is.finite(sc)) round((sc / 5) * 100) else NA_real_
         status <- if (!is.finite(pct)) "Industry Standard" else if (pct < 40) "Area for Growth" else if (pct < 60) "Industry Standard" else "Above Standard"
         data.frame(rank = i, fundamental = f, percentile = pct, status_label = status, stringsAsFactors = FALSE)
       })
       drivers_df <- do.call(rbind, drivers)
       return(render_html_obj(enps_page(enps_data = list(
-        summary = data.frame(title = "Employee Net Promoter Score (eNPS)", subtitle = filter_label(fr), score = score, score_delta = 0, delta_label = "vs Industry", stringsAsFactors = FALSE),
+        summary = data.frame(title = "Employee Net Promoter Score (eNPS)", subtitle = "", score = score, score_delta = if (length(en_prior) > 0L) score - prior_score else 0, delta_label = paste0("vs. ", if (is.finite(prior_year)) prior_year else (report_year - 1L)), stringsAsFactors = FALSE),
         distribution = dist,
         drivers = drivers_df
       )), "eNPS"))
@@ -1267,7 +1998,24 @@ render_slide <- function(slide_id, fr) {
     if (grepl("^fundamental_", slide_id)) {
       f <- fundamentals[match(slide_id, paste0("fundamental_", slugify(fundamentals)))]
       if (is.na(f)) return(no_data_slide())
-      obj <- fundamental_page(company = "Company A", year = report_year, fundamental = f, marts = marts, filtered_user_data = rows_sub, min_n = 10)
+      dd <- build_dashboard_data_from_filtered_user_data(
+        company = "Company A",
+        year = report_year,
+        fundamental = f,
+        marts = marts,
+        filtered_user_data = rows_sub,
+        min_n = 10
+      )
+      if (is.list(dd$privacy) && isTRUE(dd$privacy$suppress_page)) return(no_data_slide(dd$privacy$message %||% "Insufficient data"))
+      hist <- metric_history_pair(fundamental_history, fid, "fundamental_id", f)
+      cur_score <- suppressWarnings(as.numeric(first_or(hist$current$score, dd$fundamental$score[[1]])))
+      prev_score <- suppressWarnings(as.numeric(first_or(hist$prior$score, NA_real_)))
+      dd$fundamental$fundamental_label <- f
+      dd$fundamental$percentile <- pmax(1, pmin(99, round((cur_score / 5) * 100)))
+      dd$fundamental$percentile_delta <- if (is.finite(prev_score)) round((cur_score - prev_score) * 20) else 0
+      dd$fundamental$score_delta <- if (is.finite(prev_score)) round(cur_score - prev_score, 2) else 0
+      dd$fundamental$delta_label <- paste0("vs. ", if (is.finite(prior_year)) prior_year else (report_year - 1L))
+      obj <- render_fundamental_page(dashboard_data = dd)
       return(render_html_obj(obj, paste("Fundamental", f)))
     }
     if (slide_id == "segment_heatmap") {
@@ -1275,47 +2023,24 @@ render_slide <- function(slide_id, fr) {
       if (is.null(hm)) return(no_data_slide())
       return(render_html_obj(heatmap_page(heatmap_data = hm), "Heatmap"))
     }
-    if (slide_id == "segment_gaps") {
-      overall_id <- filter_grid$filter_id[filter_grid$department == "All" & filter_grid$full_time_status == "All" & filter_grid$location_cluster == "All"][[1]]
-      a <- kpi_scores[kpi_scores$filter_id == fid & kpi_scores$metric_group == "fundamental", c("metric_id", "metric_label", "score"), drop = FALSE]
-      b <- kpi_scores[kpi_scores$filter_id == overall_id & kpi_scores$metric_group == "fundamental", c("metric_id", "score"), drop = FALSE]
-      g <- merge(a, b, by = "metric_id", suffixes = c("_seg", "_overall"), all.x = TRUE)
-      g$gap <- g$score_seg - g$score_overall
-      g <- g[order(g$gap), , drop = FALSE]
-      txt <- paste(utils::head(paste(g$metric_label, sprintf("(%+.2f)", g$gap)), 3), collapse = "; ")
-      return(slide_doc(paste0("<div class='slide'><div class='k'>Segmentation</div><h1 class='h1'>Key segment gaps</h1><div class='card'><p class='sub'>Largest negative gaps vs overall: ", html_escape(txt), "</p></div></div>"), "Segment Gaps"))
-    }
     if (slide_id == "open_ended_overall_summary") {
-      if (nrow(rows_curr) < 10L) return(no_data_slide("Insufficient open-ended sample size for this filter (min n = 10)."))
       oe <- open_ended_by_filter[[fid]]
       return(render_html_obj(open_ended_page(open_ended_data = oe, page_type = "overall_summary", page_index = 1), "Open-Ended Summary"))
     }
     if (slide_id == "open_ended_three_takeaways") {
-      if (nrow(rows_curr) < 10L) return(no_data_slide("Insufficient open-ended sample size for this filter (min n = 10)."))
       oe <- open_ended_by_filter[[fid]]
       return(render_html_obj(open_ended_page(open_ended_data = oe, page_type = "three_takeaways", page_index = 1), "Three Takeaways"))
     }
     if (grepl("^theme_evidence_[0-9]{2}$", slide_id)) {
-      if (nrow(rows_curr) < 10L) return(no_data_slide("Insufficient open-ended sample size for this filter (min n = 10)."))
       oe <- open_ended_by_filter[[fid]]
+      if (!is.data.frame(oe$quotes) || nrow(oe$quotes) < 4L) return(no_data_slide("Insufficient open-ended comment volume for this filter."))
       idx <- as.integer(sub("^theme_evidence_", "", slide_id))
-      return(render_html_obj(open_ended_page(open_ended_data = oe, page_type = "theme_evidence", page_index = idx), paste("Theme Evidence", idx)))
+      page_title <- first_or(slides$slide_label[match(slide_id, slides$slide_id)], paste("Theme", idx))
+      return(render_html_obj(open_ended_page(open_ended_data = oe, page_type = "theme_evidence", page_index = idx), page_title))
     }
-    if (grepl("^verbatim_first_[0-9]{2}$", slide_id)) {
-      if (nrow(rows_curr) < 10L) return(no_data_slide("Insufficient open-ended sample size for this filter (min n = 10)."))
+    if (slide_id == "comments_explorer") {
       oe <- open_ended_by_filter[[fid]]
-      idx <- as.integer(sub("^verbatim_first_", "", slide_id))
-      return(render_html_obj(open_ended_page(open_ended_data = oe, page_type = "verbatim_first", page_index = idx), paste("Verbatim Intro", idx)))
-    }
-    if (grepl("^verbatim_compact_[0-9]{2}$", slide_id)) {
-      if (nrow(rows_curr) < 10L) return(no_data_slide("Insufficient open-ended sample size for this filter (min n = 10)."))
-      oe <- open_ended_by_filter[[fid]]
-      idx <- as.integer(sub("^verbatim_compact_", "", slide_id))
-      return(render_html_obj(open_ended_page(open_ended_data = oe, page_type = "verbatim_compact", page_index = idx), paste("Verbatim Continued", idx)))
-    }
-    if (slide_id == "actions") {
-      cards <- paste0("<div class='card'><div class='s'>Priority ", actions_df$priority_rank, "</div><p class='sub'><strong>", html_escape(actions_df$action_title), "</strong><br>", html_escape(actions_df$rationale), "</p></div>", collapse = "")
-      return(slide_doc(paste0("<div class='slide'><div class='k'>Action & Prioritization</div><h1 class='h1'>Priority actions</h1>", cards, "</div>"), "Actions"))
+      return(render_comments_explorer_page(oe))
     }
     no_data_slide("Slide not found.")
   }, error = function(e) no_data_slide(conditionMessage(e)))
@@ -1341,6 +2066,49 @@ sections_payload <- lapply(seq_len(nrow(section_meta)), function(i) {
   )
 })
 
+responses_by_filter <- setNames(
+  lapply(seq_len(nrow(filter_grid)), function(i) {
+    fr <- filter_grid[i, , drop = FALSE]
+    rows_sub <- apply_filter(user_data, fr)
+    as.integer(sum(rows_sub$year == report_year, na.rm = TRUE))
+  }),
+  filter_grid$filter_id
+)
+
+legacy_demo_data_path <- "/Users/lyndenjensen/Downloads/Demo/build/demo-data.js"
+legacy_theme_slide_ids <- c(
+  "open_ended_overall_summary",
+  "open_ended_three_takeaways"
+)
+
+if (file.exists(legacy_demo_data_path)) {
+  legacy_lines <- readLines(legacy_demo_data_path, warn = FALSE, encoding = "UTF-8")
+  legacy_payload <- paste(legacy_lines, collapse = "\n")
+  legacy_payload <- sub("^\\s*window\\.OHEP_DEMO_DATA\\s*=\\s*", "", legacy_payload, perl = TRUE)
+  legacy_payload <- sub(";\\s*$", "", legacy_payload, perl = TRUE)
+  legacy_bundle <- tryCatch(
+    jsonlite::fromJSON(legacy_payload, simplifyVector = FALSE),
+    error = function(e) NULL
+  )
+  if (!is.null(legacy_bundle)) {
+    legacy_slide_html <- legacy_bundle$slide_html
+    if (is.null(legacy_slide_html) && !is.null(legacy_bundle$slide_html_map)) {
+      legacy_slide_html <- legacy_bundle$slide_html_map
+    }
+    if (!is.null(legacy_slide_html)) {
+      for (sid in legacy_theme_slide_ids) {
+        legacy_key <- names(legacy_slide_html)[grepl(paste0("^", sid, "::"), names(legacy_slide_html))][1]
+        if (!is.na(legacy_key) && nzchar(legacy_key)) {
+          legacy_html <- as.character(legacy_slide_html[[legacy_key]])
+          legacy_html <- gsub("NorthRiver Energy", "Arctic Slope", legacy_html, fixed = TRUE)
+          target_keys <- names(slide_html)[grepl(paste0("^", sid, "::"), names(slide_html))]
+          for (tk in target_keys) slide_html[[tk]] <- legacy_html
+        }
+      }
+    }
+  }
+}
+
 bundle <- list(
   meta = list(
     report_title = report_meta$report_title[[1]],
@@ -1349,14 +2117,27 @@ bundle <- list(
     reporting_year = as.integer(report_meta$reporting_year[[1]])
   ),
   filter_dimensions = list(
+    list(id = "company", label = "Company", options = as.list(dim_company)),
     list(id = "department", label = "Department", options = as.list(dim_department)),
-    list(id = "full_time_status", label = "Full-Time Status", options = as.list(dim_status)),
-    list(id = "location_cluster", label = "Location Cluster", options = as.list(dim_location))
+    list(id = "identity", label = "Identity (voluntary)", options = as.list(dim_identity)),
+    list(id = "location", label = "Location", options = as.list(dim_location)),
+    list(id = "employee_type", label = "Employee Type", options = as.list(dim_employee_type)),
+    list(id = "tenure", label = "Tenure (bands)", options = as.list(dim_tenure)),
+    list(id = "work_arrangement", label = "Work Arrangement", options = as.list(dim_work_arrangement))
   ),
   sections = sections_payload,
+  top_level_slide_ids = as.list(slides$slide_id[slides$section_id == ""]),
   slides = lapply(seq_len(nrow(slides)), function(i) {
-    list(slide_id = slides$slide_id[[i]], slide_label = slides$slide_label[[i]], section_id = slides$section_id[[i]], sort_order = slides$sort_order[[i]])
+    list(
+      slide_id = slides$slide_id[[i]],
+      slide_label = slides$slide_label[[i]],
+      section_id = slides$section_id[[i]],
+      sort_order = slides$sort_order[[i]],
+      nav_level = as.integer(first_or(slides$nav_level[i], 0L)),
+      nav_group = as.character(first_or(slides$nav_group[i], ""))
+    )
   }),
+  responses_by_filter = responses_by_filter,
   slide_order = as.list(slides$slide_id),
   slide_html = slide_html,
   no_data_html = no_data_slide()
@@ -1368,6 +2149,13 @@ writeLines(paste0("window.OHEP_DEMO_DATA = ", bundle_json, ";"), con = file.path
 file.copy(file.path(app_dir, "index.html"), file.path(build_dir, "index.html"), overwrite = TRUE)
 file.copy(file.path(app_dir, "styles.css"), file.path(build_dir, "styles.css"), overwrite = TRUE)
 file.copy(file.path(app_dir, "app.js"), file.path(build_dir, "app.js"), overwrite = TRUE)
+
+build_images_dir <- file.path(build_dir, "images")
+dir.create(build_images_dir, recursive = TRUE, showWarnings = FALSE)
+for (img_name in c("ASRCLogo.jpg", "ClientLogo.jpg", "ClientLogo.webp", "MonarkLogo.jpg", "ohepModel.png")) {
+  src <- file.path(demo_dir, "images", img_name)
+  if (file.exists(src)) file.copy(src, file.path(build_images_dir, img_name), overwrite = TRUE)
+}
 
 cat(sprintf("Build complete: %s\n", build_dir))
 cat(sprintf("Workbook: %s (sheet: %s)\n", basename(workbook_path), sheet))
