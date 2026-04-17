@@ -29,9 +29,7 @@
 "location","north_slope_prudhoe_bay_kuparuk","Location","North Slope (Prudhoe Bay / Kuparuk)",2,NA
 "location","utqia_vik_barrow","Location","Utqia<U+0121>vik (Barrow)",3,NA
 "location","anchorage","Location","Anchorage",4,NA
-"location","other_alaska","Location","Other Alaska",5,NA
-"location","lower_48_u_s","Location","Lower 48 (U.S.)",6,NA
-"location","remote_other","Location","Remote / Other",7,NA
+"location","lower_48_u_s","Location","Lower 48 (U.S.)",5,NA
 "employee_type","all","Employee Type","All",1,NA
 "employee_type","field_site","Employee Type","Field / Site",2,NA
 "employee_type","corporate_office","Employee Type","Corporate / Office",3,NA

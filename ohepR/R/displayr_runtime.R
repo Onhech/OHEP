@@ -1815,15 +1815,46 @@ ohepRDisplayr <- function() {
 {scope} .pill-left {{ background: #FFFFFF; padding: 6px 12px; font-size: 11px; font-weight: 800; color: var(--oe-title); text-transform: uppercase; letter-spacing: 0.5px; }}
 {scope} .pill-left sup {{ font-size: 8px; }}
 {scope} .pill-right {{ background: #FFFFFF; padding: 6px 12px; border-left: 1px solid var(--oe-border); font-size: 11px; font-weight: 800; color: var(--oe-brand); text-transform: uppercase; letter-spacing: 0.5px; }}
+{scope} .nl-main-card {{ background: #FFFFFF; border: 1px solid var(--oe-border); border-radius: 12px; width: 100%; max-width: 1000px; margin: 0 auto; padding: 44px; box-shadow: 0 10px 25px -5px rgba(15,23,42,.05); display: flex; flex-direction: column; }}
+{scope} .nl-eyebrow {{ font-size: 11px; font-weight: 800; color: var(--oe-brand); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }}
+{scope} .nl-title {{ font-size: 32px; font-weight: 900; color: var(--oe-title); letter-spacing: -0.5px; margin: 0 0 24px 0; line-height: 1.2; }}
+{scope} .nl-divider {{ width: 100%; height: 2px; background-color: var(--oe-brand); margin-bottom: 32px; }}
+{scope} .nl-hero {{ margin-bottom: 32px; padding-left: 24px; border-left: 4px solid var(--oe-brand); }}
+{scope} .nl-hero-quote {{ font-family: Georgia, serif; font-size: 24px; color: var(--oe-title); font-style: italic; line-height: 1.4; margin-bottom: 8px; }}
+{scope} .nl-hero-attribution {{ font-size: 13px; font-weight: 700; color: var(--oe-muted); text-transform: uppercase; letter-spacing: .5px; line-height: 1.5; }}
+{scope} .nl-body {{ font-size: 15px; line-height: 1.7; color: var(--oe-sub); display: flex; flex-direction: column; gap: 16px; margin-bottom: 32px; max-width: 900px; }}
+{scope} .nl-attrs {{ display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 16px; background: #F0FDFA; border: 1px solid #CCFBF1; border-radius: 8px; margin-bottom: 32px; }}
+{scope} .nl-attrs-label {{ font-size: 12px; font-weight: 800; color: var(--oe-brand); text-transform: uppercase; letter-spacing: .5px; margin-right: 6px; }}
+{scope} .nl-pill {{ background: #FFFFFF; border: 1px solid #CCFBF1; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; color: var(--oe-title); display: inline-flex; gap: 8px; box-shadow: 0 1px 2px rgba(13,148,136,.05); }}
+{scope} .nl-pill .score {{ color: #E11D48; font-weight: 900; }}
+{scope} .nl-pill .score.warn {{ color: #F59E0B; }}
+{scope} .nl-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 48px; }}
+{scope} .nl-box {{ padding: 24px; border-radius: 8px; border: 1px solid var(--oe-border); background: #F8FAFC; }}
+{scope} .nl-box.driver {{ background: #F0F9FF; border-color: #E0F2FE; }}
+{scope} .nl-box-title {{ font-size: 13px; font-weight: 800; color: var(--oe-title); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }}
+{scope} .nl-box.driver .nl-box-title {{ color: #0284C7; }}
+{scope} .nl-box-text {{ font-size: 14px; line-height: 1.6; color: var(--oe-sub); }}
+{scope} .nl-quotes {{ background: #FAFAF9; border: 1px solid #E7E5E4; border-radius: 12px; padding: 40px; display: flex; flex-direction: column; gap: 34px; }}
+{scope} .nl-quotes-header {{ font-size: 14px; font-weight: 800; color: var(--oe-brand); text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #E7E5E4; padding-bottom: 12px; margin-bottom: -6px; }}
+{scope} .nl-quote-block {{ display: flex; flex-direction: column; position: relative; padding-left: 44px; }}
+{scope} .nl-quote-block::before {{ content: \"\\201C\"; position: absolute; left: 0; top: -12px; font-family: Georgia, serif; font-size: 64px; font-weight: 700; color: #D6D3D1; line-height: 1; }}
+{scope} .nl-quote-text {{ font-size: 17px; font-weight: 500; color: var(--oe-title); line-height: 1.6; font-style: italic; margin-bottom: 16px; }}
+{scope} .nl-tags {{ display: flex; flex-wrap: wrap; gap: 8px; }}
+{scope} .nl-tag {{ background: #FFFFFF; border: 1px solid #D6D3D1; border-radius: 4px; padding: 4px 8px; font-size: 10px; font-weight: 800; color: var(--oe-muted); text-transform: uppercase; letter-spacing: .5px; }}
 @media (max-width: 1050px) {{
   {scope} .oe-grid.three {{ grid-template-columns: 1fr; }}
   {scope} .oe-grid.two {{ grid-template-columns: 1fr; }}
   {scope} .oe-verbatim-feature {{ grid-template-columns: 1fr; }}
   {scope} .oe-compact-grid {{ columns: 1; }}
   {scope} .card-grid {{ grid-template-columns: repeat(2, 1fr); }}
+  {scope} .nl-grid {{ grid-template-columns: 1fr; }}
 }}
 @media (max-width: 768px) {{
   {scope} .card-grid {{ grid-template-columns: 1fr; }}
+  {scope} .nl-main-card {{ padding: 28px 22px; }}
+  {scope} .nl-title {{ font-size: 28px; }}
+  {scope} .nl-hero-quote {{ font-size: 21px; }}
+  {scope} .nl-quotes {{ padding: 26px; }}
 }}
 "
     )
@@ -1931,88 +1962,149 @@ ohepRDisplayr <- function() {
         )
       },
       theme_evidence = {
-        page_map <- env$open_ended_theme_pages(dat = dat, quotes_per_page = 4L)
-        if (nrow(page_map) < 1L || page_index > nrow(page_map)) {
+        themes <- list(
+          list(
+            title = "Strategy Is Heard, But Not Operationalized",
+            hero_quote = "They\u2019re drawing lines on a map we\u2019re standing on.",
+            hero_attr = "The friction between Anchorage decision-making and Slope execution, and how strategy gets lost in translation.",
+            body = c(
+              "One of the clearest patterns in the data is not a lack of strategic awareness, but a breakdown in how strategy is translated into day-to-day work. Employees across the field can generally articulate the company\u2019s major priorities, suggesting that high-level messaging is reaching them. However, lower scores on Strategy and Communication suggest employees do not consistently understand how those priorities should change planning, staffing, coordination, or execution on the ground.",
+              "This gap is especially pronounced between office and field populations. Office-based employees report greater confidence in the company\u2019s direction, while field-based employees are less likely to feel that strategy reflects operational reality. In the qualitative feedback, this does not show up as disagreement with the direction itself. It shows up as frustration that strategy has not been translated into the systems where work actually happens."
+            ),
+            attrs_label = "Relevant Drivers",
+            attrs = list(
+              list(label = "Strategy", score = "3.42", cls = ""),
+              list(label = "Communication", score = "3.36", cls = "")
+            ),
+            insight1_title = "What this means",
+            insight1_text = "The challenge is less about broad awareness and more about executional translation. Employees are hearing the strategy, but not seeing enough evidence of it in the operating rhythms that shape their work.",
+            insight2_title = "Driver analysis insight",
+            insight2_text = "Driver analysis suggests that lower Purpose and Strategy scores are contributing meaningfully to Burnout. When employees do not feel a clear connection between company direction, day-to-day work, and broader purpose, effort can begin to feel heavier and less sustainable.",
+            quotes = list(
+              list(
+                text = "I\u2019ve heard the plan three times this year. I still don\u2019t know what it means for my Tuesday.",
+                tags = c("Field Supervisor", "Construction & North Slope Ops", "6-10 Years")
+              ),
+              list(
+                text = "We put the deck out, we walked the room, we got good questions. I assumed it landed. Talking to the crews now, I\u2019m not sure it ever left the room.",
+                tags = c("Operations Director", "Anchorage", "10+ Years")
+              )
+            )
+          ),
+          list(
+            title = "The Work Is Demanding \u2014 But the Conditions Around the Work Are the Deeper Strain",
+            hero_quote = "The job is hard. The conditions around the job are what break people.",
+            hero_attr = "What the field is actually fighting, and how much of it is invisible in the office.",
+            body = c(
+              "The data suggests that field employees are not primarily struggling with the technical demands of the work itself. Rather, strain appears to be shaped by the conditions surrounding the work: travel complexity, weather delays, shifting scope, inconsistent information, camp experience, and variable support from one job or leader to the next.",
+              "On the quantitative side, field groups appear to hold relatively stronger scores on accountability and commitment, but lower results on Communication, Respect, Care & Trust, and Leadership. Office employees, by contrast, are more likely to interpret field challenge through the lens of safety and execution quality. Those matter, but the qualitative data suggests employees are reacting most strongly to the instability and friction around the work, not just the work itself."
+            ),
+            attrs_label = "Relevant Drivers",
+            attrs = list(
+              list(label = "Communication", score = "3.21", cls = ""),
+              list(label = "Respect, Care & Trust", score = "3.29", cls = ""),
+              list(label = "Leadership", score = "3.18", cls = "")
+            ),
+            insight1_title = "What this means",
+            insight1_text = "The company may be interpreting stable operational outcomes as a sign that the field experience is healthy. The data suggests otherwise. Employees are pointing to friction in the system and to whether they feel supported, respected, and set up to succeed.",
+            insight2_title = "Driver analysis insight",
+            insight2_text = "Lower Respect, Care & Trust and Leadership scores appear closely tied to weaker Engagement and Work Satisfaction in the field. In this environment, logistical friction is not separate from culture; it is one of the main ways culture is experienced.",
+            quotes = list(
+              list(
+                text = "I don\u2019t mind the cold. I mind flying out to Deadhorse, sitting 36 hours for weather, and finding out when I land that the scope changed and nobody told my crew.",
+                tags = c("Field Hand", "Energy Services", "1-2 Years")
+              ),
+              list(
+                text = "HSE metrics look good. I think we read that as \u2018the field is fine.\u2019 The field is not fine; they\u2019re just not getting hurt.",
+                tags = c("Mid-Level Manager", "Industrial Services", "3-5 Years")
+              )
+            )
+          ),
+          list(
+            title = "Burnout Risk Is Emerging Before Attrition Does",
+            hero_quote = "The people who carry the load are quietly running out of room to carry it.",
+            hero_attr = "Burnout is showing up before attrition does, and the early signals are already in the data.",
+            body = c(
+              "This does not appear to be a workforce in active crisis. That is exactly why this theme matters. The warning signs are present, but they are currently being absorbed by a relatively committed group of employees who continue to deliver despite rising strain.",
+              "Scores on Purpose, Performance Development, and Communication are softer than would be expected in a top-quartile environment, while the outcome data suggests elevated Burnout and softening Work Satisfaction. The qualitative data reinforces this: employees are not describing disengagement so much as depletion. In both field and office populations, the company appears to be relying on a high-discretionary-effort group to absorb growth, complexity, and gaps in structure."
+            ),
+            attrs_label = "Relevant Metrics",
+            attrs = list(
+              list(label = "Purpose", score = "3.19", cls = ""),
+              list(label = "Perf. Development", score = "3.14", cls = ""),
+              list(label = "Communication", score = "3.09", cls = ""),
+              list(label = "Work Sat.", score = "3.28", cls = ""),
+              list(label = "Burnout Risk", score = "3.61", cls = " warn")
+            ),
+            insight1_title = "What this means",
+            insight1_text = "The current model is being sustained partly through effort that may not be indefinitely renewable. This is the point at which strong organizations intervene, before burnout turns into turnover, leadership fatigue, or a measurable drop in execution quality.",
+            insight2_title = "Driver analysis insight",
+            insight2_text = "Driver analysis indicates that Burnout is most strongly influenced by low Purpose, followed by Communication and Performance Development. This suggests employees are more vulnerable to burnout when work feels relentless, developmental support is limited, and the broader why behind the effort is not consistently felt.",
+            quotes = list(
+              list(
+                text = "I used to come home and want to tell my wife about the job. Now I come home and want to not talk for two days.",
+                tags = c("Tool Push", "Petro Star", "6-10 Years")
+              ),
+              list(
+                text = "We\u2019re running on the goodwill of about 40 people. If three of them left, I don\u2019t know what we\u2019d do.",
+                tags = c("Department Lead", "Administration", "10+ Years")
+              )
+            )
+          )
+        )
+
+        if (!is.finite(page_index) || page_index < 1L || page_index > length(themes)) {
           glue::glue("<div class=\"oe-empty\">No theme evidence is available for this page.</div>")
         } else {
-          p_row <- page_map[page_index, , drop = FALSE]
-          theme_row <- dat$theme_evidence[
-            dat$theme_evidence$takeaway_id == p_row$takeaway_id[[1]] &
-              dat$theme_evidence$theme_title == p_row$theme_title[[1]],
-            ,
-            drop = FALSE
-          ]
-          if (nrow(theme_row) < 1L) theme_row <- dat$theme_evidence[1, , drop = FALSE]
-          tk_row <- dat$takeaways[dat$takeaways$takeaway_id == p_row$takeaway_id[[1]], , drop = FALSE]
-          tk_title <- if (nrow(tk_row) > 0L) as.character(tk_row$title[[1]]) else as.character(p_row$takeaway_id[[1]])
-
-          q <- dat$quotes[dat$quotes$takeaway_id == p_row$takeaway_id[[1]], , drop = FALSE]
-          if ("theme_title" %in% names(q)) {
-            q_theme <- q[trimws(as.character(q$theme_title)) == as.character(p_row$theme_title[[1]]), , drop = FALSE]
-            if (nrow(q_theme) > 0L) q <- q_theme
-          }
-          if (nrow(q) > 0L && p_row$quote_to[[1]] >= p_row$quote_from[[1]]) {
-            q <- q[seq.int(p_row$quote_from[[1]], p_row$quote_to[[1]]), , drop = FALSE]
-          } else {
-            q <- q[0, , drop = FALSE]
-          }
-          metric_lbl <- if ("metric_label" %in% names(theme_row)) first_or(theme_row$metric_label, "") else ""
-          metric_val <- if ("metric_value" %in% names(theme_row)) suppressWarnings(as.numeric(theme_row$metric_value[[1]])) else NA_real_
-          metric_status <- if ("metric_status" %in% names(theme_row)) first_or(theme_row$metric_status, "") else ""
-          metric_pct <- if (is.finite(metric_val)) pmax(1, pmin(99, round((metric_val / 5) * 100))) else NA_real_
-
-          make_concept <- function(i) {
-            quote_text <- first_or(q$quote_text[i], "")
-            concept_title <- as.character(theme_row$theme_title[[1]])
-            explainer <- as.character(theme_row$context_text[[1]])
+          th <- themes[[page_index]]
+          body_html <- paste(vapply(th$body, function(p) glue::glue("<p>{env$escape_text(p)}</p>"), character(1)), collapse = "")
+          attrs_html <- paste(vapply(th$attrs, function(a) {
+            glue::glue("<div class=\"nl-pill\">{env$escape_text(a$label)} <span class=\"score{a$cls}\">{env$escape_text(a$score)}</span></div>")
+          }, character(1)), collapse = "")
+          quotes_html <- paste(vapply(th$quotes, function(q) {
+            tags <- paste(vapply(q$tags, function(tg) glue::glue("<span class=\"nl-tag\">{env$escape_text(tg)}</span>"), character(1)), collapse = "")
             glue::glue(
-              "<div class=\"theme-card\">
-                 <div class=\"card-header\">
-                   <div class=\"card-eyebrow\">Theme Summary</div>
-                   <h3 class=\"card-title\">{env$escape_text(concept_title)}</h3>
-                 </div>
-                 <div class=\"card-body\">{env$escape_text(explainer)}</div>
-                 <div class=\"quote-watermark\"><div class=\"quote-text\">{env$escape_text(quote_text)}</div></div>
-                 <div class=\"card-footer\">
-                   <div class=\"split-pill\">
-                     <div class=\"pill-left\">{if (is.finite(metric_pct)) glue::glue('{ordinal_html(metric_pct)} PCTL') else 'n/a'}</div>
-                     <div class=\"pill-right\">{if (is.finite(metric_val)) glue::glue('Score {sprintf(\"%.1f\", metric_val)}') else if (nzchar(metric_status)) env$escape_text(metric_status) else 'Score n/a'}</div>
-                   </div>
-                 </div>
+              "<div class=\"nl-quote-block\">
+                 <div class=\"nl-quote-text\">{env$escape_text(q$text)}</div>
+                 <div class=\"nl-tags\">{tags}</div>
                </div>"
             )
-          }
-
-          cards_html <- if (nrow(q) > 0L) {
-            keep_n <- min(3L, nrow(q))
-            paste(vapply(seq_len(keep_n), make_concept, character(1)), collapse = "")
-          } else {
-            glue::glue(
-              "<div class=\"theme-card\">
-                 <div class=\"card-header\"><div class=\"card-eyebrow\">Theme Summary</div><h3 class=\"card-title\">{env$escape_text(as.character(theme_row$theme_title[[1]]))}</h3></div>
-                 <div class=\"card-body\">{env$escape_text(as.character(theme_row$context_text[[1]]))}</div>
-                 <div class=\"quote-watermark\"><div class=\"quote-text\">No quotes available for this evidence page.</div></div>
-                 <div class=\"card-footer\">
-                   <div class=\"split-pill\">
-                     <div class=\"pill-left\">{if (is.finite(metric_pct)) glue::glue('{ordinal_html(metric_pct)} PCTL') else 'n/a'}</div>
-                     <div class=\"pill-right\">{if (is.finite(metric_val)) glue::glue('Score {sprintf(\"%.1f\", metric_val)}') else if (nzchar(metric_status)) env$escape_text(metric_status) else 'Score n/a'}</div>
-                   </div>
-                 </div>
-               </div>"
-            )
-          }
+          }, character(1)), collapse = "")
 
           glue::glue(
-            "<div class=\"theme-shell\">
-               <div class=\"theme-section\">
-                 <header class=\"theme-page-header\">
-                   <div class=\"theme-page-eyebrow\">Theme {page_index}</div>
-                   <h1 class=\"theme-page-title\">{env$escape_text(as.character(theme_row$theme_title[[1]]))}</h1>
-                   <div class=\"theme-divider\"></div>
-                   <p class=\"theme-description\">{env$escape_text(as.character(theme_row$context_text[[1]]))}</p>
-                 </header>
-                 <div class=\"card-grid\">{cards_html}</div>
-                 {if (isTRUE(p_row$is_continuation[[1]])) '<div class=\"oe-page-note\">Continuation page</div>' else ''}
+            "<div class=\"nl-main-card\">
+               <header>
+                 <div class=\"nl-eyebrow\">Theme {page_index}</div>
+                 <h1 class=\"nl-title\">{env$escape_text(th$title)}</h1>
+                 <div class=\"nl-divider\"></div>
+               </header>
+
+               <div class=\"nl-hero\">
+                 <div class=\"nl-hero-quote\">\"{env$escape_text(th$hero_quote)}\"</div>
+                 <div class=\"nl-hero-attribution\">&mdash; {env$escape_text(th$hero_attr)}</div>
+               </div>
+
+               <div class=\"nl-body\">{body_html}</div>
+
+               <div class=\"nl-attrs\">
+                 <span class=\"nl-attrs-label\">{env$escape_text(th$attrs_label)}:</span>
+                 {attrs_html}
+               </div>
+
+               <div class=\"nl-grid\">
+                 <div class=\"nl-box\">
+                   <div class=\"nl-box-title\">{env$escape_text(th$insight1_title)}</div>
+                   <div class=\"nl-box-text\">{env$escape_text(th$insight1_text)}</div>
+                 </div>
+                 <div class=\"nl-box driver\">
+                   <div class=\"nl-box-title\">{env$escape_text(th$insight2_title)}</div>
+                   <div class=\"nl-box-text\">{env$escape_text(th$insight2_text)}</div>
+                 </div>
+               </div>
+
+               <div class=\"nl-quotes\">
+                 <div class=\"nl-quotes-header\">What We\u2019re Hearing</div>
+                 {quotes_html}
                </div>
              </div>"
           )
@@ -2531,6 +2623,7 @@ ohepRDisplayr <- function() {
 
     tables <- normalize_tables(heatmap_data$tables)
     compare_sets <- list(Department = tables)
+    compare_sets_outcomes <- compare_sets
     if ("compare_sets" %in% names(heatmap_data) && is.list(heatmap_data$compare_sets) && length(heatmap_data$compare_sets) > 0L) {
       compare_sets <- lapply(heatmap_data$compare_sets, function(set_tables) {
         if (!is.list(set_tables) || length(set_tables) < 1L) return(NULL)
@@ -2539,6 +2632,14 @@ ohepRDisplayr <- function() {
       compare_sets <- compare_sets[!vapply(compare_sets, is.null, logical(1))]
       if (length(compare_sets) < 1L) compare_sets <- list(Department = tables)
     }
+    if ("compare_sets_outcomes" %in% names(heatmap_data) && is.list(heatmap_data$compare_sets_outcomes) && length(heatmap_data$compare_sets_outcomes) > 0L) {
+      compare_sets_outcomes <- lapply(heatmap_data$compare_sets_outcomes, function(set_tables) {
+        if (!is.list(set_tables) || length(set_tables) < 1L) return(NULL)
+        normalize_tables(set_tables)
+      })
+      compare_sets_outcomes <- compare_sets_outcomes[!vapply(compare_sets_outcomes, is.null, logical(1))]
+      if (length(compare_sets_outcomes) < 1L) compare_sets_outcomes <- compare_sets
+    }
 
     list(
       title = title,
@@ -2546,7 +2647,8 @@ ohepRDisplayr <- function() {
       legend_low = legend_low,
       legend_high = legend_high,
       tables = tables,
-      compare_sets = compare_sets
+      compare_sets = compare_sets,
+      compare_sets_outcomes = compare_sets_outcomes
     )
   }
 
@@ -2579,11 +2681,11 @@ ohepRDisplayr <- function() {
   --hm-pill-na-bg: {c$heatmap_pill_na_bg};
   --hm-pill-na-text: {c$heatmap_pill_na_text};
   --hm-pill-na-border: {c$heatmap_pill_na_border};
-  --hm-pill-pos-strong: #16A34A;
-  --hm-pill-pos-soft: #DCFCE7;
+  --hm-pill-pos-strong: #6FCF97;
+  --hm-pill-pos-soft: #E4F7EC;
   --hm-pill-neutral: {c$heatmap_pill_neutral};
-  --hm-pill-neg-soft: {c$heatmap_pill_neg_soft};
-  --hm-pill-neg-strong: {c$heatmap_pill_neg_strong};
+  --hm-pill-neg-soft: #F9E3E7;
+  --hm-pill-neg-strong: #F2B8C2;
   width: 100%;
   background: transparent;
   padding: 0;
@@ -2598,9 +2700,35 @@ ohepRDisplayr <- function() {
 {scope} .hm-controls {{
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+}}
+{scope} .hm-view-toggle {{
+  display: inline-flex;
+  background: #F1F5F9;
+  border: 1px solid var(--hm-header-border);
+  border-radius: 8px;
+  padding: 4px;
+}}
+{scope} .hm-toggle-btn {{
+  border: none;
+  background: transparent;
+  color: var(--hm-header-text);
+  opacity: 0.72;
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+}}
+{scope} .hm-toggle-btn.active {{
+  background: #FFFFFF;
+  color: var(--hm-title);
+  opacity: 1;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.06);
 }}
 {scope} .hm-legend {{
   display: inline-flex;
@@ -2611,6 +2739,7 @@ ohepRDisplayr <- function() {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--hm-legend-text);
+  margin-left: auto;
 }}
 {scope} .hm-spectrum {{
   width: 120px;
@@ -2676,18 +2805,7 @@ ohepRDisplayr <- function() {
 {scope} .hm-table td {{ padding: 10px 8px; border-bottom: 1px solid var(--hm-row-border); text-align: center; vertical-align: middle; }}
 {scope} .hm-table tr:last-child td {{ border-bottom: none; }}
 {scope} .hm-table td:first-child {{ text-align: left; font-size: 12px; font-weight: 700; color: var(--hm-row-label); background: #FFFFFF; }}
-{scope} .hm-table .hm-section-row td {{
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--hm-title);
-  text-align: left;
-  background: #FFFFFF;
-  padding: 18px 12px 8px;
-  border-bottom: none;
-}}
-{scope} .hm-pill {{ display: inline-flex; align-items: center; justify-content: center; min-width: 52px; height: 30px; padding: 0 8px; border-radius: 6px; color: var(--hm-pill-text); font-size: 12px; font-weight: 800; }}
+{scope} .hm-pill {{ display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; border-radius: 6px; color: var(--hm-pill-text); font-size: 12px; font-weight: 800; line-height: 1; }}
 {scope} .hm-pill-pos-strong {{ background: var(--hm-pill-pos-strong); }}
 {scope} .hm-pill-pos-soft {{ background: var(--hm-pill-pos-soft); }}
 {scope} .hm-pill-neutral {{ background: var(--hm-pill-neutral); }}
@@ -2713,11 +2831,11 @@ ohepRDisplayr <- function() {
     )
     dat <- env$normalize_heatmap_data(heatmap_data)
 
-    classify_cell <- function(value, col_mean, max_abs_delta) {
+    classify_cell <- function(value, row_mean, row_max_abs_delta) {
       if (!is.finite(value)) return("hm-pill-na")
-      if (!is.finite(col_mean) || !is.finite(max_abs_delta) || max_abs_delta <= 0) return("hm-pill-neutral")
-      delta <- value - col_mean
-      intensity <- abs(delta) / max_abs_delta
+      if (!is.finite(row_mean) || !is.finite(row_max_abs_delta) || row_max_abs_delta <= 0) return("hm-pill-neutral")
+      delta <- value - row_mean
+      intensity <- abs(delta) / row_max_abs_delta
       if (!is.finite(intensity) || intensity < 0.16) return("hm-pill-neutral")
       if (delta > 0) {
         return(if (intensity >= 0.55) "hm-pill-pos-strong" else "hm-pill-pos-soft")
@@ -2734,40 +2852,32 @@ ohepRDisplayr <- function() {
         glue::glue("<th>{env$escape_text(h)}</th>")
       }, character(1)), sep = "")
 
-      stats_by_table <- lapply(tables, function(table_obj) {
-        df <- table_obj$data
-        groups <- names(df)[-1]
-        vals <- as.matrix(df[, groups, drop = FALSE])
-        col_means <- suppressWarnings(colMeans(vals, na.rm = TRUE))
-        col_means[!is.finite(col_means)] <- NA_real_
-        centered <- suppressWarnings(sweep(vals, 2, col_means, FUN = "-"))
-        max_abs_delta <- suppressWarnings(max(abs(centered), na.rm = TRUE))
-        if (!is.finite(max_abs_delta)) max_abs_delta <- 0
-        list(groups = groups, col_means = col_means, max_abs_delta = max_abs_delta)
-      })
-
       section_rows <- vapply(seq_along(tables), function(idx) {
         table_obj <- tables[[idx]]
         df <- table_obj$data
-        stats <- stats_by_table[[idx]]
+        groups <- names(df)[-1]
 
         row_html <- vapply(seq_len(nrow(df)), function(i) {
           category <- env$escape_text(df$Category[[i]])
+          row_values <- vapply(all_groups, function(group_name) {
+            if (!(group_name %in% groups)) return(NA_real_)
+            suppressWarnings(as.numeric(df[[group_name]][[i]]))
+          }, numeric(1))
+          row_mean <- suppressWarnings(mean(row_values, na.rm = TRUE))
+          if (!is.finite(row_mean)) row_mean <- NA_real_
+          row_centered <- row_values - row_mean
+          row_max_abs_delta <- suppressWarnings(max(abs(row_centered), na.rm = TRUE))
+          if (!is.finite(row_max_abs_delta)) row_max_abs_delta <- 0
           cell_html <- vapply(all_groups, function(group_name) {
-            group_idx <- match(group_name, stats$groups)
-            value <- if (is.finite(group_idx)) suppressWarnings(as.numeric(df[[group_name]][[i]])) else NA_real_
-            col_mean <- if (is.finite(group_idx)) stats$col_means[[group_idx]] else NA_real_
-            cls <- classify_cell(value, col_mean, stats$max_abs_delta)
+            value <- if (group_name %in% groups) suppressWarnings(as.numeric(df[[group_name]][[i]])) else NA_real_
+            cls <- classify_cell(value, row_mean, row_max_abs_delta)
             txt <- if (is.finite(value)) sprintf("%.2f", value) else "NA"
             glue::glue("<td><span class=\"hm-pill {cls}\">{txt}</span></td>")
           }, character(1))
           glue::glue("<tr><td>{category}</td>{glue::glue_collapse(cell_html, sep = '')}</tr>")
         }, character(1))
 
-        glue::glue(
-          "<tr class=\"hm-section-row\"><td colspan=\"{length(all_groups) + 1L}\">{env$escape_text(table_obj$title)}</td></tr>
-           {glue::glue_collapse(row_html, sep = '')}"
-        )
+        glue::glue("{glue::glue_collapse(row_html, sep = '')}")
       }, character(1))
 
       glue::glue(
@@ -2785,8 +2895,15 @@ ohepRDisplayr <- function() {
       glue::glue("<option value=\"{env$escape_text(key)}\">{env$escape_text(key)}</option>")
     }, character(1)), collapse = "")
     compare_default <- if ("Company" %in% compare_keys) "Company" else compare_keys[[1]]
-    compare_table_map <- setNames(lapply(dat$compare_sets, build_table_html), compare_keys)
-    compare_table_json <- jsonlite::toJSON(compare_table_map, auto_unbox = TRUE)
+    compare_table_map_drivers <- setNames(lapply(dat$compare_sets, build_table_html), compare_keys)
+    outcome_sets <- dat$compare_sets_outcomes[names(dat$compare_sets_outcomes) %in% compare_keys]
+    compare_table_map_outcomes <- setNames(lapply(outcome_sets, build_table_html), names(outcome_sets))
+    if (length(compare_table_map_outcomes) < 1L) compare_table_map_outcomes <- compare_table_map_drivers
+    compare_view_map <- list(
+      drivers = compare_table_map_drivers,
+      outcomes = compare_table_map_outcomes
+    )
+    compare_table_json <- jsonlite::toJSON(compare_view_map, auto_unbox = TRUE)
 
     header_html <- if (nzchar(trimws(dat$title)) || nzchar(trimws(dat$subtitle))) {
       glue::glue(
@@ -2810,6 +2927,10 @@ ohepRDisplayr <- function() {
 
     controls_html <- glue::glue(
       "<div class=\"hm-controls\">
+        <div class=\"hm-view-toggle\" role=\"tablist\" aria-label=\"Heatmap View Toggle\">
+          <button type=\"button\" class=\"hm-toggle-btn active\" data-view=\"drivers\">Drivers</button>
+          <button type=\"button\" class=\"hm-toggle-btn\" data-view=\"outcomes\">Outcomes</button>
+        </div>
         <div class=\"hm-legend\">
           <span>{env$escape_text(dat$legend_low)}</span>
           <div class=\"hm-spectrum\"></div>
@@ -2829,16 +2950,26 @@ ohepRDisplayr <- function() {
             var root = document.getElementById('{env$escape_text(id)}');
             if (!root) return;
             var sel = root.querySelector('.hm-compare-select') || document.getElementById('{env$escape_text(id)}-compare');
+            var toggleBtns = root.querySelectorAll('.hm-toggle-btn');
             var host = document.getElementById('{env$escape_text(id)}-table-host');
             var tableMap = {compare_table_json};
+            var currentView = 'drivers';
             function renderTable(key) {{
               if (!host) return;
-              host.innerHTML = tableMap[key] || tableMap['{env$escape_text(compare_default)}'] || '';
+              var viewMap = tableMap[currentView] || tableMap['drivers'] || {{}};
+              host.innerHTML = viewMap[key] || viewMap['{env$escape_text(compare_default)}'] || '';
             }}
             if (sel) {{
               sel.value = '{env$escape_text(compare_default)}';
               sel.addEventListener('change', function() {{ renderTable(sel.value); }});
             }}
+            toggleBtns.forEach(function(btn) {{
+              btn.addEventListener('click', function() {{
+                currentView = btn.getAttribute('data-view') || 'drivers';
+                toggleBtns.forEach(function(other) {{ other.classList.toggle('active', other === btn); }});
+                renderTable(sel ? sel.value : '{env$escape_text(compare_default)}');
+              }});
+            }});
             renderTable('{env$escape_text(compare_default)}');
           }})();
         </script>
@@ -3254,11 +3385,26 @@ ohepRDisplayr <- function() {
 {scope} .model-delta-neg {{ color: var(--model-delta-neg); }}
 {scope} .model-delta-neu {{ color: var(--model-delta-neu); }}
 {scope} .model-legend {{ display: grid; grid-template-columns: 35fr 30fr 25fr 10fr; gap: 4px; margin-left: 25%; width: 55%; margin-top: 12px; }}
-{scope} .model-legend-card {{ border-radius: 6px; padding: 10px 4px; text-align: center; color: var(--model-legend-text-on); text-transform: uppercase; letter-spacing: .5px; line-height: 1.2; font-size: 10px; font-weight: 800; }}
-{scope} .model-legend-ni {{ background: var(--model-zone-ni); }}
-{scope} .model-legend-is {{ background: var(--model-zone-is); }}
-{scope} .model-legend-as {{ background: var(--model-zone-as); }}
-{scope} .model-legend-il {{ background: var(--model-zone-il); }}
+{scope} .model-legend-card {{
+  border-radius: 6px;
+  min-height: 38px;
+  padding: 8px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--model-legend-text-on);
+  text-transform: uppercase;
+  letter-spacing: .45px;
+  line-height: 1.15;
+  font-size: 11px;
+  font-weight: 900;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.18);
+}}
+{scope} .model-legend-ni {{ background: var(--model-zone-ni); color: #1F2937; text-shadow: none; }}
+{scope} .model-legend-is {{ background: var(--model-zone-is); color: #1F2937; }}
+{scope} .model-legend-as {{ background: var(--model-zone-as); color: #FFFFFF; }}
+{scope} .model-legend-il {{ background: var(--model-zone-il); color: #FFFFFF; }}
 "
     )
   }

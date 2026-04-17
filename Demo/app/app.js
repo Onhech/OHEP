@@ -38,6 +38,15 @@
     "Three Key Takeaways": "Key Takeaways",
     Comments: "Comment Explorer"
   };
+  const sectionIconMap = {
+    system_orientation: "nav-icon-start",
+    ohep_summary: "nav-icon-summary",
+    drivers: "nav-icon-driver",
+    outcomes: "nav-icon-outcome",
+    insights: "nav-icon-theme",
+    action_plan: "nav-icon-action",
+    comments: "nav-icon-comment"
+  };
 
   const defaults = {
     slideId: slideOrder[0]
@@ -126,6 +135,26 @@
     }
   });
 
+  frameEl.addEventListener("load", function () {
+    try {
+      const frameDoc = frameEl.contentDocument;
+      if (!frameDoc) return;
+      frameDoc.addEventListener("click", function () {
+        if (!filterPopover.hidden) {
+          filterPopover.hidden = true;
+          filterToggle.classList.remove("active");
+          filterToggle.setAttribute("aria-expanded", "false");
+        }
+        if (!exportMenu.hidden) {
+          exportMenu.hidden = true;
+          exportToggle.setAttribute("aria-expanded", "false");
+        }
+      });
+    } catch (err) {
+      // Ignore cross-document access issues; srcdoc is expected to be same-origin.
+    }
+  });
+
   document.addEventListener("keydown", function (event) {
     const tag = document.activeElement && document.activeElement.tagName;
     if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
@@ -188,12 +217,20 @@
 
     (data.sections || []).forEach((section) => {
       const sectionSlides = (section.slide_ids || []).map((id) => slidesById[id]).filter(Boolean);
+      const isOpen = section.section_id === activeSectionId || section.section_id === "system_orientation";
+      const iconId = sectionIconMap[section.section_id] || "nav-icon-summary";
+      if (section.section_id === "action_plan") {
+        const sidebarDivider = document.createElement("div");
+        sidebarDivider.className = "sidebar-divider";
+        sidebarEl.appendChild(sidebarDivider);
+      }
       if (sectionSlides.length === 1 && (sectionSlides[0].slide_label || "").toLowerCase() === (section.section_label || "").toLowerCase()) {
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.className = "nav-section-link";
+        btn.className = "nav-item nav-section-link";
         if (sectionSlides[0].slide_id === state.slideId) btn.classList.add("active");
-        btn.textContent = displaySectionLabel(section.section_label);
+        if (isOpen) btn.classList.add("open");
+        btn.appendChild(buildNavLabel(iconId, displaySectionLabel(section.section_label)));
         btn.addEventListener("click", function () {
           state.slideId = sectionSlides[0].slide_id;
           renderSidebar();
@@ -205,14 +242,62 @@
       }
 
       const details = document.createElement("details");
-      if (section.section_id === activeSectionId || section.section_id === "system_orientation") details.open = true;
+      if (isOpen) details.open = true;
+      details.className = "nav-group-wrap";
 
       const summary = document.createElement("summary");
-      summary.textContent = displaySectionLabel(section.section_label);
+      summary.className = "nav-item";
+      if (isOpen) summary.classList.add("open");
+      summary.appendChild(buildNavLabel(iconId, displaySectionLabel(section.section_label)));
+      summary.appendChild(buildIconUse("nav-icon-caret", "caret"));
       details.appendChild(summary);
 
       const group = document.createElement("div");
       group.className = "nav-group";
+
+      if (section.section_id === "insights") {
+        const byId = Object.fromEntries(sectionSlides.map((s) => [s.slide_id, s]));
+        const overview = byId.open_ended_overall_summary || sectionSlides[0];
+        const themeSlides = sectionSlides.filter(function (s) {
+          return /^theme_evidence_\d{2}$/.test(String(s.slide_id || ""));
+        });
+
+        function appendSubItem(slide, numberText) {
+          if (!slide) return;
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "nav-item level-" + String(slide.nav_level || 0);
+          if (slide.slide_id === state.slideId) btn.classList.add("active");
+          if (numberText) {
+            const num = document.createElement("span");
+            num.className = "nav-num";
+            num.textContent = numberText;
+            btn.appendChild(num);
+          }
+          const txt = document.createElement("span");
+          txt.textContent = displaySlideLabel(slide.slide_label);
+          btn.appendChild(txt);
+          btn.addEventListener("click", function () {
+            state.slideId = slide.slide_id;
+            renderSidebar();
+            renderShell();
+            persistState();
+          });
+          group.appendChild(btn);
+        }
+
+        appendSubItem(overview, "");
+
+        if (themeSlides.length > 0) {
+          themeSlides.forEach(function (slide, idx) {
+            appendSubItem(slide, String(idx + 1) + ".");
+          });
+        }
+
+        details.appendChild(group);
+        sidebarEl.appendChild(details);
+        return;
+      }
 
       let currentGroup = "";
       sectionSlides.forEach((slide) => {
@@ -253,6 +338,30 @@
       node.selected = option === selected;
       el.appendChild(node);
     });
+  }
+
+  function buildNavLabel(iconId, labelText) {
+    const wrap = document.createElement("span");
+    wrap.className = "nav-item-left";
+    wrap.appendChild(buildIconUse(iconId, "nav-icon"));
+    const label = document.createElement("span");
+    label.textContent = labelText;
+    wrap.appendChild(label);
+    return wrap;
+  }
+
+  function buildIconUse(iconId, className) {
+    const svgNs = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNs, "svg");
+    svg.setAttribute("class", className);
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    const use = document.createElementNS(svgNs, "use");
+    use.setAttribute("href", "#" + iconId);
+    use.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#" + iconId);
+    svg.appendChild(use);
+    return svg;
   }
 
   function loadState() {

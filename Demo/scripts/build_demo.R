@@ -220,6 +220,7 @@ employee_type_levels <- c(
   "Manager / Supervisor"
 )
 tenure_band_levels <- c("<1 year", "1-2 years", "3-5 years", "6-10 years", "10+ years")
+generation_levels <- c("Gen Z", "Millennial", "Gen X", "Boomer")
 work_arrangement_levels <- c("On-site", "Camp / Rotational", "Hybrid", "Remote")
 
 map_by_levels <- function(values, levels) {
@@ -236,18 +237,25 @@ raw$location_filter <- map_by_levels(raw$location_anon, location_levels)
 is_manager <- grepl("manager|supervisor|lead|foreman|executive", tolower(raw$position_raw))
 is_field_like <- grepl("operations|maintenance|reliability|construction|drilling|completions|hse|supply|logistics", tolower(raw$department_anon))
 rand_u <- runif(nrow(raw))
-raw$employee_type <- ifelse(
-  is_manager, "Manager / Supervisor",
+base_employee <- ifelse(
+  is_field_like & rand_u < 0.50, "Field / Site",
   ifelse(
-    is_field_like & rand_u < 0.45, "Field / Site",
-    ifelse(
-      is_field_like & rand_u < 0.75, "Craft / Trades",
-      ifelse(rand_u < 0.88, "Corporate / Office", "Federal Contract Staff")
-    )
+    is_field_like & rand_u < 0.80, "Craft / Trades",
+    ifelse(rand_u < 0.92, "Corporate / Office", "Federal Contract Staff")
   )
 )
+raw$employee_type <- ifelse(is_manager & runif(nrow(raw)) < 0.62, "Manager / Supervisor", base_employee)
 
 raw$tenure_band <- map_by_levels(raw$tenure_anon, tenure_band_levels)
+raw$generation <- ifelse(
+  raw$tenure_band %in% c("<1 year", "1-2 years"), "Gen Z",
+  ifelse(
+    raw$tenure_band %in% c("3-5 years"), "Millennial",
+    ifelse(raw$tenure_band %in% c("6-10 years"), "Gen X", "Boomer")
+  )
+)
+mix_idx <- runif(nrow(raw)) < 0.15
+raw$generation[mix_idx] <- sample(generation_levels, sum(mix_idx), replace = TRUE)
 
 raw$work_arrangement <- ifelse(
   raw$employee_type %in% c("Field / Site", "Craft / Trades"),
@@ -347,6 +355,7 @@ user_data <- data.frame(
   demo_employee_type = raw$employee_type,
   demo_position = raw$position_anon,
   demo_tenure = raw$tenure_band,
+  demo_generation = raw$generation,
   demo_work_arrangement = raw$work_arrangement,
   eNPS = enps_values,
   stringsAsFactors = FALSE
@@ -465,13 +474,19 @@ slugify <- function(x) {
 }
 
 rows_report <- user_data[user_data$year == report_year, , drop = FALSE]
-dim_company <- c("All", company_levels)
-dim_department <- c("All", department_levels)
-dim_identity <- c("All", identity_levels)
-dim_location <- c("All", location_levels)
-dim_employee_type <- c("All", employee_type_levels)
-dim_tenure <- c("All", tenure_band_levels)
-dim_work_arrangement <- c("All", work_arrangement_levels)
+observed_levels <- function(col, levels) {
+  present <- sort(unique(as.character(rows_report[[col]])))
+  present <- present[nzchar(present)]
+  out <- levels[levels %in% present]
+  if (length(out) < 1L) levels else out
+}
+dim_company <- c("All", observed_levels("demo_company", company_levels))
+dim_department <- c("All", observed_levels("demo_department", department_levels))
+dim_identity <- c("All", observed_levels("demo_identity", identity_levels))
+dim_location <- c("All", observed_levels("demo_location", location_levels))
+dim_employee_type <- c("All", observed_levels("demo_employee_type", employee_type_levels))
+dim_tenure <- c("All", observed_levels("demo_tenure", tenure_band_levels))
+dim_work_arrangement <- c("All", observed_levels("demo_work_arrangement", work_arrangement_levels))
 
 filter_ids <- c("company", "department", "identity", "location", "employee_type", "tenure", "work_arrangement")
 dim_options <- list(
@@ -907,21 +922,105 @@ utils::write.csv(demographics_panels, file.path(data_dir, "demographics_panels.c
 utils::write.csv(heatmap_values, file.path(data_dir, "heatmap_values.csv"), row.names = FALSE)
 
 build_demographics_page <- function(fid) {
-  x <- demographics_panels[demographics_panels$filter_id == fid, , drop = FALSE]
-  if (nrow(x) < 1L) return(no_data_slide())
-  mk <- function(slot, ttl) {
-    p <- x[x$panel_slot == slot, , drop = FALSE]
-    if (nrow(p) < 1L) return(NULL)
-    demo_categorical_bar(data = data.frame(category = p$category, value = p$pct, stringsAsFactors = FALSE), title = ttl, subtitle = "", sort_desc = TRUE)
+  rows_sub <- apply_filter(user_data, filter_grid[filter_grid$filter_id == fid, , drop = FALSE])
+  rows_curr <- rows_sub[rows_sub$year == report_year, , drop = FALSE]
+  if (nrow(rows_curr) < 1L) return(no_data_slide())
+
+  dims <- list(
+    list(id = "department", label = "Department", col = "demo_department", levels = setdiff(dim_department, "All")),
+    list(id = "location", label = "Location", col = "demo_location", levels = setdiff(dim_location, "All")),
+    list(id = "full_time_status", label = "Full-Time Status", col = "demo_employee_type", levels = setdiff(employee_type_levels, "")),
+    list(id = "tenure", label = "Tenure", col = "demo_tenure", levels = setdiff(dim_tenure, "All")),
+    list(id = "generation", label = "Generation", col = "demo_generation", levels = generation_levels)
+  )
+
+  dim_data <- list()
+  for (d in dims) {
+    vals <- as.character(rows_curr[[d$col]])
+    vals <- vals[nzchar(vals)]
+    tab <- sort(table(vals), decreasing = TRUE)
+    if (length(d$levels) > 0L) {
+      lv <- d$levels[d$levels %in% names(tab)]
+      other <- setdiff(names(tab), lv)
+      ord <- c(lv, other)
+      ord <- ord[ord %in% names(tab)]
+      tab <- tab[ord]
+    }
+    tab <- utils::head(tab, 6L)
+    total <- sum(tab)
+    entries <- lapply(seq_along(tab), function(i) {
+      n <- as.integer(tab[[i]])
+      pct <- if (is.finite(total) && total > 0) round(100 * n / total) else 0
+      list(label = as.character(names(tab)[[i]]), n = n, pct = pct)
+    })
+    dim_data[[d$id]] <- entries
   }
-  widget_shell_doc(demographics_page(
-    tl = mk("tl", "Department"),
-    tr = mk("tr", "Location Cluster"),
-    bl = mk("bl", "Full-Time Status"),
-    br = mk("br", "Tenure"),
-    title = "",
-    subtitle = ""
-  ), title = "Demographics", eyebrow = "OHEP Summary", description = NULL)
+
+  options_html <- paste0(vapply(dims, function(d) {
+    paste0("<option value='", d$id, "'>", html_escape(d$label), "</option>")
+  }, character(1)), collapse = "")
+
+  cards <- list(
+    list(id = "demo-card-tl", default = "department"),
+    list(id = "demo-card-tr", default = "location"),
+    list(id = "demo-card-bl", default = "full_time_status"),
+    list(id = "demo-card-br", default = "tenure")
+  )
+
+  card_html <- paste0(vapply(cards, function(card) {
+    select_id <- paste0(card$id, "-select")
+    chart_id <- paste0(card$id, "-chart")
+    paste0(
+      "<div class='widget-card'>",
+      "<div class='widget-header'><select id='", select_id, "' class='metric-select'>",
+      gsub(
+        paste0("value='", card$default, "'"),
+        paste0("value='", card$default, "' selected"),
+        options_html,
+        fixed = TRUE
+      ),
+      "</select></div>",
+      "<div id='", chart_id, "' class='chart-container'></div>",
+      "</div>"
+    )
+  }, character(1)), collapse = "")
+
+  data_json <- jsonlite::toJSON(dim_data, auto_unbox = TRUE)
+
+  slide_doc(
+    paste0(
+      "<div class='slide'><div id='demo-dynamic' class='main-card demographics-dynamic'>",
+      "<header class='card-header'><div class='eyebrow'>OHEP Summary</div><h1 class='title'>Demographics</h1><div class='divider'></div></header>",
+      "<div class='demo-grid'>", card_html, "</div>",
+      "</div></div>",
+      "<style>",
+      "#demo-dynamic{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:34px;box-shadow:0 10px 25px -5px rgba(15,23,42,.05);}",
+      "#demo-dynamic .card-header{margin-bottom:28px;}",
+      "#demo-dynamic .eyebrow{font-size:11px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}",
+      "#demo-dynamic .title{font-size:28px;font-weight:900;color:#0F172A;letter-spacing:-.5px;margin:0 0 14px 0;}",
+      "#demo-dynamic .divider{width:100%;height:2px;background:#0D9488;}",
+      "#demo-dynamic .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}",
+      "#demo-dynamic .widget-card{border:1px solid #E2E8F0;border-radius:8px;padding:22px;background:#FFFFFF;display:flex;flex-direction:column;gap:18px;box-shadow:0 2px 4px rgba(15,23,42,.02);}",
+      "#demo-dynamic .metric-select{appearance:none;background:#FFFFFF;border:1px solid #E2E8F0;padding:8px 36px 8px 12px;border-radius:6px;font-size:13px;font-weight:800;color:#0F172A;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;outline:none;box-shadow:0 1px 2px rgba(15,23,42,.02);background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748B'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 12px center;background-size:14px;}",
+      "#demo-dynamic .metric-select:hover{border-color:#CBD5E1;background:#F8FAFC;}",
+      "#demo-dynamic .chart-container{display:flex;flex-direction:column;gap:12px;}",
+      "#demo-dynamic .chart-row{display:flex;align-items:center;gap:14px;}",
+      "#demo-dynamic .row-label{width:150px;font-size:11px;font-weight:700;color:#334155;text-align:right;line-height:1.3;flex-shrink:0;}",
+      "#demo-dynamic .bar-track{flex:1;background:#F1F5F9;height:28px;border-radius:4px;display:flex;align-items:center;position:relative;overflow:hidden;}",
+      "#demo-dynamic .bar-fill{height:100%;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;font-size:11px;font-weight:800;color:#FFFFFF;border-radius:4px;min-width:30px;}",
+      "@media (max-width: 960px){#demo-dynamic .demo-grid{grid-template-columns:1fr;}}",
+      "</style>",
+      "<script>(function(){",
+      "var root=document.getElementById('demo-dynamic'); if(!root) return;",
+      "var palette=['#357960','#3B82F6','#4DB6AC','#F59E0B','#F97316','#64748B'];",
+      "var data=", data_json, ";",
+      "function esc(s){return String(s).replace(/[&<>\\\"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','\\\"':'&quot;',\"'\":'&#39;'})[c];});}",
+      "function renderChart(targetId, dimId){var el=document.getElementById(targetId); if(!el) return; var rows=(data[dimId]||[]); if(!rows.length){el.innerHTML=\"<div class='row-label' style='text-align:left;width:auto;color:#64748B;'>No data</div>\"; return;} var max=0; rows.forEach(function(r){if(r.n>max)max=r.n;}); if(max<1) max=1; var html=rows.map(function(r,i){var w=Math.max(12,Math.round((r.n/max)*100)); var c=palette[i%palette.length]; return \"<div class='chart-row'><div class='row-label'>\"+esc(r.label)+\"</div><div class='bar-track'><div class='bar-fill' style='width:\"+w+\"%;background-color:\"+c+\";'>\"+r.n+\"</div></div></div>\";}).join(''); el.innerHTML=html;}",
+      "['demo-card-tl','demo-card-tr','demo-card-bl','demo-card-br'].forEach(function(cid){var sel=document.getElementById(cid+'-select'); var chartId=cid+'-chart'; if(!sel) return; renderChart(chartId, sel.value); sel.addEventListener('change', function(){renderChart(chartId, sel.value);});});",
+      "})();</script>"
+    ),
+    "Demographics"
+  )
 }
 
 metric_history_pair <- function(df, fid, id_col, metric_id) {
@@ -946,31 +1045,37 @@ build_model_data <- function(fid) {
   f <- k[k$metric_group == "fundamental", , drop = FALSE]
   o <- k[k$metric_group == "outcome", , drop = FALSE]
   if (nrow(f) < 1L) return(NULL)
-  f_delta <- vapply(f$metric_id, function(mid) {
+  f_delta_raw <- vapply(f$metric_id, function(mid) {
     hist <- metric_history_pair(fundamental_history, fid, "fundamental_id", mid)
     cur <- suppressWarnings(as.numeric(first_or(hist$current$score, NA_real_)))
     prv <- suppressWarnings(as.numeric(first_or(hist$prior$score, NA_real_)))
     if (is.finite(cur) && is.finite(prv)) round(cur - prv, 2) else 0
   }, numeric(1))
-  o_prior_pct <- vapply(o$metric_id, function(mid) {
-    hist <- metric_history_pair(outcome_history, fid, "outcome_id", mid)
-    prv <- suppressWarnings(as.numeric(first_or(hist$prior$score, NA_real_)))
-    if (!is.finite(prv)) return(NA_real_)
-    if (tolower(mid) == "enps") pmax(1, pmin(99, 50 + prv / 2)) else pmax(1, pmin(99, round((prv / 5) * 100)))
-  }, numeric(1))
-  o_delta <- vapply(o$metric_id, function(mid) {
+  amplify_delta <- function(x, scale = 2.1, min_abs = 0.08, digits = 2L) {
+    if (!is.finite(x) || x == 0) return(0)
+    y <- x * scale
+    if (abs(y) < min_abs) y <- sign(y) * min_abs
+    round(y, digits)
+  }
+  f_delta <- vapply(f_delta_raw, amplify_delta, numeric(1), scale = 2.2, min_abs = 0.08, digits = 2L)
+
+  current_outcome_pct <- ifelse(o$metric_id == "eNPS", 50 + o$score / 2, round((o$score / 5) * 100))
+
+  o_delta_raw <- vapply(o$metric_id, function(mid) {
     hist <- metric_history_pair(outcome_history, fid, "outcome_id", mid)
     cur <- suppressWarnings(as.numeric(first_or(hist$current$score, NA_real_)))
     prv <- suppressWarnings(as.numeric(first_or(hist$prior$score, NA_real_)))
     if (is.finite(cur) && is.finite(prv)) round(cur - prv, 2) else 0
   }, numeric(1))
+  o_delta <- vapply(o_delta_raw, amplify_delta, numeric(1), scale = 2.0, min_abs = 0.10, digits = 2L)
+
   list(
     summary = data.frame(title = "Organizational Health Model", subtitle = "", fundamentals_label = "Fundamentals", outcomes_label = "Outcomes", raw_avg_label = "Score", delta_label = paste("vs", history_year_label(if (is.finite(prior_year)) prior_year else (report_year - 1L))), stringsAsFactors = FALSE),
     fundamentals = data.frame(label = f$metric_label, percentile = pmax(1, pmin(99, round((f$score / 5) * 100))), raw_avg = round(f$score, 2), delta = f_delta, shape = "circle", stringsAsFactors = FALSE),
     outcomes = data.frame(
       label = o$metric_label,
-      percentile = pmax(1, pmin(99, ifelse(o$metric_id == "eNPS", 50 + o$score / 2, round((o$score / 5) * 100)))),
-      prior_percentile = o_prior_pct,
+      percentile = pmax(1, pmin(99, current_outcome_pct)),
+      prior_percentile = NA_real_,
       raw_avg = round(o$score, 2),
       delta = o_delta,
       shape = "diamond",
@@ -1023,6 +1128,43 @@ build_matrix_points <- function(fid) {
   x$impact_work_satisfaction[!is.finite(x$impact_work_satisfaction)] <- 0.30
   x$impact_enps[!is.finite(x$impact_enps)] <- 0.30
 
+  # Inject deterministic filter-aware variation so each global filter value
+  # (including tenure) visibly repositions points while preserving quadrant intent.
+  base_key <- "company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all"
+  f_base <- kpi_scores[kpi_scores$filter_id == base_key & kpi_scores$metric_group == "fundamental", c("metric_id", "score"), drop = FALSE]
+  f_base_map <- setNames(as.numeric(f_base$score), f_base$metric_id)
+  outcome_now <- kpi_scores[kpi_scores$filter_id == fid & kpi_scores$metric_group == "outcome", c("metric_id", "score"), drop = FALSE]
+  outcome_base <- kpi_scores[kpi_scores$filter_id == base_key & kpi_scores$metric_group == "outcome", c("metric_id", "score"), drop = FALSE]
+  outcome_now_map <- setNames(as.numeric(outcome_now$score), outcome_now$metric_id)
+  outcome_base_map <- setNames(as.numeric(outcome_base$score), outcome_base$metric_id)
+
+  hash_jitter <- function(seed, scale = 0.06) {
+    h <- sum(utf8ToInt(seed))
+    ((h %% 101L) - 50L) / 50 * scale
+  }
+
+  score_adj <- vapply(seq_len(nrow(x)), function(i) {
+    mid <- as.character(x$metric_id[[i]])
+    cur <- suppressWarnings(as.numeric(x$score_kpi[[i]]))
+    base <- suppressWarnings(as.numeric(first_or(f_base_map[mid], NA_real_)))
+    rel <- if (is.finite(cur) && is.finite(base)) (cur - base) * 0.45 else 0
+    rel + hash_jitter(paste(fid, mid, "x", sep = "|"), scale = 0.035)
+  }, numeric(1))
+
+  outcome_shift <- function(metric_id, scale = 0.30) {
+    cur <- suppressWarnings(as.numeric(first_or(outcome_now_map[metric_id], NA_real_)))
+    base <- suppressWarnings(as.numeric(first_or(outcome_base_map[metric_id], NA_real_)))
+    if (is.finite(cur) && is.finite(base)) return((cur - base) * scale)
+    0
+  }
+
+  x$score <- pmax(-0.95, pmin(0.95, x$score + score_adj))
+  x$impact_overall <- pmax(0.08, pmin(0.95, x$impact_overall + outcome_shift("Engagement", 0.20) + outcome_shift("Work Satisfaction", 0.16) - outcome_shift("Burnout", 0.14) + hash_jitter(paste(fid, "overall", sep = "|"), 0.03)))
+  x$impact_engagement <- pmax(0.08, pmin(0.95, x$impact_engagement + outcome_shift("Engagement", 0.28) + hash_jitter(paste(fid, "engagement", sep = "|"), 0.03)))
+  x$impact_burnout <- pmax(0.08, pmin(0.95, x$impact_burnout - outcome_shift("Burnout", 0.28) + hash_jitter(paste(fid, "burnout", sep = "|"), 0.03)))
+  x$impact_work_satisfaction <- pmax(0.08, pmin(0.95, x$impact_work_satisfaction + outcome_shift("Work Satisfaction", 0.28) + hash_jitter(paste(fid, "work_satisfaction", sep = "|"), 0.03)))
+  x$impact_enps <- pmax(0.08, pmin(0.95, x$impact_enps + outcome_shift("eNPS", 0.012) + hash_jitter(paste(fid, "enps", sep = "|"), 0.03)))
+
   data.frame(
     fundamental = x$metric_id,
     label = x$metric_label,
@@ -1036,7 +1178,24 @@ build_matrix_points <- function(fid) {
   )
 }
 
-build_heatmap <- function() {
+build_heatmap <- function(fr) {
+  driver_rows <- c(
+    "Purpose",
+    "Strategy",
+    "Leadership",
+    "Communication",
+    "Learning & innovation",
+    "Respect, care, and trust",
+    "Performance development"
+  )
+  outcome_rows <- c(
+    "eNPS",
+    "Burnout",
+    "Engagement",
+    "Work Satisfaction",
+    "Turnover Intention"
+  )
+
   short_label <- function(x) {
     x <- trimws(as.character(x))
     x <- gsub("Health, Safety & Environment \\(HSE\\)", "HSE", x, fixed = FALSE)
@@ -1060,7 +1219,7 @@ build_heatmap <- function() {
   ]
   overall_key <- if (nrow(default_all_row) > 0L) as.character(default_all_row$filter_id[[1]]) else NA_character_
   overall_scores <- setNames(
-    sapply(fundamentals, function(fu) {
+    sapply(driver_rows, function(fu) {
       if (!is.character(overall_key) || !nzchar(overall_key)) return(NA_real_)
       v <- kpi_scores$score[
         kpi_scores$filter_id == overall_key &
@@ -1069,7 +1228,27 @@ build_heatmap <- function() {
       ]
       as.numeric(first_or(v, NA_real_))
     }),
-    fundamentals
+    driver_rows
+  )
+  outcome_metric_map <- list(
+    "eNPS" = c("eNPS", "ENPS", "NPS"),
+    "Burnout" = c("Burnout"),
+    "Engagement" = c("Engagement"),
+    "Work Satisfaction" = c("Work Satisfaction", "Work satisfaction", "Satisfaction"),
+    "Turnover Intention" = c("Turnover Intention", "Turnover", "Intent to Leave")
+  )
+  overall_outcome_scores <- setNames(
+    sapply(outcome_rows, function(lbl) {
+      if (!is.character(overall_key) || !nzchar(overall_key)) return(NA_real_)
+      mids <- outcome_metric_map[[lbl]]
+      v <- kpi_scores$score[
+        kpi_scores$filter_id == overall_key &
+          kpi_scores$metric_group == "outcome" &
+          kpi_scores$metric_id %in% mids
+      ]
+      as.numeric(first_or(v, NA_real_))
+    }),
+    outcome_rows
   )
 
   fake_score <- function(segment_id, seg_val, fundamental_id) {
@@ -1080,37 +1259,41 @@ build_heatmap <- function() {
     round(max(3.2, min(4.9, base + jitter)), 2)
   }
 
-  build_table_for <- function(segment_id, segment_values) {
+  build_table_for <- function(segment_id, segment_values, rows, metric_group = "fundamental") {
     vals <- setdiff(segment_values, "All")
-    tab <- data.frame(Category = fundamentals, stringsAsFactors = FALSE, check.names = FALSE)
+    tab <- data.frame(Category = rows, stringsAsFactors = FALSE, check.names = FALSE)
     if (length(vals) < 1L) return(tab)
 
     for (seg_val in vals) {
-      key_rows <- filter_grid[
-        filter_grid$company == "All" &
-          filter_grid$department == "All" &
-          filter_grid$identity == "All" &
-          filter_grid$location == "All" &
-          filter_grid$employee_type == "All" &
-          filter_grid$tenure == "All" &
-          filter_grid$work_arrangement == "All",
-        ,
-        drop = FALSE
-      ]
-      key_rows <- key_rows[key_rows[[segment_id]] == seg_val, , drop = FALSE]
+      key_rows <- filter_grid
+      for (fid in filter_ids) {
+        target <- if (identical(fid, segment_id)) seg_val else as.character(fr[[fid]])
+        key_rows <- key_rows[key_rows[[fid]] == target, , drop = FALSE]
+      }
       key <- if (nrow(key_rows) > 0L) as.character(key_rows$filter_id[[1]]) else NA_character_
 
-      metric_vals <- sapply(fundamentals, function(fu) {
+      metric_vals <- sapply(rows, function(fu) {
         if (is.character(key) && nzchar(key)) {
+          mids <- if (identical(metric_group, "outcome")) outcome_metric_map[[fu]] else fu
+          if (is.null(mids)) mids <- fu
           v <- kpi_scores$score[
             kpi_scores$filter_id == key &
-              kpi_scores$metric_group == "fundamental" &
-              kpi_scores$metric_id == fu
+              kpi_scores$metric_group == metric_group &
+              kpi_scores$metric_id %in% mids
           ]
           vv <- as.numeric(first_or(v, NA_real_))
           if (is.finite(vv)) return(round(vv, 2))
         }
-        fake_score(segment_id, seg_val, fu)
+        if (identical(metric_group, "fundamental")) {
+          fake_score(segment_id, paste(seg_val, as.character(fr$filter_id[[1]]), sep = "::"), fu)
+        } else {
+          base <- as.numeric(overall_outcome_scores[[fu]])
+          if (!is.finite(base)) base <- if (identical(fu, "eNPS")) 62 else 4.10
+          h <- sum(utf8ToInt(paste(segment_id, seg_val, fu, as.character(fr$filter_id[[1]]), "outcome", sep = "|")))
+          jitter <- ((h %% 41L) - 20L) / if (identical(fu, "eNPS")) 1 else 120
+          out <- if (identical(fu, "eNPS")) max(20, min(95, base + jitter)) else max(3.0, min(4.9, base + jitter))
+          round(out, 2)
+        }
       })
       col_name <- short_label(seg_val)
       while (col_name %in% names(tab)) {
@@ -1131,9 +1314,13 @@ build_heatmap <- function() {
     list(id = "work_arrangement", label = "Work Arrangement", values = dim_work_arrangement)
   )
   compare_sets <- lapply(dimension_defs, function(dd) {
-    list("Fundamental Scores" = build_table_for(dd$id, dd$values))
+    list("Drivers" = build_table_for(dd$id, dd$values, rows = driver_rows, metric_group = "fundamental"))
+  })
+  compare_sets_outcomes <- lapply(dimension_defs, function(dd) {
+    list("Outcomes" = build_table_for(dd$id, dd$values, rows = outcome_rows, metric_group = "outcome"))
   })
   names(compare_sets) <- vapply(dimension_defs, function(dd) dd$label, character(1))
+  names(compare_sets_outcomes) <- vapply(dimension_defs, function(dd) dd$label, character(1))
 
   list(
     title = "",
@@ -1141,7 +1328,140 @@ build_heatmap <- function() {
     legend_low = "Lower",
     legend_high = "Higher",
     tables = compare_sets[["Department"]],
-    compare_sets = compare_sets
+    compare_sets = compare_sets,
+    compare_sets_outcomes = compare_sets_outcomes
+  )
+}
+
+build_participation_profile_page <- function(rows_sub) {
+  rows_curr <- rows_sub[rows_sub$year == report_year, , drop = FALSE]
+  if (nrow(rows_curr) < 1L) return(no_data_slide("Insufficient data for participation profile."))
+
+  company_cols <- setdiff(dim_company, "All")
+  if (length(company_cols) < 1L) company_cols <- c("Company")
+
+  classify_pct <- function(p) {
+    if (!is.finite(p)) return("bg-mid")
+    if (p < 50) return("bg-low-strong")
+    if (p < 65) return("bg-low-light")
+    if (p < 75) return("bg-mid")
+    if (p < 85) return("bg-high-light")
+    "bg-high-strong"
+  }
+
+  hash_jitter <- function(seed, scale = 7) {
+    h <- sum(utf8ToInt(seed))
+    ((h %% 21L) - 10L) / 10 * scale
+  }
+
+  build_matrix <- function(row_col, row_levels) {
+    rows <- row_levels[row_levels %in% unique(as.character(rows_curr[[row_col]]))]
+    if (length(rows) < 1L) rows <- unique(as.character(rows_curr[[row_col]]))
+    rows <- rows[nzchar(rows)]
+    if (length(rows) < 1L) rows <- c("Unspecified")
+
+    counts <- lapply(rows, function(rv) {
+      sapply(company_cols, function(cv) {
+        sum(rows_curr[[row_col]] == rv & rows_curr$demo_company == cv, na.rm = TRUE)
+      })
+    })
+    counts <- do.call(rbind, counts)
+    rownames(counts) <- rows
+    colnames(counts) <- company_cols
+
+    pct <- matrix(NA_real_, nrow = nrow(counts), ncol = ncol(counts), dimnames = dimnames(counts))
+    for (i in seq_len(nrow(counts))) {
+      row_max <- max(counts[i, ], na.rm = TRUE)
+      for (j in seq_len(ncol(counts))) {
+        n <- counts[i, j]
+        if (is.finite(row_max) && row_max > 0) {
+          base <- 45 + 50 * (n / row_max)
+        } else {
+          base <- 60
+        }
+        pct[i, j] <- round(max(35, min(98, base + hash_jitter(paste(row_col, rownames(counts)[i], colnames(counts)[j], sep = "|"), scale = 5))))
+      }
+    }
+    pct
+  }
+
+  render_table <- function(table_id, row_label, pct_mat, active = FALSE) {
+    hdr <- paste0("<th>", html_escape(row_label), "</th>", paste0(vapply(colnames(pct_mat), function(x) paste0("<th>", html_escape(x), "</th>"), character(1)), collapse = ""))
+    body <- paste0(vapply(seq_len(nrow(pct_mat)), function(i) {
+      row_name <- rownames(pct_mat)[[i]]
+      cells <- paste0(vapply(seq_len(ncol(pct_mat)), function(j) {
+        p <- pct_mat[i, j]
+        cls <- classify_pct(p)
+        paste0("<td><span class='heat-pill ", cls, "'>", as.integer(p), "%</span></td>")
+      }, character(1)), collapse = "")
+      paste0("<tr><td>", html_escape(row_name), "</td>", cells, "</tr>")
+    }, character(1)), collapse = "")
+    paste0(
+      "<div class='table-wrapper participation-table", if (active) " active" else "", "' id='", table_id, "'>",
+      "<table class='heatmap-table'><thead><tr>", hdr, "</tr></thead><tbody>", body, "</tbody></table></div>"
+    )
+  }
+
+  dept_mat <- build_matrix("demo_department", setdiff(dim_department, "All"))
+  loc_mat <- build_matrix("demo_location", setdiff(dim_location, "All"))
+  ten_mat <- build_matrix("demo_tenure", setdiff(dim_tenure, "All"))
+
+  slide_doc(
+    paste0(
+      "<div class='slide'><div class='main-card participation-card'>",
+      "<header class='card-header'>",
+      "<div class='header-top-row'>",
+      "<div class='title-group'><div class='eyebrow'>Getting Started</div><h1 class='title'>Participation Profile</h1></div>",
+      "<div class='filter-container'>",
+      "<label class='filter-label' for='participation-rows'>Rows:</label>",
+      "<select id='participation-rows' class='segment-select'>",
+      "<option value='table-dept' selected>Department</option>",
+      "<option value='table-location'>Location</option>",
+      "<option value='table-tenure'>Tenure</option>",
+      "</select>",
+      "<label class='filter-label cols-label' for='participation-cols'>Columns:</label>",
+      "<select id='participation-cols' class='segment-select'><option selected>Company</option></select>",
+      "</div></div><div class='divider'></div></header>",
+      "<div class='legend-wrapper'>",
+      "<span class='legend-label'>Low Participation (&lt;60%)</span>",
+      "<div class='legend-gradient'></div>",
+      "<span class='legend-label'>High Participation (85%+)</span>",
+      "</div>",
+      render_table("table-dept", "Department", dept_mat, active = TRUE),
+      render_table("table-location", "Location", loc_mat, active = FALSE),
+      render_table("table-tenure", "Tenure", ten_mat, active = FALSE),
+      "</div></div>",
+      "<style>",
+      ".participation-card{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:34px;box-shadow:0 10px 25px -5px rgba(15,23,42,.05);}",
+      ".participation-card .header-top-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;gap:16px;}",
+      ".participation-card .title-group{display:flex;flex-direction:column;}",
+      ".participation-card .eyebrow{font-size:11px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}",
+      ".participation-card .title{font-size:28px;font-weight:900;color:#0F172A;letter-spacing:-.5px;margin:0;line-height:1;}",
+      ".participation-card .filter-container{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end;}",
+      ".participation-card .filter-label{font-size:12px;font-weight:800;color:#0F172A;text-transform:uppercase;letter-spacing:.5px;}",
+      ".participation-card .cols-label{margin-left:12px;}",
+      ".participation-card .segment-select{appearance:none;background-color:#FFFFFF;border:1px solid #E2E8F0;padding:8px 32px 8px 12px;border-radius:6px;font-size:13px;font-weight:700;color:#0F172A;cursor:pointer;outline:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748B'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;}",
+      ".participation-card .divider{width:100%;height:2px;background-color:#0D9488;margin-bottom:22px;}",
+      ".participation-card .legend-wrapper{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-bottom:16px;}",
+      ".participation-card .legend-label{font-size:10px;font-weight:800;color:#64748B;text-transform:uppercase;letter-spacing:.5px;}",
+      ".participation-card .legend-gradient{width:140px;height:6px;border-radius:99px;background:linear-gradient(90deg,#FCA5A5 0%, #F8FAFC 50%, #4ADE80 100%);}",
+      ".participation-card .table-wrapper{border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;overflow-x:auto;display:none;}",
+      ".participation-card .table-wrapper.active{display:block;}",
+      ".participation-card .heatmap-table{width:100%;border-collapse:collapse;min-width:900px;}",
+      ".participation-card .heatmap-table th,.participation-card .heatmap-table td{padding:16px 12px;text-align:center;border-bottom:1px solid #E2E8F0;}",
+      ".participation-card .heatmap-table tr:last-child td{border-bottom:none;}",
+      ".participation-card .heatmap-table th{font-size:10px;font-weight:800;color:#64748B;text-transform:uppercase;letter-spacing:.5px;vertical-align:bottom;white-space:normal;line-height:1.4;max-width:140px;}",
+      ".participation-card .heatmap-table th:first-child,.participation-card .heatmap-table td:first-child{text-align:left;min-width:220px;font-size:13px;font-weight:700;color:#0F172A;}",
+      ".participation-card .heat-pill{display:inline-flex;align-items:center;justify-content:center;width:52px;height:40px;border-radius:6px;font-size:13px;font-weight:800;color:#0F172A;}",
+      ".participation-card .bg-high-strong{background-color:#4ADE80;}",
+      ".participation-card .bg-high-light{background-color:#DCFCE7;}",
+      ".participation-card .bg-mid{background-color:#F1F5F9;}",
+      ".participation-card .bg-low-light{background-color:#FEE2E2;}",
+      ".participation-card .bg-low-strong{background-color:#FCA5A5;}",
+      "</style>",
+      "<script>(function(){var root=document.querySelector('.participation-card');if(!root) return;var sel=root.querySelector('#participation-rows');var tabs=root.querySelectorAll('.participation-table');function show(id){tabs.forEach(function(t){t.classList.toggle('active',t.id===id);});}if(sel){sel.addEventListener('change',function(){show(sel.value);});show(sel.value);} })();</script>"
+    ),
+    "Participation Profile"
   )
 }
 
@@ -1780,74 +2100,62 @@ quotes_df$sentiment <- "mixed"
 quotes_df$source_col <- "workbook_open_ended"
 quotes_df <- quotes_df[, c("quote_id", "theme_id", "section", "quote_text", "sentiment", "source_col"), drop = FALSE]
 
-oe_theme_pages_n <- theme_page_count(overall_oe, quotes_per_page = 4L)
+fixed_theme_titles <- c(
+  "Strategy Is Heard, But Not Operationalized",
+  "The Work Is Demanding - But the Conditions Around the Work Are the Deeper Strain",
+  "Burnout Risk Is Emerging Before Attrition Does"
+)
+oe_theme_pages_n <- length(fixed_theme_titles)
 theme_slide_ids <- paste0("theme_evidence_", sprintf("%02d", seq_len(oe_theme_pages_n)))
-short_theme_label <- function(x, max_chars = 30L) {
-  x <- trimws(as.character(x %||% "Theme"))
-  if (!nzchar(x)) x <- "Theme"
-  if (nchar(x, type = "chars") <= max_chars) return(x)
-  paste0(substr(x, 1L, max_chars - 3L), "...")
-}
-
-theme_titles_by_page <- character(0)
-for (i in seq_len(nrow(overall_oe$theme_evidence))) {
-  rr <- overall_oe$theme_evidence[i, , drop = FALSE]
-  q <- overall_oe$quotes[overall_oe$quotes$takeaway_id == rr$takeaway_id[[1]], , drop = FALSE]
-  if ("theme_title" %in% names(q)) {
-    qq <- q[q$theme_title == rr$theme_title[[1]], , drop = FALSE]
-    if (nrow(qq) > 0L) q <- qq
-  }
-  pages_i <- max(1L, ceiling(nrow(q) / 4L))
-  theme_titles_by_page <- c(theme_titles_by_page, rep(rr$theme_title[[1]], pages_i))
-}
-if (length(theme_titles_by_page) < oe_theme_pages_n) {
-  theme_titles_by_page <- c(theme_titles_by_page, rep("Theme", oe_theme_pages_n - length(theme_titles_by_page)))
-}
-theme_titles_by_page <- theme_titles_by_page[seq_len(oe_theme_pages_n)]
-theme_slide_labels <- vapply(theme_titles_by_page, short_theme_label, character(1))
+theme_slide_labels <- c("Strategy Gap", "Work Strain", "Burnout Risk")
 
 slides <- data.frame(
   slide_id = c(
-    "cover", "ohep_model_image", "methodology",
+    "cover", "ohep_model_image", "methodology", "participation_profile",
     "orientation_model", "demographics_overview", "priority_matrix", "segment_heatmap",
     paste0("fundamental_", slugify(fundamentals)),
     "outcomes_overview", "engagement_deep_dive", "burnout_deep_dive", "work_satisfaction_deep_dive", "enps",
-    "open_ended_overall_summary", "open_ended_three_takeaways",
+    "open_ended_overall_summary",
     theme_slide_ids,
+    "open_ended_action_plan",
     "comments_explorer"
   ),
   slide_label = c(
-    "Introduction", "About the OHEP", "Methodology",
+    "Introduction", "About the OHEP", "Methodology", "Participation Profile",
     "OHEP Results", "Demographics", "Priority Matrix", "Segment Heatmap",
     fundamentals,
     "Overall", "Engagement", "Burnout", "Work Satisfaction", "eNPS",
-    "Themes Overview", "Three Key Takeaways",
+    "Overview",
     theme_slide_labels,
+    "Action Plan",
     "Comments"
   ),
   section_id = c(
-    "system_orientation", "system_orientation", "system_orientation",
+    "system_orientation", "system_orientation", "system_orientation", "system_orientation",
     "ohep_summary", "ohep_summary", "ohep_summary", "ohep_summary",
     rep("drivers", length(fundamentals)),
     "outcomes", "outcomes", "outcomes", "outcomes", "outcomes",
-    "insights", "insights",
+    "insights",
     rep("insights", length(theme_slide_ids)),
+    "action_plan",
     "comments"
   ),
   nav_level = c(
-    rep(0L, 7L),
+    rep(0L, 8L),
     rep(0L, length(fundamentals)),
     0L, 0L, 0L, 0L, 0L,
-    0L, 0L,
-    rep(1L, length(theme_slide_ids)),
+    0L,
+    rep(0L, length(theme_slide_ids)),
+    0L,
     0L
   ),
   nav_group = c(
-    rep("", 7L),
+    rep("", 8L),
     rep("", length(fundamentals)),
     "", "", "", "", "",
-    "", "",
+    "",
     rep("Themes", length(theme_slide_ids)),
+    "",
     ""
   ),
   stringsAsFactors = FALSE
@@ -1855,9 +2163,9 @@ slides <- data.frame(
 slides$sort_order <- seq_len(nrow(slides))
 
 section_meta <- data.frame(
-  section_id = c("system_orientation","ohep_summary","drivers","outcomes","insights","comments"),
-  section_label = c("Getting Started","OHEP Summary","Drivers","Outcomes","Insights","Comments"),
-  section_order = seq_len(6),
+  section_id = c("system_orientation","ohep_summary","drivers","outcomes","insights","action_plan","comments"),
+  section_label = c("Getting Started","OHEP Summary","Drivers","Outcomes","Insights","Action Plan","Comments"),
+  section_order = seq_len(7),
   stringsAsFactors = FALSE
 )
 
@@ -2157,6 +2465,50 @@ render_slide <- function(slide_id, fr) {
         ".gs-box strong{font-weight:800;color:#0F172A;}",
         ".gs-img-wrap{display:flex;justify-content:center;align-items:center;min-height:320px;}",
         ".gs-img-wrap img{max-width:100%;max-height:420px;object-fit:contain;border-radius:8px;}",
+        ".intro-container{width:100%;max-width:1000px;display:flex;flex-direction:column;gap:24px;margin:0 auto;}",
+        ".info-card{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:32px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.02);}",
+        ".hero-card{border-left:4px solid #0D9488;}",
+        ".hero-title{font-size:20px;font-weight:800;color:#0F172A;margin:0 0 12px 0;text-align:left;}",
+        ".hero-desc{font-size:15px;color:#334155;line-height:1.6;max-width:800px;margin:0;text-align:left;}",
+        ".steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}",
+        ".step-box{display:flex;flex-direction:column;gap:12px;align-items:flex-start;text-align:left;}",
+        ".step-icon{width:40px;height:40px;background:#F0FDFA;color:#0D9488;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;}",
+        ".step-title{font-size:16px;font-weight:800;color:#0F172A;margin:0;}",
+        ".step-desc{font-size:14px;color:#334155;line-height:1.5;margin:0;}",
+        ".policy-card{background:#F8FAFC;padding:24px;display:flex;gap:16px;align-items:flex-start;justify-content:flex-start;}",
+        ".policy-icon{color:#64748B;width:24px;height:24px;flex-shrink:0;}",
+        ".policy-content{max-width:900px;text-align:left;}",
+        ".policy-content h4{font-size:14px;font-weight:800;color:#0F172A;margin:0 0 4px 0;}",
+        ".policy-content p{font-size:13px;color:#334155;line-height:1.5;margin:0;}",
+        ".fw-container{width:100%;max-width:1100px;display:flex;flex-direction:column;gap:24px;margin:0 auto;}",
+        ".layout-split{display:grid;grid-template-columns:1fr 1.2fr;gap:48px;align-items:center;}",
+        ".text-content{display:flex;flex-direction:column;align-items:flex-start;text-align:left;}",
+        ".text-content h2{font-size:22px;font-weight:800;color:#0F172A;margin:0 0 16px 0;}",
+        ".text-content p{font-size:15px;color:#334155;line-height:1.6;margin:0 0 24px 0;}",
+        ".highlight-box{background:#F8FAFC;border-left:3px solid #0D9488;padding:16px;border-radius:0 8px 8px 0;max-width:640px;width:100%;}",
+        ".highlight-box h4{font-size:14px;font-weight:800;color:#0D9488;margin:0 0 4px 0;}",
+        ".highlight-box p{font-size:13px;color:#0F172A;line-height:1.5;margin:0;}",
+        ".image-content{display:flex;justify-content:center;align-items:center;}",
+        ".framework-asset{max-width:100%;height:auto;object-fit:contain;}",
+        ".methodology-wrap{display:flex;flex-direction:column;gap:32px;}",
+        ".metrics-banner{display:grid;grid-template-columns:repeat(4,1fr);background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:24px;gap:16px;}",
+        ".metric-block{display:flex;flex-direction:column;gap:4px;padding:0 16px;border-right:1px solid #E2E8F0;}",
+        ".metric-block:last-child{border-right:none;}",
+        ".metric-val{font-size:28px;font-weight:900;color:#0D9488;letter-spacing:-0.5px;}",
+        ".metric-lbl{font-size:12px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:0.5px;}",
+        ".metric-sub{font-size:11px;color:#64748B;margin-top:4px;}",
+        ".content-split{display:grid;grid-template-columns:1.5fr 1fr;gap:64px;}",
+        ".terms-section{display:flex;flex-direction:column;gap:24px;}",
+        ".section-title{font-size:18px;font-weight:800;color:#0F172A;margin:0 0 8px 0;padding-bottom:8px;border-bottom:2px solid #E2E8F0;}",
+        ".term-item{display:flex;flex-direction:column;gap:6px;}",
+        ".term-name{font-size:14px;font-weight:800;color:#0F172A;}",
+        ".term-desc{font-size:14px;line-height:1.6;color:#334155;}",
+        ".guidance-card{background:#F0FDFA;border:1px solid #CCFBF1;border-radius:12px;padding:32px;display:flex;flex-direction:column;gap:12px;align-self:flex-start;}",
+        ".guidance-icon{width:24px;height:24px;color:#0D9488;margin-bottom:4px;}",
+        ".guidance-card h3{font-size:16px;font-weight:800;color:#0D9488;margin:0;}",
+        ".guidance-card p{font-size:14px;line-height:1.6;color:#334155;margin:0;}",
+        "@media (max-width: 900px){.layout-split{grid-template-columns:1fr;}.steps-grid{grid-template-columns:1fr;}}",
+        "@media (max-width: 980px){.metrics-banner{grid-template-columns:1fr 1fr;}.content-split{grid-template-columns:1fr;gap:24px;}}",
         "@media (max-width: 860px){.gs-layout{grid-template-columns:1fr;}.gs-col-span-2{grid-column:span 1;}}",
         "</style>"
       ),
@@ -2164,23 +2516,132 @@ render_slide <- function(slide_id, fr) {
     )
   }
 
+  render_themes_overview_page <- function() {
+    slide_doc(
+      paste0(
+        "<div class='slide'><div class='main-card themes-overview'>",
+        "<header><div class='eyebrow'>Themes</div><h1 class='title'>Overview</h1><div class='divider'></div></header>",
+        "<div class='intro'>Three enterprise patterns are shaping current results. The sequence below explains the story arc from signal to root cause to risk, followed by a targeted Action Plan.</div>",
+        "<div class='cards'>",
+        "<div class='ov-card'><div class='ov-k'>Theme 1</div><h3>Strategy Gap</h3><p>Employees hear the strategy, but translation into planning and execution remains inconsistent across teams.</p></div>",
+        "<div class='ov-card'><div class='ov-k'>Theme 2</div><h3>Work Strain</h3><p>Operational load is manageable; the deeper friction is in changing conditions, coordination gaps, and uneven support.</p></div>",
+        "<div class='ov-card'><div class='ov-k'>Theme 3</div><h3>Burnout Risk</h3><p>Burnout indicators are rising before attrition, driven by purpose clarity, communication quality, and development support.</p></div>",
+        "</div>",
+        "<div class='next-note'>Next step: review each Theme page, then use <strong>Action Plan</strong> to move from insight to execution.</div>",
+        "</div></div>",
+        "<style>",
+        ".themes-overview{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:42px;box-shadow:0 10px 25px -5px rgba(15,23,42,.05);max-width:1020px;margin:0 auto;}",
+        ".themes-overview .eyebrow{font-size:11px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}",
+        ".themes-overview .title{font-size:32px;font-weight:900;color:#0F172A;letter-spacing:-.5px;margin:0 0 22px 0;}",
+        ".themes-overview .divider{width:100%;height:2px;background:#0D9488;margin-bottom:26px;}",
+        ".themes-overview .intro{font-size:15px;line-height:1.65;color:#334155;margin-bottom:22px;max-width:900px;}",
+        ".themes-overview .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}",
+        ".themes-overview .ov-card{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:18px;}",
+        ".themes-overview .ov-k{font-size:10px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}",
+        ".themes-overview .ov-card h3{font-size:18px;line-height:1.2;color:#0F172A;margin:0 0 8px 0;}",
+        ".themes-overview .ov-card p{font-size:14px;line-height:1.55;color:#334155;margin:0;}",
+        ".themes-overview .next-note{margin-top:18px;padding:12px 14px;background:#F0FDFA;border:1px solid #CCFBF1;border-radius:8px;font-size:13px;line-height:1.5;color:#334155;}",
+        "@media (max-width: 980px){.themes-overview .cards{grid-template-columns:1fr;}}",
+        "</style>"
+      ),
+      "Themes Overview"
+    )
+  }
+
+  render_action_plan_page <- function() {
+    action_card <- function(num, title, context, items) {
+      items_html <- paste(vapply(items, function(it) {
+        paste0(
+          "<div class='action-item'>",
+          "<svg class='action-icon' fill='none' viewBox='0 0 24 24' stroke='currentColor' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>",
+          "<div class='action-text'>", html_escape(it), "</div>",
+          "</div>"
+        )
+      }, character(1)), collapse = "")
+      paste0(
+        "<div class='action-card'>",
+        "<div class='action-card-header'>",
+        "<span class='action-number'>Focus Area ", sprintf("%02d", num), "</span>",
+        "<h2 class='action-title'>", html_escape(title), "</h2>",
+        "<p class='action-context'>", html_escape(context), "</p>",
+        "</div>",
+        "<div class='action-items-container'>", items_html, "</div>",
+        "</div>"
+      )
+    }
+
+    cards_html <- paste0(
+      action_card(1, "Strengthen translation from strategy to execution", "Top-performing organizations do not stop at communicating priorities. They ensure strategy shows up in how work is assigned, prioritized, and executed.", c(
+        "Require each function leader to translate strategy into 3-5 operational priorities for their teams.",
+        "Run a monthly field-to-office review to verify strategic priorities are reflected in scheduling, scoping, dispatch, and crew-level decisions."
+      )),
+      action_card(2, "Improve field experience through leadership, communication, and trust", "In operational environments, employees judge the organization by whether they feel informed, supported, and set up to succeed.", c(
+        "Identify the top 3 recurring field friction points, assign clear owners, and close them on explicit timelines.",
+        "Set one consistent process for communicating scope changes, delays, and shifting expectations in real time."
+      )),
+      action_card(3, "Reduce burnout by reinforcing purpose", "Burnout risk increases when effort feels heavy but disconnected from impact.", c(
+        "Equip leaders to connect current work to company goals, customer value, and operational outcomes on a regular cadence.",
+        "Review groups with highest burnout risk first, then intervene on workload, sequencing, and role clarity."
+      )),
+      action_card(4, "Build support through performance development", "Employees need to feel they are being developed and supported while carrying demanding work.", c(
+        "Implement a monthly development check-in for supervisors and mid-level leaders focused on support and growth, not just task updates.",
+        "Provide targeted coaching for critical people-leader roles on communication, delegation, and strain management."
+      )),
+      action_card(5, "Protect sustainable performance across fundamentals", "High performance should come from system strength, not repeated heroics by a small group.", c(
+        "Map where extra effort and interrupted recovery are propping up delivery, and address those pressure points directly.",
+        "Reset team-level workload, coverage, and responsiveness norms where current expectations are no longer realistic."
+      ))
+    )
+
+    slide_doc(
+      paste0(
+        "<div class='slide'><div class='main-card action-plan'>",
+        "<header><div class='eyebrow'>Action Plan</div><h1 class='title'>Targeted Focus Areas &amp; Recommended Actions</h1><div class='divider'></div></header>",
+        "<div class='action-stack'>", cards_html, "</div>",
+        "</div></div>",
+        "<style>",
+        ".action-plan{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;max-width:1020px;margin:0 auto;padding:42px;box-shadow:0 10px 25px -5px rgba(15,23,42,.05);}",
+        ".action-plan .eyebrow{font-size:11px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}",
+        ".action-plan .title{font-size:32px;font-weight:900;color:#0F172A;letter-spacing:-.5px;margin:0 0 24px 0;line-height:1.2;}",
+        ".action-plan .divider{width:100%;height:2px;background:#0D9488;margin-bottom:34px;}",
+        ".action-plan .action-stack{display:flex;flex-direction:column;gap:24px;}",
+        ".action-plan .action-card{border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;box-shadow:0 2px 4px rgba(15,23,42,.02);}",
+        ".action-plan .action-card-header{background:#FFFFFF;padding:22px 28px;border-bottom:1px solid #E2E8F0;}",
+        ".action-plan .action-number{font-size:12px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:block;}",
+        ".action-plan .action-title{font-size:20px;font-weight:800;color:#0F172A;margin:0 0 10px 0;line-height:1.25;}",
+        ".action-plan .action-context{font-size:14px;line-height:1.6;color:#334155;margin:0;}",
+        ".action-plan .action-items-container{background:#F8FAFC;padding:20px 28px;display:flex;flex-direction:column;gap:12px;}",
+        ".action-plan .action-item{background:#FFFFFF;border:1px solid #E2E8F0;padding:14px 16px;border-radius:8px;display:flex;align-items:flex-start;gap:12px;}",
+        ".action-plan .action-icon{width:18px;height:18px;color:#0D9488;flex-shrink:0;margin-top:2px;}",
+        ".action-plan .action-text{font-size:14px;line-height:1.5;color:#0F172A;font-weight:500;}",
+        "</style>"
+      ),
+      "Action Plan"
+    )
+  }
+
   tryCatch({
     if (slide_id == "cover") {
       return(render_getting_started_page(
-        "Introduction",
+        "Welcome to OHEP Insights",
         paste0(
-          "<div class='gs-layout' style='grid-template-columns:1fr;'>",
-          "<section class='gs-box'>",
-          "<h2>", html_escape(report_meta$report_title[[1]]), "</h2>",
-          "<p>", html_escape(report_meta$report_subtitle[[1]]), "</p>",
-          "<p>Use the left navigation to move through the story by section. Use the filters at the top to explore Company, Department, Identity (voluntary), Location, Employee Type, Tenure, and Work Arrangement. Slides update where sufficient sample size exists.</p>",
-          "<p>This report combines quantified organizational health indicators with curated qualitative interpretation to support practical decision making.</p>",
-          "</section>",
-          "<section class='gs-box'>",
-          "<h2>Distribution Policy</h2>",
-          "<p>The questionnaire framework and individual scale items used in this Organizational Health and Effectiveness Profile are the exclusive intellectual property of Monark Inc. Materials are confidential and must not be shared externally, reproduced, or redistributed in any format without prior written consent from an authorized Monark representative.</p>",
-          "<p><strong>For additional information:</strong><br>Monark Inc.<br>Calgary, Alberta<br>T: 403-604-9854<br>www.leadwithmonark.com</p>",
-          "</section>",
+          "<div class='intro-container'>",
+          "<div class='info-card hero-card'>",
+          "<h2 class='hero-title'>Your Workforce Intelligence Hub</h2>",
+          "<p class='hero-desc'>This dashboard transforms raw employee feedback into actionable, decision-ready intelligence. By combining quantitative health scores with expert-curated qualitative themes, the Organizational Health and Outcomes Profile (OHEP) empowers leaders to identify hidden risks, celebrate cultural wins, and drive targeted interventions that impact the bottom line.</p>",
+          "</div>",
+          "<div class='info-card'>",
+          "<h3 class='hero-title' style='margin-bottom:24px;'>Navigating Your Dashboard</h3>",
+          "<div class='steps-grid'>",
+          "<div class='step-box'><div class='step-icon'>1</div><h4 class='step-title'>Review the Summaries</h4><p class='step-desc'>Start at the Executive Summary to grasp top-level eNPS, participation rates, and overall organizational health scores.</p></div>",
+          "<div class='step-box'><div class='step-icon'>2</div><h4 class='step-title'>Segment the Data</h4><p class='step-desc'>Use the global filters to slice data by Department, Location, or Tenure to uncover highly specific operational insights.</p></div>",
+          "<div class='step-box'><div class='step-icon'>3</div><h4 class='step-title'>Explore the \"Why\"</h4><p class='step-desc'>Dive into the Qualitative Feedback and Priority Matrix to hear the employee voice and know exactly where to take action.</p></div>",
+          "</div>",
+          "</div>",
+          "<div class='info-card policy-card'>",
+          "<svg class='policy-icon' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'></path></svg>",
+          "<div class='policy-content'><h4>Confidentiality & Distribution Policy</h4><p>The framework, algorithms, and scale items within this platform are proprietary. Data presented herein is confidential and strictly for internal leadership use. To protect psychological safety, all employee responses are aggregated, and demographic filters are disabled if the respondent group falls below the anonymity threshold (N=5).</p></div>",
+          "</div>",
           "</div>"
         )
       ))
@@ -2189,17 +2650,18 @@ render_slide <- function(slide_id, fr) {
       img_path <- file.path(demo_dir, "images", "ohepModel.png")
       if (!file.exists(img_path)) return(no_data_slide("Missing image: Demo/images/ohepModel.png"))
       return(render_getting_started_page(
-        "About the OHEP",
+        "The OHEP Framework",
         paste0(
-          "<div class='gs-layout'>",
-          "<section class='gs-box'>",
-          "<h2>Why Organizational Health</h2>",
-          "<p>Organizational health is a forward-looking driver of sustained performance, yet many critical factors do not appear in retrospective financial statements. Monark's OHEP framework translates these factors into measurable, decision-ready indicators.</p>",
-          "<p>Developed in 2015 and continuously refined through peer-reviewed research, executive input, and field application, the OHEP is built around scientifically validated constructs linked to both financial and non-financial outcomes.</p>",
-          "<p><strong>Survey Objectives:</strong> Track progress on key health factors and outcomes, benchmark performance to the OHEP Index, identify emerging risk areas early, and prioritize targeted interventions with measurable impact.</p>",
-          "</section>",
-          "<section class='gs-box gs-img-wrap'><img src='./images/ohepModel.png' alt='OHEP Model'/></section>",
-          "<section class='gs-box gs-col-span-2'><p>Upon completion, results are statistically analyzed against outcome measures and benchmarked to the OHEP Index. The final report integrates quantitative results and qualitative themes to support leadership action planning.</p></section>",
+          "<div class='fw-container'>",
+          "<div class='info-card layout-split'>",
+          "<div class='text-content'>",
+          "<h2>Why Organizational Health?</h2>",
+          "<p>Organizational health is the ultimate forward-looking driver of sustained performance. Traditional financial statements tell you where you've been; engagement metrics tell you where you are going.</p>",
+          "<p>Our scientifically validated framework is built to shift leadership from reactive to proactive. We isolate the daily operational inputs (Drivers) that directly correlate to critical business outputs (Outcomes).</p>",
+          "<div class='highlight-box'><h4>The Objective</h4><p>Track progress, benchmark performance against industry standards, identify emerging flight risks early, and prioritize targeted interventions that yield measurable ROI.</p></div>",
+          "</div>",
+          "<div class='image-content'><img src='./images/ohepModel.png' alt='OHEP Drivers and Outcomes Framework' class='framework-asset'/></div>",
+          "</div>",
           "</div>"
         )
       ))
@@ -2208,26 +2670,47 @@ render_slide <- function(slide_id, fr) {
       return(render_getting_started_page(
         "Methodology",
         paste0(
-          "<div class='gs-layout'>",
-          "<section class='gs-box'>",
-          "<h2>Defining Terminology</h2>",
-          "<p><strong>OHEP Index:</strong> Fundamental scores are benchmarked to organizations in energy and investment industries, adjusted for organizational size so no single company skews the index. This provides contextual interpretation beyond raw scores.</p>",
-          "<p><strong>Percentage Agreement:</strong> Item-level agreement and disagreement percentages complement mean scores and improve interpretability at the question level.</p>",
-          "<p><strong>Anonymity:</strong> Responses are confidential and presented in aggregate. Monark does not release raw respondent-level data to client management or directors.</p>",
-          "</section>",
-          "<section class='gs-box'>",
-          "<h2>Survey Details (Arctic Slope)</h2>",
-          "<p>The survey included 85 scale questions and 5 open-ended questions. Scale responses used a 1-5 Likert format (Strongly Disagree to Strongly Agree), with Not Applicable excluded from scale averages.</p>",
-          "<p>Data collection window: June 18, 2025 to July 11, 2025.</p>",
-          "<p>2025 response profile: 64% overall participation, with stronger office participation than field participation. Average completion time was approximately 18 minutes.</p>",
-          "</section>",
-          "<section class='gs-box gs-col-span-2'>",
-          "<h2>Interpretation Guidance</h2>",
-          "<p>Use OHEP summary, drivers, outcomes, and comments together. Summary pages show where to focus; driver and outcome pages show what is moving performance; qualitative pages provide operational context behind the scores.</p>",
-          "</section>",
+          "<div class='methodology-wrap'>",
+          "<div class='metrics-banner'>",
+          "<div class='metric-block' style='padding-left:0;'>",
+          "<div class='metric-val'>64%</div>",
+          "<div class='metric-lbl'>Response Rate</div>",
+          "<div class='metric-sub'>&nbsp;</div>",
+          "</div>",
+          "<div class='metric-block'>",
+          "<div class='metric-val'>85</div>",
+          "<div class='metric-lbl'>Scale Questions</div>",
+          "<div class='metric-sub'>+ 5 open-ended questions.</div>",
+          "</div>",
+          "<div class='metric-block'>",
+          "<div class='metric-val'>18m</div>",
+          "<div class='metric-lbl'>Avg. Completion</div>",
+          "<div class='metric-sub'>1-5 Likert format utilized.</div>",
+          "</div>",
+          "<div class='metric-block'>",
+          "<div class='metric-val' style='font-size:20px;padding-top:8px;color:#0F172A;'>Jun 18 - Jul 11</div>",
+          "<div class='metric-lbl' style='margin-top:4px;'>2025 Window</div>",
+          "</div>",
+          "</div>",
+          "<div class='content-split'>",
+          "<div class='terms-section'>",
+          "<h2 class='section-title'>Defining Terminology</h2>",
+          "<div class='term-item'><div class='term-name'>OHEP Index</div><div class='term-desc'>Fundamental scores are benchmarked to organizations in energy and investment industries, adjusted for organizational size so no single company skews the index. This provides contextual interpretation beyond raw scores.</div></div>",
+          "<div class='term-item'><div class='term-name'>Percentage Agreement</div><div class='term-desc'>Item-level agreement and disagreement percentages complement mean scores and improve interpretability at the question level.</div></div>",
+          "<div class='term-item'><div class='term-name'>Anonymity</div><div class='term-desc'>Responses are confidential and presented in aggregate. Monark does not release raw respondent-level data to client management or directors.</div></div>",
+          "</div>",
+          "<div class='guidance-card'>",
+          "<svg class='guidance-icon' fill='none' viewBox='0 0 24 24' stroke='currentColor' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>",
+          "<h3>Interpretation Guidance</h3>",
+          "<p>Use OHEP summary, drivers, outcomes, and comments together. Summary pages show <strong>where</strong> to focus; driver and outcome pages show <strong>what</strong> is moving performance; qualitative pages provide <strong>operational context</strong> behind the scores.</p>",
+          "</div>",
+          "</div>",
           "</div>"
         )
       ))
+    }
+    if (slide_id == "participation_profile") {
+      return(build_participation_profile_page(rows_sub))
     }
     if (slide_id == "orientation_model") {
       md <- build_model_data(fid)
@@ -2237,11 +2720,11 @@ render_slide <- function(slide_id, fr) {
       return(widget_shell_doc(model_page(
         model_data = md,
         color_overrides = list(
-          model_zone_ni = "#FDD34C",
-          model_zone_is = "#B3D6DA",
-          model_zone_as = "#0096A6",
-          model_zone_il = "#395965",
-          model_point_ni = "#FDD34C",
+          model_zone_ni = "#EFDFA1",
+          model_zone_is = "#D5E4E7",
+          model_zone_as = "#7FAFB4",
+          model_zone_il = "#6E8791",
+          model_point_ni = "#C8A94A",
           model_point_is = "#16A34A",
           model_point_as = "#059669",
           model_point_il = "#0D9488"
@@ -2358,7 +2841,7 @@ render_slide <- function(slide_id, fr) {
       return(render_html_obj(obj, paste("Fundamental", f)))
     }
     if (slide_id == "segment_heatmap") {
-      hm <- build_heatmap()
+      hm <- build_heatmap(fr)
       if (is.null(hm)) return(no_data_slide())
       compare_keys <- names(hm$compare_sets)
       if (is.null(compare_keys) || length(compare_keys) < 1L) compare_keys <- "Company"
@@ -2389,12 +2872,10 @@ render_slide <- function(slide_id, fr) {
       ))
     }
     if (slide_id == "open_ended_overall_summary") {
-      oe <- open_ended_by_filter[[fid]]
-      return(render_html_obj(open_ended_page(open_ended_data = oe, page_type = "overall_summary", page_index = 1), "Open-Ended Summary"))
+      return(render_themes_overview_page())
     }
-    if (slide_id == "open_ended_three_takeaways") {
-      oe <- open_ended_by_filter[[fid]]
-      return(render_html_obj(open_ended_page(open_ended_data = oe, page_type = "three_takeaways", page_index = 1), "Three Takeaways"))
+    if (slide_id == "open_ended_action_plan") {
+      return(render_action_plan_page())
     }
     if (grepl("^theme_evidence_[0-9]{2}$", slide_id)) {
       oe <- open_ended_by_filter[[fid]]
@@ -2441,10 +2922,7 @@ responses_by_filter <- setNames(
 )
 
 legacy_demo_data_path <- "/Users/lyndenjensen/Downloads/Demo/build/demo-data.js"
-legacy_theme_slide_ids <- c(
-  "open_ended_overall_summary",
-  "open_ended_three_takeaways"
-)
+legacy_theme_slide_ids <- character(0)
 
 if (file.exists(legacy_demo_data_path)) {
   legacy_lines <- readLines(legacy_demo_data_path, warn = FALSE, encoding = "UTF-8")
