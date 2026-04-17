@@ -21,6 +21,24 @@ ohepRDisplayr <- function() {
     paste0(x, suffix)
   }
 
+  env$format_ordinal_html <- function(x) {
+    x <- as.integer(round(x))
+    if (is.na(x)) {
+      return("")
+    }
+    if ((x %% 100L) %in% c(11L, 12L, 13L)) {
+      suffix <- "th"
+    } else {
+      suffix <- switch(as.character(x %% 10L), "1" = "st", "2" = "nd", "3" = "rd", "th")
+    }
+    paste0(
+      x,
+      "<sup style=\"font-size:0.62em;line-height:0;vertical-align:super;\">",
+      suffix,
+      "</sup>"
+    )
+  }
+
   env$format_signed <- function(x, digits = 0L) {
     if (is.na(x)) {
       return("0")
@@ -1067,7 +1085,7 @@ ohepRDisplayr <- function() {
   --privacy-overlay-text: {c$privacy_overlay_text};
   --privacy-overlay-shadow: {c$privacy_overlay_shadow};
   width: 1280px;
-  height: 720px;
+  min-height: 720px;
   background: var(--bg-canvas);
   padding: 24px 32px;
   border-radius: 8px;
@@ -1075,11 +1093,11 @@ ohepRDisplayr <- function() {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  overflow: hidden;
+  overflow: visible;
   font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
 }}
 {scope} .top-row {{ display: flex; gap: 20px; height: 310px; flex-shrink: 0; }}
-{scope} .bottom-row {{ flex: 1; display: flex; min-height: 0; }}
+{scope} .bottom-row {{ flex: 1 1 auto; display: flex; min-height: 0; }}
 {scope} .card {{
   background: var(--bg-card);
   border: 1px solid var(--border-default);
@@ -1153,7 +1171,7 @@ ohepRDisplayr <- function() {
 {scope} .bg-agree {{ background: var(--favorability-agree); }}
 {scope} .bg-neutral {{ background: var(--favorability-neutral); }}
 {scope} .bg-disagree {{ background: var(--favorability-disagree); }}
-{scope} .item-grid-2col {{ display: grid; grid-template-columns: 1fr 1fr; gap: 40px; flex: 1; }}
+{scope} .item-grid-2col {{ display: grid; grid-template-columns: 1fr 1fr; gap: 40px; flex: 1; align-items: start; }}
 {scope} .item-column {{ display: flex; flex-direction: column; }}
 {scope} .header-row, {scope} .item-row {{ display: grid; grid-template-columns: minmax(180px, 2fr) 40px 3fr 50px 50px; gap: 12px; align-items: center; }}
 {scope} .header-row {{ padding-bottom: 8px; border-bottom: 2px solid var(--border-default); }}
@@ -1237,7 +1255,7 @@ ohepRDisplayr <- function() {
           <div class=\"hero-row\">
             <div>
               <div class=\"hero-label\">Percentile</div>
-              <div class=\"hero-value\">{env$format_ordinal(percentile)}</div>
+              <div class=\"hero-value\">{env$format_ordinal_html(percentile)}</div>
             </div>
             <div class=\"delta-block {delta_class}\">
               <div class=\"delta-icon\">{delta_icon}</div>
@@ -1286,7 +1304,7 @@ ohepRDisplayr <- function() {
         </td>
         <td>
           <div class=\"company-score-stack\">
-            <span class=\"row-score-val {color_class}\">{env$format_ordinal(pct)} Percentile</span>
+            <span class=\"row-score-val {color_class}\">{env$format_ordinal_html(pct)} Percentile</span>
             <span class=\"row-status {color_class}\">{status_text}</span>
           </div>
         </td>
@@ -1840,6 +1858,12 @@ ohepRDisplayr <- function() {
       suffix <- if ((x %% 100L) %in% c(11L, 12L, 13L)) "th" else switch(as.character(x %% 10L), `1` = "st", `2` = "nd", `3` = "rd", "th")
       paste0(x, suffix)
     }
+    ordinal_html <- function(x) {
+      x <- suppressWarnings(as.integer(round(x)))
+      if (!is.finite(x) || is.na(x)) return("n/a")
+      suffix <- if ((x %% 100L) %in% c(11L, 12L, 13L)) "th" else switch(as.character(x %% 10L), `1` = "st", `2` = "nd", `3` = "rd", "th")
+      paste0(x, "<sup>", suffix, "</sup>")
+    }
 
     title <- first_or(dat$summary$title, "Open-Ended Insights")
     kicker <- first_or(dat$summary$kicker, "Qualitative Summary")
@@ -1951,7 +1975,7 @@ ohepRDisplayr <- function() {
                  <div class=\"quote-watermark\"><div class=\"quote-text\">{env$escape_text(quote_text)}</div></div>
                  <div class=\"card-footer\">
                    <div class=\"split-pill\">
-                     <div class=\"pill-left\">{if (is.finite(metric_pct)) glue::glue('{ordinal(metric_pct)}<sup>PCTL</sup>') else 'n/a'}</div>
+                     <div class=\"pill-left\">{if (is.finite(metric_pct)) glue::glue('{ordinal_html(metric_pct)} PCTL') else 'n/a'}</div>
                      <div class=\"pill-right\">{if (is.finite(metric_val)) glue::glue('Score {sprintf(\"%.1f\", metric_val)}') else if (nzchar(metric_status)) env$escape_text(metric_status) else 'Score n/a'}</div>
                    </div>
                  </div>
@@ -1970,7 +1994,7 @@ ohepRDisplayr <- function() {
                  <div class=\"quote-watermark\"><div class=\"quote-text\">No quotes available for this evidence page.</div></div>
                  <div class=\"card-footer\">
                    <div class=\"split-pill\">
-                     <div class=\"pill-left\">{if (is.finite(metric_pct)) glue::glue('{ordinal(metric_pct)}<sup>PCTL</sup>') else 'n/a'}</div>
+                     <div class=\"pill-left\">{if (is.finite(metric_pct)) glue::glue('{ordinal_html(metric_pct)} PCTL') else 'n/a'}</div>
                      <div class=\"pill-right\">{if (is.finite(metric_val)) glue::glue('Score {sprintf(\"%.1f\", metric_val)}') else if (nzchar(metric_status)) env$escape_text(metric_status) else 'Score n/a'}</div>
                    </div>
                  </div>
@@ -2351,7 +2375,7 @@ ohepRDisplayr <- function() {
       cls <- status_class(pct)
       st <- as.character(d$status_label[[1]])
       if (!nzchar(st) || is.na(st)) st <- status_text(pct)
-      pct_txt <- if (is.finite(pct)) sprintf("%dth Percentile", as.integer(round(pct))) else "n/a"
+      pct_txt <- if (is.finite(pct)) paste0(env$format_ordinal_html(pct), " Percentile") else "n/a"
       glue::glue(
         "<tr>
           <td>
@@ -2484,31 +2508,45 @@ ohepRDisplayr <- function() {
     legend_low <- if ("legend_low" %in% names(heatmap_data)) as.character(heatmap_data$legend_low[[1]]) else "Below Avg"
     legend_high <- if ("legend_high" %in% names(heatmap_data)) as.character(heatmap_data$legend_high[[1]]) else "Above Avg"
 
-    tables <- lapply(seq_along(heatmap_data$tables), function(i) {
-      table_name <- names(heatmap_data$tables)[[i]]
-      tbl <- heatmap_data$tables[[i]]
-      row_label_col <- names(tbl)[[1]]
-      group_cols <- names(tbl)[-1]
+    normalize_tables <- function(tbl_list) {
+      lapply(seq_along(tbl_list), function(i) {
+        table_name <- names(tbl_list)[[i]]
+        tbl <- tbl_list[[i]]
+        row_label_col <- names(tbl)[[1]]
+        group_cols <- names(tbl)[-1]
 
-      out <- tbl
-      out[[row_label_col]] <- as.character(out[[row_label_col]])
-      for (col in group_cols) {
-        out[[col]] <- suppressWarnings(as.numeric(out[[col]]))
-      }
-      names(out)[[1]] <- "Category"
+        out <- tbl
+        out[[row_label_col]] <- as.character(out[[row_label_col]])
+        for (col in group_cols) {
+          out[[col]] <- suppressWarnings(as.numeric(out[[col]]))
+        }
+        names(out)[[1]] <- "Category"
 
-      list(
-        title = table_name,
-        data = out
-      )
-    })
+        list(
+          title = table_name,
+          data = out
+        )
+      })
+    }
+
+    tables <- normalize_tables(heatmap_data$tables)
+    compare_sets <- list(Department = tables)
+    if ("compare_sets" %in% names(heatmap_data) && is.list(heatmap_data$compare_sets) && length(heatmap_data$compare_sets) > 0L) {
+      compare_sets <- lapply(heatmap_data$compare_sets, function(set_tables) {
+        if (!is.list(set_tables) || length(set_tables) < 1L) return(NULL)
+        normalize_tables(set_tables)
+      })
+      compare_sets <- compare_sets[!vapply(compare_sets, is.null, logical(1))]
+      if (length(compare_sets) < 1L) compare_sets <- list(Department = tables)
+    }
 
     list(
       title = title,
       subtitle = subtitle,
       legend_low = legend_low,
       legend_high = legend_high,
-      tables = tables
+      tables = tables,
+      compare_sets = compare_sets
     )
   }
 
@@ -2546,32 +2584,109 @@ ohepRDisplayr <- function() {
   --hm-pill-neutral: {c$heatmap_pill_neutral};
   --hm-pill-neg-soft: {c$heatmap_pill_neg_soft};
   --hm-pill-neg-strong: {c$heatmap_pill_neg_strong};
-  width: 1400px;
-  min-height: 720px;
-  background: var(--hm-slide-bg);
-  padding: 30px 32px;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  width: 100%;
+  background: transparent;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
   font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
 }}
-{scope} .hm-header {{ display: flex; justify-content: flex-start; align-items: flex-end; gap: 24px; flex-wrap: wrap; }}
+{scope} .hm-header {{ display: flex; flex-direction: column; gap: 6px; }}
 {scope} .hm-title {{ margin: 0; font-size: 22px; font-weight: 900; color: var(--hm-title); text-transform: uppercase; letter-spacing: 0.4px; }}
-{scope} .hm-subtitle {{ margin: 4px 0 0; font-size: 14px; color: var(--hm-subtitle); }}
-{scope} .hm-legend {{ display: flex; align-items: center; gap: 12px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--hm-legend-text); }}
-{scope} .hm-spectrum {{ width: 180px; height: 8px; border-radius: 5px; background: linear-gradient(to right, var(--hm-legend-start), var(--hm-legend-mid), var(--hm-legend-end)); }}
-{scope} .hm-grid {{ display: grid; grid-template-columns: 1fr 0.92fr; gap: 24px; align-items: flex-start; }}
-{scope} .hm-col-right {{ display: flex; flex-direction: column; gap: 24px; }}
-{scope} .hm-card {{ background: var(--hm-card-bg); border: 1px solid var(--hm-card-border); border-radius: 12px; box-shadow: 0 4px 20px var(--hm-card-shadow); padding: 20px 24px; }}
-{scope} .hm-card-title {{ margin: 0 0 14px; padding-bottom: 10px; border-bottom: 2px solid var(--hm-header-border); font-size: 14px; font-weight: 800; text-transform: uppercase; color: var(--hm-card-title); letter-spacing: 0.5px; }}
-{scope} .hm-table {{ width: 100%; border-collapse: collapse; table-layout: fixed; }}
-{scope} .hm-table th {{ padding: 0 6px 10px; border-bottom: 1px solid var(--hm-header-border); text-transform: uppercase; font-size: 10px; font-weight: 800; color: var(--hm-header-text); text-align: center; }}
-{scope} .hm-table th:first-child {{ text-align: left; width: 31%; color: var(--hm-row-label); }}
-{scope} .hm-table td {{ padding: 8px 6px; border-bottom: 1px solid var(--hm-row-border); text-align: center; vertical-align: middle; }}
+{scope} .hm-subtitle {{ margin: 0; font-size: 14px; color: var(--hm-subtitle); }}
+{scope} .hm-controls {{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}}
+{scope} .hm-legend {{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--hm-legend-text);
+}}
+{scope} .hm-spectrum {{
+  width: 120px;
+  height: 6px;
+  border-radius: 99px;
+  background: linear-gradient(to right, var(--hm-legend-start), var(--hm-legend-mid), var(--hm-legend-end));
+}}
+{scope} .hm-compare {{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}}
+{scope} .hm-compare-label {{
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--hm-legend-text);
+}}
+{scope} .hm-compare-select {{
+  appearance: none;
+  border: 1px solid var(--hm-header-border);
+  border-radius: 6px;
+  padding: 8px 30px 8px 12px;
+  background-color: #F8FAFC;
+  color: var(--hm-title);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  min-width: 180px;
+  cursor: pointer;
+  background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748B'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+}}
+{scope} .hm-table-wrap {{
+  border: 1px solid var(--hm-card-border);
+  border-radius: 8px;
+  background: #FFFFFF;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}}
+{scope} .hm-table-wrap::-webkit-scrollbar {{ height: 8px; }}
+{scope} .hm-table-wrap::-webkit-scrollbar-track {{ background: #F8FAFC; }}
+{scope} .hm-table-wrap::-webkit-scrollbar-thumb {{ background: #CBD5E1; border-radius: 4px; }}
+{scope} .hm-table {{ width: 100%; min-width: 900px; border-collapse: collapse; }}
+{scope} .hm-table th {{
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--hm-header-border);
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--hm-header-text);
+  text-align: center;
+  vertical-align: bottom;
+  min-width: 120px;
+  line-height: 1.35;
+}}
+{scope} .hm-table th:first-child {{
+  text-align: left;
+  min-width: 180px;
+  color: var(--hm-row-label);
+}}
+{scope} .hm-table td {{ padding: 10px 8px; border-bottom: 1px solid var(--hm-row-border); text-align: center; vertical-align: middle; }}
 {scope} .hm-table tr:last-child td {{ border-bottom: none; }}
-{scope} .hm-table td:first-child {{ text-align: left; font-size: 12px; font-weight: 700; color: var(--hm-row-label); }}
+{scope} .hm-table td:first-child {{ text-align: left; font-size: 12px; font-weight: 700; color: var(--hm-row-label); background: #FFFFFF; }}
+{scope} .hm-table .hm-section-row td {{
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--hm-title);
+  text-align: left;
+  background: #FFFFFF;
+  padding: 18px 12px 8px;
+  border-bottom: none;
+}}
 {scope} .hm-pill {{ display: inline-flex; align-items: center; justify-content: center; min-width: 52px; height: 30px; padding: 0 8px; border-radius: 6px; color: var(--hm-pill-text); font-size: 12px; font-weight: 800; }}
 {scope} .hm-pill-pos-strong {{ background: var(--hm-pill-pos-strong); }}
 {scope} .hm-pill-pos-soft {{ background: var(--hm-pill-pos-soft); }}
@@ -2586,6 +2701,7 @@ ohepRDisplayr <- function() {
   env$render_heatmap_page <- function(
     heatmap_data,
     id = "ohep-heatmap-page",
+    show_compare_control = TRUE,
     color_overrides = NULL,
     ...
   ) {
@@ -2612,67 +2728,120 @@ ohepRDisplayr <- function() {
       "hm-pill-neutral"
     }
 
-    build_card <- function(table_obj) {
-      df <- table_obj$data
-      groups <- names(df)[-1]
-      vals <- as.matrix(df[, groups, drop = FALSE])
-      col_means <- suppressWarnings(colMeans(vals, na.rm = TRUE))
-      col_means[!is.finite(col_means)] <- NA_real_
-      centered <- suppressWarnings(sweep(vals, 2, col_means, FUN = "-"))
-      max_abs_delta <- suppressWarnings(max(abs(centered), na.rm = TRUE))
-      if (!is.finite(max_abs_delta)) max_abs_delta <- 0
-
-      header_html <- glue::glue_collapse(vapply(c("Category", groups), function(h) {
+    build_table_html <- function(tables) {
+      all_groups <- unique(unlist(lapply(tables, function(table_obj) names(table_obj$data)[-1]), use.names = FALSE))
+      header_html <- glue::glue_collapse(vapply(c("Category", all_groups), function(h) {
         glue::glue("<th>{env$escape_text(h)}</th>")
       }, character(1)), sep = "")
 
-      row_html <- vapply(seq_len(nrow(df)), function(i) {
-        category <- env$escape_text(df$Category[[i]])
-        cell_html <- vapply(seq_along(groups), function(j) {
-          value <- suppressWarnings(as.numeric(df[[groups[[j]]]][[i]]))
-          cls <- classify_cell(value, col_means[[j]], max_abs_delta)
-          txt <- if (is.finite(value)) sprintf("%.2f", value) else "NA"
-          glue::glue("<td><span class=\"hm-pill {cls}\">{txt}</span></td>")
+      stats_by_table <- lapply(tables, function(table_obj) {
+        df <- table_obj$data
+        groups <- names(df)[-1]
+        vals <- as.matrix(df[, groups, drop = FALSE])
+        col_means <- suppressWarnings(colMeans(vals, na.rm = TRUE))
+        col_means[!is.finite(col_means)] <- NA_real_
+        centered <- suppressWarnings(sweep(vals, 2, col_means, FUN = "-"))
+        max_abs_delta <- suppressWarnings(max(abs(centered), na.rm = TRUE))
+        if (!is.finite(max_abs_delta)) max_abs_delta <- 0
+        list(groups = groups, col_means = col_means, max_abs_delta = max_abs_delta)
+      })
+
+      section_rows <- vapply(seq_along(tables), function(idx) {
+        table_obj <- tables[[idx]]
+        df <- table_obj$data
+        stats <- stats_by_table[[idx]]
+
+        row_html <- vapply(seq_len(nrow(df)), function(i) {
+          category <- env$escape_text(df$Category[[i]])
+          cell_html <- vapply(all_groups, function(group_name) {
+            group_idx <- match(group_name, stats$groups)
+            value <- if (is.finite(group_idx)) suppressWarnings(as.numeric(df[[group_name]][[i]])) else NA_real_
+            col_mean <- if (is.finite(group_idx)) stats$col_means[[group_idx]] else NA_real_
+            cls <- classify_cell(value, col_mean, stats$max_abs_delta)
+            txt <- if (is.finite(value)) sprintf("%.2f", value) else "NA"
+            glue::glue("<td><span class=\"hm-pill {cls}\">{txt}</span></td>")
+          }, character(1))
+          glue::glue("<tr><td>{category}</td>{glue::glue_collapse(cell_html, sep = '')}</tr>")
         }, character(1))
-        glue::glue("<tr><td>{category}</td>{glue::glue_collapse(cell_html, sep = '')}</tr>")
+
+        glue::glue(
+          "<tr class=\"hm-section-row\"><td colspan=\"{length(all_groups) + 1L}\">{env$escape_text(table_obj$title)}</td></tr>
+           {glue::glue_collapse(row_html, sep = '')}"
+        )
       }, character(1))
 
       glue::glue(
-        "<div class=\"hm-card\">
-          <h3 class=\"hm-card-title\">{env$escape_text(table_obj$title)}</h3>
+        "<div class=\"hm-table-wrap\">
           <table class=\"hm-table\">
             <thead><tr>{header_html}</tr></thead>
-            <tbody>{glue::glue_collapse(row_html, sep = '')}</tbody>
+            <tbody>{glue::glue_collapse(section_rows, sep = '')}</tbody>
           </table>
         </div>"
       )
     }
 
-    cards <- vapply(dat$tables, build_card, character(1))
-    first_card <- cards[[1]]
-    right_cards <- if (length(cards) > 1L) glue::glue_collapse(cards[-1], sep = "") else ""
+    compare_keys <- names(dat$compare_sets)
+    compare_options_html <- paste(vapply(compare_keys, function(key) {
+      glue::glue("<option value=\"{env$escape_text(key)}\">{env$escape_text(key)}</option>")
+    }, character(1)), collapse = "")
+    compare_default <- if ("Company" %in% compare_keys) "Company" else compare_keys[[1]]
+    compare_table_map <- setNames(lapply(dat$compare_sets, build_table_html), compare_keys)
+    compare_table_json <- jsonlite::toJSON(compare_table_map, auto_unbox = TRUE)
 
-    grid_html <- if (length(cards) <= 1L) {
-      glue::glue("<div class=\"hm-grid\"><div>{first_card}</div></div>")
+    header_html <- if (nzchar(trimws(dat$title)) || nzchar(trimws(dat$subtitle))) {
+      glue::glue(
+        "<div class=\"hm-header\">
+          {if (nzchar(trimws(dat$title))) glue::glue('<h2 class=\"hm-title\">{env$escape_text(dat$title)}</h2>') else ''}
+          {if (nzchar(trimws(dat$subtitle))) glue::glue('<p class=\"hm-subtitle\">{env$escape_text(dat$subtitle)}</p>') else ''}
+        </div>"
+      )
+    } else ""
+
+    compare_html <- if (isTRUE(show_compare_control)) {
+      glue::glue(
+        "<div class=\"hm-compare\">
+          <label class=\"hm-compare-label\" for=\"{env$escape_text(id)}-compare\">Compare By:</label>
+          <select id=\"{env$escape_text(id)}-compare\" class=\"hm-compare-select\">{compare_options_html}</select>
+        </div>"
+      )
     } else {
-      glue::glue("<div class=\"hm-grid\"><div>{first_card}</div><div class=\"hm-col-right\">{right_cards}</div></div>")
+      ""
     }
 
-    subtitle_html <- if (nzchar(dat$subtitle)) glue::glue("<p class=\"hm-subtitle\">{env$escape_text(dat$subtitle)}</p>") else ""
+    controls_html <- glue::glue(
+      "<div class=\"hm-controls\">
+        <div class=\"hm-legend\">
+          <span>{env$escape_text(dat$legend_low)}</span>
+          <div class=\"hm-spectrum\"></div>
+          <span>{env$escape_text(dat$legend_high)}</span>
+        </div>
+        {compare_html}
+      </div>"
+    )
+
     body_html <- glue::glue(
       "<div id=\"{env$escape_text(id)}\" class=\"ohep-heatmap-root\">
-        <div class=\"hm-header\">
-          <div>
-            <h2 class=\"hm-title\">{env$escape_text(dat$title)}</h2>
-            {subtitle_html}
-          </div>
-          <div class=\"hm-legend\">
-            <span>{env$escape_text(dat$legend_low)}</span>
-            <div class=\"hm-spectrum\"></div>
-            <span>{env$escape_text(dat$legend_high)}</span>
-          </div>
-        </div>
-        {grid_html}
+        {header_html}
+        {controls_html}
+        <div id=\"{env$escape_text(id)}-table-host\"></div>
+        <script>
+          (function() {{
+            var root = document.getElementById('{env$escape_text(id)}');
+            if (!root) return;
+            var sel = root.querySelector('.hm-compare-select') || document.getElementById('{env$escape_text(id)}-compare');
+            var host = document.getElementById('{env$escape_text(id)}-table-host');
+            var tableMap = {compare_table_json};
+            function renderTable(key) {{
+              if (!host) return;
+              host.innerHTML = tableMap[key] || tableMap['{env$escape_text(compare_default)}'] || '';
+            }}
+            if (sel) {{
+              sel.value = '{env$escape_text(compare_default)}';
+              sel.addEventListener('change', function() {{ renderTable(sel.value); }});
+            }}
+            renderTable('{env$escape_text(compare_default)}');
+          }})();
+        </script>
       </div>"
     )
 
@@ -3025,22 +3194,21 @@ ohepRDisplayr <- function() {
   --model-point-ghost-border: {c$model_point_ghost_border};
   --model-legend-text-on: {c$model_legend_text_on};
   width: 1280px;
-  min-height: 760px;
-  background: var(--model-slide-bg);
-  padding: 28px;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
-  display: flex;
-  justify-content: center;
+  min-height: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+  display: block;
   font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
 }}
 {scope} .model-card {{
-  width: 1150px;
-  background: var(--model-card-bg);
-  border: 1px solid var(--model-card-border);
-  border-radius: 16px;
-  box-shadow: 0 10px 25px var(--model-card-shadow);
-  padding: 34px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 4px 0 0;
 }}
 {scope} .model-header {{ margin-bottom: 12px; border-left: 4px solid var(--model-header-accent); padding-left: 16px; }}
 {scope} .model-title {{ margin: 0 0 6px; font-size: 26px; font-weight: 800; color: var(--model-title); }}
@@ -3198,13 +3366,21 @@ ohepRDisplayr <- function() {
     f_rows <- render_rows(dat$fundamentals, is_outcomes = FALSE)
     o_rows <- render_rows(dat$outcomes, is_outcomes = TRUE)
 
+    model_header_html <- if (nzchar(trimws(dat$title)) || nzchar(trimws(dat$subtitle))) {
+      glue::glue(
+        "<div class=\"model-header\">
+          {if (nzchar(trimws(dat$title))) glue::glue('<h1 class=\"model-title\">{env$escape_text(dat$title)}</h1>') else ''}
+          {if (nzchar(trimws(dat$subtitle))) glue::glue('<p class=\"model-subtitle\">{env$escape_text(dat$subtitle)}</p>') else ''}
+        </div>"
+      )
+    } else {
+      ""
+    }
+
     body_html <- glue::glue(
       "<div id=\"{env$escape_text(id)}\" class=\"ohep-model-root\">
         <div class=\"model-card\">
-          <div class=\"model-header\">
-            <h1 class=\"model-title\">{env$escape_text(dat$title)}</h1>
-            {if (nzchar(trimws(dat$subtitle))) glue::glue('<p class=\"model-subtitle\">{env$escape_text(dat$subtitle)}</p>') else ''}
-          </div>
+          {model_header_html}
           {render_block(dat$fundamentals_label, f_rows, show_metrics = TRUE)}
           {render_block(dat$outcomes_label, o_rows, show_metrics = FALSE)}
           <div class=\"model-legend\">
@@ -3448,11 +3624,11 @@ ohepRDisplayr <- function() {
   --demo-ob-seg-text-dark: {c$demo_ob_seg_text_dark};
   --demo-ob-seg-text-light: {c$demo_ob_seg_text_light};
   width: 1280px;
-  min-height: 760px;
-  background: var(--demo-page-bg);
-  padding: 26px;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  min-height: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
   font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
 }}
 {scope} .demo-header {{ margin-bottom: 14px; }}
@@ -3653,12 +3829,20 @@ ohepRDisplayr <- function() {
       glue::glue("<div class=\"demo-panel\">{head_html}{body_html}</div>")
     }
 
+    demo_header_html <- if (nzchar(trimws(title)) || nzchar(trimws(subtitle))) {
+      glue::glue(
+        "<div class=\"demo-header\">
+          {if (nzchar(trimws(title))) glue::glue('<h1 class=\"demo-title\">{env$escape_text(title)}</h1>') else ''}
+          {if (nzchar(trimws(subtitle))) glue::glue('<p class=\"demo-subtitle\">{env$escape_text(subtitle)}</p>') else ''}
+        </div>"
+      )
+    } else {
+      ""
+    }
+
     body_html <- glue::glue(
       "<div id=\"{env$escape_text(id)}\" class=\"ohep-demographics-root\">
-        <div class=\"demo-header\">
-          <h1 class=\"demo-title\">{env$escape_text(title)}</h1>
-          {if (nzchar(trimws(subtitle))) glue::glue('<p class=\"demo-subtitle\">{env$escape_text(subtitle)}</p>') else ''}
-        </div>
+        {demo_header_html}
         <div class=\"demo-grid\">
           {panel_html(slots$tl)}
           {panel_html(slots$tr)}
@@ -3814,20 +3998,42 @@ ohepRDisplayr <- function() {
   --matrix-brand-text: {c$matrix_brand_text};
   --matrix-brand-dot: {c$matrix_brand_dot};
   width: 1280px;
-  height: 720px;
-  background: var(--matrix-slide-bg);
-  padding: 36px 48px;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1);
+  min-height: 720px;
+  aspect-ratio: 16 / 9;
+  background: transparent;
+  padding: 8px 0 0;
+  border-radius: 0;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
 }}
 {scope} .header-section {{ display: flex; flex-direction: column; border-bottom: 2px solid var(--matrix-header-divider); padding-bottom: 12px; margin-bottom: 20px; flex-shrink: 0; }}
 {scope} .theme-kicker {{ font-size: 14px; font-weight: 800; color: var(--matrix-theme-kicker); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }}
 {scope} .title {{ font-size: 32px; font-weight: 900; color: var(--matrix-title); margin: 0 0 6px 0; letter-spacing: -0.5px; }}
 {scope} .subtitle {{ font-size: 15px; color: var(--matrix-subtitle); font-weight: 500; margin: 0; }}
+{scope} .controls-bar {{ display: flex; justify-content: flex-end; align-items: center; margin-bottom: 14px; }}
+{scope} .axis-filter {{ display: inline-flex; align-items: center; gap: 10px; }}
+{scope} .axis-filter-label {{ font-size: 12px; font-weight: 800; color: var(--matrix-axis-text); text-transform: uppercase; letter-spacing: 0.5px; }}
+{scope} .axis-select {{
+  appearance: none;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  background: #F8FAFC;
+  color: var(--matrix-title);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 34px 8px 12px;
+  min-width: 220px;
+  outline: none;
+  cursor: pointer;
+  background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748B'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+}}
+{scope} .axis-select:focus {{ border-color: #0D9488; box-shadow: 0 0 0 3px rgba(13,148,136,.15); }}
 {scope} .chart-wrapper {{ display: flex; position: relative; flex: 1; min-height: 0; margin-top: 10px; }}
 {scope} .y-axis {{ width: 60px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-bottom: 20px; flex-shrink: 0; }}
 {scope} .y-axis-text {{ font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }}
@@ -3862,6 +4068,7 @@ ohepRDisplayr <- function() {
     theme_kicker = "Decision Matrix",
     title = "Health Driver Action Matrix",
     subtitle = "",
+    show_axis_control = TRUE,
     y_axis_main = "IMPACT ON OUTCOMES",
     x_axis_main = "PERFORMANCE VS. BENCHMARK",
     y_axis_low = "LOW",
@@ -3877,7 +4084,32 @@ ohepRDisplayr <- function() {
       extra_overrides = inline_overrides,
       graph = "decision_matrix"
     )
-    pts <- env$normalize_decision_matrix_points(points)
+    matrix_variants <- list(
+      overall = points
+    )
+    if ("impact_engagement" %in% names(points)) {
+      p <- points
+      p$impact <- suppressWarnings(as.numeric(p$impact_engagement))
+      matrix_variants$engagement <- p
+    }
+    if ("impact_burnout" %in% names(points)) {
+      p <- points
+      p$impact <- suppressWarnings(as.numeric(p$impact_burnout))
+      matrix_variants$burnout <- p
+    }
+    if ("impact_work_satisfaction" %in% names(points)) {
+      p <- points
+      p$impact <- suppressWarnings(as.numeric(p$impact_work_satisfaction))
+      matrix_variants$work_satisfaction <- p
+    }
+    if ("impact_enps" %in% names(points)) {
+      p <- points
+      p$impact <- suppressWarnings(as.numeric(p$impact_enps))
+      matrix_variants$enps <- p
+    }
+
+    matrix_variants <- lapply(matrix_variants, env$normalize_decision_matrix_points)
+    pts <- matrix_variants$overall
 
     points_html <- vapply(seq_len(nrow(pts)), function(i) {
       label_txt <- as.character(pts$label[[i]])
@@ -3885,21 +4117,68 @@ ohepRDisplayr <- function() {
       est_label_w <- pmax(10, pmin(34, 3 + 0.72 * chars))
       side <- if ((pts$x_pct[[i]] + est_label_w) > 98) "left" else "right"
       if ((pts$x_pct[[i]] - est_label_w) < 2) side <- "right"
+      metric_attrs <- paste(
+        vapply(names(matrix_variants), function(metric_key) {
+          pts_metric <- matrix_variants[[metric_key]]
+          paste0(
+            " data-top-", metric_key, "=\"", sprintf('%.1f', 100 - pts_metric$y_pct[[i]]), "\"",
+            " data-dot-", metric_key, "=\"", pts_metric$dot_class[[i]], "\""
+          )
+        }, character(1)),
+        collapse = ""
+      )
       glue::glue(
-        "<div class=\"point\" style=\"left: {sprintf('%.1f', pts$x_pct[[i]])}%; top: {sprintf('%.1f', 100 - pts$y_pct[[i]])}%;\">
+        "<div class=\"point\"{metric_attrs} style=\"left: {sprintf('%.1f', pts$x_pct[[i]])}%; top: {sprintf('%.1f', 100 - pts$y_pct[[i]])}%;\">
           <div class=\"dot {pts$dot_class[[i]]}\"></div>
           <div class=\"label label-{side}\">{env$escape_text(label_txt)}</div>
         </div>"
       )
     }, character(1))
 
+    axis_options <- c(
+      overall = "Outcomes (Overall)",
+      engagement = "Engagement",
+      burnout = "Burnout",
+      work_satisfaction = "Work Satisfaction",
+      enps = "eNPS"
+    )
+    axis_options <- axis_options[names(axis_options) %in% names(matrix_variants)]
+    if (!("overall" %in% names(axis_options))) {
+      axis_options <- c(overall = "Outcomes (Overall)", axis_options)
+    }
+    select_options_html <- paste(vapply(names(axis_options), function(k) {
+      paste0("<option value=\"", k, "\"", if (identical(k, "overall")) " selected" else "", ">", env$escape_text(axis_options[[k]]), "</option>")
+    }, character(1)), collapse = "")
+
+    header_html <- if (nzchar(trimws(theme_kicker)) || nzchar(trimws(title)) || nzchar(trimws(subtitle))) {
+      glue::glue(
+        "<div class=\"header-section\">
+          {if (nzchar(trimws(theme_kicker))) glue::glue('<div class=\"theme-kicker\">{env$escape_text(theme_kicker)}</div>') else ''}
+          {if (nzchar(trimws(title))) glue::glue('<h1 class=\"title\">{env$escape_text(title)}</h1>') else ''}
+          {if (nzchar(trimws(subtitle))) glue::glue('<p class=\"subtitle\">{env$escape_text(subtitle)}</p>') else ''}
+        </div>"
+      )
+    } else {
+      ""
+    }
+
+    controls_html <- if (isTRUE(show_axis_control)) {
+      glue::glue(
+        "<div class=\"controls-bar\">
+          <div class=\"axis-filter\">
+            <label for=\"{env$escape_text(id)}-axis\" class=\"axis-filter-label\">Y-Axis:</label>
+            <select id=\"{env$escape_text(id)}-axis\" class=\"axis-select\">{select_options_html}</select>
+          </div>
+        </div>"
+      )
+    } else {
+      ""
+    }
+
     body_html <- glue::glue(
       "<div id=\"{env$escape_text(id)}\" class=\"ohep-dm-root\">
-        <div class=\"header-section\">
-          <div class=\"theme-kicker\">{env$escape_text(theme_kicker)}</div>
-          <h1 class=\"title\">{env$escape_text(title)}</h1>
-          {if (nzchar(subtitle)) glue::glue('<p class=\"subtitle\">{env$escape_text(subtitle)}</p>') else ''}
-        </div>
+        {header_html}
+        {controls_html}
         <div class=\"chart-wrapper\">
           <div class=\"y-axis\">
             <div class=\"y-axis-text\">{env$escape_text(y_axis_high)}</div>
@@ -3921,6 +4200,26 @@ ohepRDisplayr <- function() {
           <div class=\"x-axis-main\">{env$escape_text(x_axis_main)}</div>
           <div class=\"x-axis-text\">{env$escape_text(x_axis_high)}</div>
         </div>
+        <script>
+          (function() {{
+            var root = document.getElementById('{env$escape_text(id)}');
+            if (!root) return;
+            var axisSel = root.querySelector('.axis-select') || document.getElementById('{env$escape_text(id)}-axis');
+            if (!axisSel) return;
+            var points = root.querySelectorAll('.point');
+            function applyAxis(key) {{
+              points.forEach(function(pt) {{
+                var top = pt.getAttribute('data-top-' + key);
+                var dotCls = pt.getAttribute('data-dot-' + key);
+                if (top) pt.style.top = top + '%';
+                var dot = pt.querySelector('.dot');
+                if (dot && dotCls) dot.className = 'dot ' + dotCls;
+              }});
+            }}
+            axisSel.addEventListener('change', function() {{ applyAxis(axisSel.value); }});
+            applyAxis(axisSel.value || 'overall');
+          }})();
+        </script>
       </div>"
     )
 
@@ -3962,9 +4261,17 @@ ohepRDisplayr <- function() {
     outcomes_table <- env$build_outcomes_table(outcomes)
     left_col <- env$build_item_column(items, "left", active_benchmarks = active_benchmarks)
     right_col <- env$build_item_column(items, "right", active_benchmarks = active_benchmarks)
+    count_rows <- function(col_name) {
+      sub <- items[as.character(items$column) == col_name, , drop = FALSE]
+      if (nrow(sub) < 1L) return(0L)
+      section_keys <- paste0(sub$section_order, "::", sub$section)
+      nrow(sub) + length(unique(section_keys))
+    }
+    max_item_rows <- max(count_rows("left"), count_rows("right"))
+    dynamic_min_height <- max(720L, 420L + as.integer(max_item_rows) * 44L)
 
     body_html <- glue::glue(
-      "<div id=\"{env$escape_text(id)}\" class=\"ohep-root\">
+      "<div id=\"{env$escape_text(id)}\" class=\"ohep-root\" style=\"min-height:{as.integer(dynamic_min_height)}px;\">
         <div class=\"top-row\">
           {hero}
           {outcomes_table}

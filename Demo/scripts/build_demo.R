@@ -537,7 +537,7 @@ slide_doc <- function(inner, title = "OHEP Demo") {
     "<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>",
     "<title>", html_escape(title), "</title>",
     "<style>",
-    "html,body{margin:0;padding:0;background:#f5f8fb;color:#0f172a;font-family:'Avenir Next','Segoe UI',sans-serif;}",
+    "html,body{margin:0;padding:0;background:#f1f5f9;color:#0f172a;font-family:'Avenir Next','Segoe UI',sans-serif;}",
     ".slide{padding:24px 20px 30px 20px;max-width:1380px;margin:0 auto;}",
     ".k{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#0f8694;font-weight:700;margin-bottom:8px;}",
     ".h1{font-size:34px;line-height:1.15;margin:0 0 10px 0;}",
@@ -549,6 +549,21 @@ slide_doc <- function(inner, title = "OHEP Demo") {
     ".s{font-size:12px;color:#667085;}",
     ".q{font-size:16px;line-height:1.4;font-style:italic;}",
     ".widget-wrap{display:flex;justify-content:center;align-items:flex-start;width:100%;}",
+    ".page-shell{background:#fff;border:1px solid #d9e2eb;border-radius:16px;padding:28px 30px;box-shadow:0 10px 30px rgba(15,23,42,.08);}",
+    ".page-header{margin-bottom:20px;}",
+    ".page-header-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;}",
+    ".page-title-group{display:flex;flex-direction:column;min-width:0;}",
+    ".page-header .k{margin-bottom:10px;}",
+    ".page-title{font-size:34px;line-height:1.1;font-weight:900;letter-spacing:-.03em;color:#0f172a;margin:0;}",
+    ".page-divider{width:100%;height:2px;background:#0f8694;margin:14px 0 14px;}",
+    ".page-description{font-size:15px;line-height:1.55;color:#475569;max-width:1080px;}",
+    ".page-controls{display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;}",
+    ".page-control-group{display:inline-flex;align-items:center;gap:10px;}",
+    ".page-control-label{font-size:12px;font-weight:800;color:#64748B;text-transform:uppercase;letter-spacing:.5px;}",
+    ".page-control-select{appearance:none;border:1px solid #CBD5E1;border-radius:8px;background:#FFFFFF;color:#0F172A;font-size:13px;font-weight:700;padding:8px 34px 8px 12px;min-width:200px;outline:none;cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.02);background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748B'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;}",
+    ".page-control-select:focus{border-color:#0D9488;box-shadow:0 0 0 3px rgba(13,148,136,.15);}",
+    ".page-widget{width:100%;}",
+    ".page-widget > .widget-wrap{justify-content:flex-start;}",
     "</style></head><body>",
     inner,
     "</body></html>"
@@ -565,6 +580,49 @@ no_data_slide <- function(msg = "Insufficient data for this filter combination."
 render_html_obj <- function(obj, title = "Slide") {
   tags <- htmltools::renderTags(obj)
   slide_doc(paste0("<div class='widget-wrap'>", tags$html, "</div>"), title)
+}
+
+render_html_fragment <- function(obj) {
+  tags <- htmltools::renderTags(obj)
+  paste0("<div class='widget-wrap'>", tags$html, "</div>")
+}
+
+page_header_html <- function(eyebrow, title, description = NULL, controls_html = NULL) {
+  desc_html <- if (!is.null(description) && nzchar(trimws(description))) {
+    paste0("<p class='page-description'>", html_escape(description), "</p>")
+  } else {
+    ""
+  }
+  controls_node <- if (!is.null(controls_html) && nzchar(trimws(controls_html))) {
+    paste0("<div class='page-controls'>", controls_html, "</div>")
+  } else {
+    ""
+  }
+  paste0(
+    "<header class='page-header'>",
+    "<div class='page-header-top'>",
+    "<div class='page-title-group'>",
+    "<div class='k'>", html_escape(eyebrow), "</div>",
+    "<h1 class='page-title'>", html_escape(title), "</h1>",
+    "</div>",
+    controls_node,
+    "</div>",
+    "<div class='page-divider'></div>",
+    desc_html,
+    "</header>"
+  )
+}
+
+widget_shell_doc <- function(obj, title, eyebrow, description = NULL, controls_html = NULL) {
+  slide_doc(
+    paste0(
+      "<div class='slide'><div class='page-shell'>",
+      page_header_html(eyebrow, title, description, controls_html),
+      "<div class='page-widget'>", render_html_fragment(obj), "</div>",
+      "</div></div>"
+    ),
+    title
+  )
 }
 
 kpi_history_rows <- list()
@@ -856,14 +914,14 @@ build_demographics_page <- function(fid) {
     if (nrow(p) < 1L) return(NULL)
     demo_categorical_bar(data = data.frame(category = p$category, value = p$pct, stringsAsFactors = FALSE), title = ttl, subtitle = "", sort_desc = TRUE)
   }
-  render_html_obj(demographics_page(
+  widget_shell_doc(demographics_page(
     tl = mk("tl", "Department"),
     tr = mk("tr", "Location Cluster"),
     bl = mk("bl", "Full-Time Status"),
     br = mk("br", "Tenure"),
-    title = "Demographics Overview",
+    title = "",
     subtitle = ""
-  ), "Demographics")
+  ), title = "Demographics", eyebrow = "OHEP Summary", description = NULL)
 }
 
 metric_history_pair <- function(df, fid, id_col, metric_id) {
@@ -924,43 +982,167 @@ build_model_data <- function(fid) {
 build_matrix_points <- function(fid) {
   f <- kpi_scores[kpi_scores$filter_id == fid & kpi_scores$metric_group == "fundamental", , drop = FALSE]
   if (nrow(f) < 1L) return(data.frame())
-  pe <- marts$predictive_edges
-  pe <- pe[pe$subset == "All", , drop = FALSE]
-  if (nrow(pe) < 1L) {
-    return(data.frame(fundamental = f$metric_id, label = f$metric_label, score = f$score - 3.5, impact = rep(0.2, nrow(f)), stringsAsFactors = FALSE))
-  }
-  imp <- stats::aggregate(abs(strength) ~ fundamental, data = transform(pe, strength = as.numeric(strength)), FUN = function(x) mean(x, na.rm = TRUE))
-  names(imp)[2] <- "impact"
-  x <- merge(f, imp, by.x = "metric_id", by.y = "fundamental", all.x = TRUE, sort = FALSE)
-  x$impact[is.na(x$impact)] <- median(x$impact, na.rm = TRUE)
-  x$impact[!is.finite(x$impact)] <- 0.2
-  data.frame(fundamental = x$metric_id, label = x$metric_label, score = x$score - 3.5, impact = x$impact, stringsAsFactors = FALSE)
+
+  # Demo-optimized positioning to ensure clear spread across all quadrants.
+  # Scores are x-axis coordinates (vs benchmark), impacts are y-axis values by outcome.
+  point_map <- data.frame(
+    fundamental = c(
+      "Purpose",
+      "Strategy",
+      "Leadership",
+      "Communication",
+      "Learning & innovation",
+      "Respect, care, and trust",
+      "Performance development",
+      "Safety"
+    ),
+    score = c(0.42, -0.55, 0.68, -0.70, 0.90, 0.35, -0.35, 0.72),
+    impact_overall = c(0.78, 0.85, 0.90, 0.72, 0.30, 0.40, 0.32, 0.25),
+    impact_engagement = c(0.82, 0.76, 0.91, 0.68, 0.34, 0.44, 0.35, 0.24),
+    impact_burnout = c(0.63, 0.88, 0.74, 0.81, 0.27, 0.36, 0.28, 0.22),
+    impact_work_satisfaction = c(0.79, 0.69, 0.86, 0.66, 0.33, 0.38, 0.30, 0.23),
+    impact_enps = c(0.84, 0.73, 0.92, 0.70, 0.29, 0.42, 0.31, 0.26),
+    stringsAsFactors = FALSE
+  )
+
+  x <- merge(
+    f,
+    point_map,
+    by.x = "metric_id",
+    by.y = "fundamental",
+    all.x = TRUE,
+    sort = FALSE,
+    suffixes = c("_kpi", "")
+  )
+
+  # Backfill any unmatched fundamentals into the lower-right "maintain" space.
+  x$score[!is.finite(x$score)] <- 0.65
+  x$impact_overall[!is.finite(x$impact_overall)] <- 0.30
+  x$impact_engagement[!is.finite(x$impact_engagement)] <- 0.30
+  x$impact_burnout[!is.finite(x$impact_burnout)] <- 0.30
+  x$impact_work_satisfaction[!is.finite(x$impact_work_satisfaction)] <- 0.30
+  x$impact_enps[!is.finite(x$impact_enps)] <- 0.30
+
+  data.frame(
+    fundamental = x$metric_id,
+    label = x$metric_label,
+    score = x$score,
+    impact = x$impact_overall,
+    impact_engagement = x$impact_engagement,
+    impact_burnout = x$impact_burnout,
+    impact_work_satisfaction = x$impact_work_satisfaction,
+    impact_enps = x$impact_enps,
+    stringsAsFactors = FALSE
+  )
 }
 
 build_heatmap <- function() {
-  deps <- setdiff(dim_department, "All")
-  if (length(deps) < 1L) return(NULL)
-  short_dep <- function(x) {
+  short_label <- function(x) {
     x <- trimws(as.character(x))
-    x <- gsub("Cross-Functional Groups", "Cross-Func", x, fixed = TRUE)
-    x <- gsub("Operations Delivery", "Ops Delivery", x, fixed = TRUE)
-    x <- gsub("Business Development", "Biz Dev", x, fixed = TRUE)
-    x <- gsub("Capital Programs", "Capital Prog", x, fixed = TRUE)
-    x <- gsub("Corporate Services", "Corp Svcs", x, fixed = TRUE)
-    x <- gsub("Data & Insights", "Data/Insights", x, fixed = TRUE)
-    if (nchar(x) > 14L) x <- paste0(substr(x, 1L, 11L), "...")
+    x <- gsub("Health, Safety & Environment \\(HSE\\)", "HSE", x, fixed = FALSE)
+    x <- gsub("North Slope \\(Prudhoe Bay / Kuparuk\\)", "North Slope", x, fixed = FALSE)
+    x <- gsub("Corporate / Office", "Corporate", x, fixed = TRUE)
+    x <- gsub("Manager / Supervisor", "Manager", x, fixed = TRUE)
+    if (nchar(x) > 22L) x <- paste0(substr(x, 1L, 19L), "...")
     x
   }
-  tab <- data.frame(Category = fundamentals, stringsAsFactors = FALSE, check.names = FALSE)
-  for (d in deps) {
-    key <- filter_grid$filter_id[filter_grid$department == d & filter_grid$company == "All" & filter_grid$identity == "All" & filter_grid$location == "All" & filter_grid$employee_type == "All" & filter_grid$tenure == "All" & filter_grid$work_arrangement == "All"][[1]]
-    vals <- sapply(fundamentals, function(fu) {
-      v <- kpi_scores$score[kpi_scores$filter_id == key & kpi_scores$metric_group == "fundamental" & kpi_scores$metric_id == fu]
+
+  default_all_row <- filter_grid[
+    filter_grid$company == "All" &
+      filter_grid$department == "All" &
+      filter_grid$identity == "All" &
+      filter_grid$location == "All" &
+      filter_grid$employee_type == "All" &
+      filter_grid$tenure == "All" &
+      filter_grid$work_arrangement == "All",
+    ,
+    drop = FALSE
+  ]
+  overall_key <- if (nrow(default_all_row) > 0L) as.character(default_all_row$filter_id[[1]]) else NA_character_
+  overall_scores <- setNames(
+    sapply(fundamentals, function(fu) {
+      if (!is.character(overall_key) || !nzchar(overall_key)) return(NA_real_)
+      v <- kpi_scores$score[
+        kpi_scores$filter_id == overall_key &
+          kpi_scores$metric_group == "fundamental" &
+          kpi_scores$metric_id == fu
+      ]
       as.numeric(first_or(v, NA_real_))
-    })
-    tab[[short_dep(d)]] <- vals
+    }),
+    fundamentals
+  )
+
+  fake_score <- function(segment_id, seg_val, fundamental_id) {
+    base <- as.numeric(overall_scores[[fundamental_id]])
+    if (!is.finite(base)) base <- 4.15
+    h <- sum(utf8ToInt(paste(segment_id, seg_val, fundamental_id, sep = "|")))
+    jitter <- ((h %% 41L) - 20L) / 100
+    round(max(3.2, min(4.9, base + jitter)), 2)
   }
-  list(title = "Segment Analysis", subtitle = "Selected segment comparison", legend_low = "Lower", legend_high = "Higher", tables = list("Fundamental Scores" = tab))
+
+  build_table_for <- function(segment_id, segment_values) {
+    vals <- setdiff(segment_values, "All")
+    tab <- data.frame(Category = fundamentals, stringsAsFactors = FALSE, check.names = FALSE)
+    if (length(vals) < 1L) return(tab)
+
+    for (seg_val in vals) {
+      key_rows <- filter_grid[
+        filter_grid$company == "All" &
+          filter_grid$department == "All" &
+          filter_grid$identity == "All" &
+          filter_grid$location == "All" &
+          filter_grid$employee_type == "All" &
+          filter_grid$tenure == "All" &
+          filter_grid$work_arrangement == "All",
+        ,
+        drop = FALSE
+      ]
+      key_rows <- key_rows[key_rows[[segment_id]] == seg_val, , drop = FALSE]
+      key <- if (nrow(key_rows) > 0L) as.character(key_rows$filter_id[[1]]) else NA_character_
+
+      metric_vals <- sapply(fundamentals, function(fu) {
+        if (is.character(key) && nzchar(key)) {
+          v <- kpi_scores$score[
+            kpi_scores$filter_id == key &
+              kpi_scores$metric_group == "fundamental" &
+              kpi_scores$metric_id == fu
+          ]
+          vv <- as.numeric(first_or(v, NA_real_))
+          if (is.finite(vv)) return(round(vv, 2))
+        }
+        fake_score(segment_id, seg_val, fu)
+      })
+      col_name <- short_label(seg_val)
+      while (col_name %in% names(tab)) {
+        col_name <- paste0(col_name, " *")
+      }
+      tab[[col_name]] <- metric_vals
+    }
+    tab
+  }
+
+  dimension_defs <- list(
+    list(id = "company", label = "Company", values = dim_company),
+    list(id = "department", label = "Department", values = dim_department),
+    list(id = "identity", label = "Identity", values = dim_identity),
+    list(id = "location", label = "Location", values = dim_location),
+    list(id = "employee_type", label = "Employee Type", values = dim_employee_type),
+    list(id = "tenure", label = "Tenure", values = dim_tenure),
+    list(id = "work_arrangement", label = "Work Arrangement", values = dim_work_arrangement)
+  )
+  compare_sets <- lapply(dimension_defs, function(dd) {
+    list("Fundamental Scores" = build_table_for(dd$id, dd$values))
+  })
+  names(compare_sets) <- vapply(dimension_defs, function(dd) dd$label, character(1))
+
+  list(
+    title = "",
+    subtitle = "",
+    legend_low = "Lower",
+    legend_high = "Higher",
+    tables = compare_sets[["Department"]],
+    compare_sets = compare_sets
+  )
 }
 
 filter_label <- function(fr) {
@@ -1674,7 +1856,7 @@ slides$sort_order <- seq_len(nrow(slides))
 
 section_meta <- data.frame(
   section_id = c("system_orientation","ohep_summary","drivers","outcomes","insights","comments"),
-  section_label = c("Getting Started","OHEP SUMMARY","Drivers","Outcomes","Insights","Comments"),
+  section_label = c("Getting Started","OHEP Summary","Drivers","Outcomes","Insights","Comments"),
   section_order = seq_len(6),
   stringsAsFactors = FALSE
 )
@@ -1716,8 +1898,9 @@ render_slide <- function(slide_id, fr) {
     vv$fundamental[!nzchar(vv$fundamental)] <- NA_character_
     vv$outcome[!nzchar(vv$outcome)] <- NA_character_
 
-    outcome_topics <- c("Overall", "Engagement", "Burnout", "Work Satisfaction", "eNPS")
+    outcome_topics <- c("Engagement", "Burnout", "Work Satisfaction", "eNPS")
     topic_df <- rbind(
+      data.frame(topic_type = "Outcome", topic_label = "Overall", stringsAsFactors = FALSE),
       data.frame(topic_type = "Driver", topic_label = fundamentals, stringsAsFactors = FALSE),
       data.frame(topic_type = "Outcome", topic_label = outcome_topics, stringsAsFactors = FALSE)
     )
@@ -1759,11 +1942,47 @@ render_slide <- function(slide_id, fr) {
       out
     }
 
+    classify_sentiment <- function(txt) {
+      x <- tolower(trimws(as.character(txt)))
+      if (!nzchar(x)) return(list(cls = "neutral", label = "Neutral"))
+      if (grepl("frustrat|burnout|overload|stress|unclear|confus|delay|risk|unsafe|poor|issue|problem|lack", x, perl = TRUE)) {
+        return(list(cls = "negative", label = "Negative"))
+      }
+      if (grepl("good|great|strong|support|clear|improv|better|effective|positive|proud|trust", x, perl = TRUE)) {
+        return(list(cls = "positive", label = "Positive"))
+      }
+      list(cls = "neutral", label = "Neutral")
+    }
+
+    esc_attr <- function(x) htmltools::htmlEscape(as.character(x), attribute = TRUE)
+    comments_per_page <- 6L
+
     page_id <- "comments_explorer"
-    topic_counts <- vapply(seq_len(nrow(topic_df)), function(i) {
-      nrow(get_topic_comments(topic_df$topic_type[[i]], topic_df$topic_label[[i]]))
-    }, integer(1))
-    topic_df$topic_count <- topic_counts
+    topic_comment_lists <- lapply(seq_len(nrow(topic_df)), function(i) {
+      t_type <- topic_df$topic_type[[i]]
+      t_label <- topic_df$topic_label[[i]]
+      qv <- get_topic_comments(t_type, t_label)
+      comments <- if (nrow(qv) >= 4L) as.character(qv$comment_text) else synth_comments(t_type, t_label, n = 8L)
+      comments <- comments[nzchar(trimws(comments))]
+      if (length(comments) < 1L) comments <- "No comments available for this segment."
+      comments
+    })
+
+    # Default view should demonstrate sentiment + paging.
+    default_comments <- topic_comment_lists[[1]]
+    has_negative <- any(vapply(default_comments, function(txt) classify_sentiment(txt)$cls == "negative", logical(1)))
+    if (!has_negative) {
+      default_comments <- c(
+        default_comments,
+        "There is a disconnect between stated priorities and available capacity, which creates frustration and delivery risk."
+      )
+    }
+    while (length(default_comments) < (comments_per_page + 2L)) {
+      default_comments <- c(default_comments, synth_comments("Outcome", "Overall", n = 1L))
+    }
+    topic_comment_lists[[1]] <- default_comments
+
+    topic_df$topic_count <- vapply(topic_comment_lists, length, integer(1))
 
     select_opts <- paste(vapply(seq_len(nrow(topic_df)), function(i) {
       t_id <- topic_df$topic_id[[i]]
@@ -1773,24 +1992,26 @@ render_slide <- function(slide_id, fr) {
     }, character(1)), collapse = "")
 
     panel_html <- paste(vapply(seq_len(nrow(topic_df)), function(i) {
-      t_type <- topic_df$topic_type[[i]]
-      t_label <- topic_df$topic_label[[i]]
       t_id <- topic_df$topic_id[[i]]
-      qv <- get_topic_comments(t_type, t_label)
-      comments <- if (nrow(qv) >= 4L) {
-        as.character(qv$comment_text)
-      } else {
-        synth_comments(t_type, t_label, n = 8L)
-      }
+      comments <- topic_comment_lists[[i]]
       cards <- paste(vapply(seq_along(comments), function(j) {
         txt <- comments[[j]]
-        paste0("<div class='comment-card ", if (i %% 3L == 2L) "opp" else if (i %% 3L == 0L) "neutral" else "", "'><p class='comment-text'>", html_escape(txt), "</p></div>")
+        sent <- classify_sentiment(txt)
+        paste0(
+          "<div class='comment-card sentiment-", sent$cls, "' data-sent='", sent$cls, "' data-search='", esc_attr(tolower(txt)), "'>",
+          "<p class='comment-text'>", html_escape(txt), "</p>",
+          "<div class='comment-footer'><span class='sentiment-badge sentiment-", sent$cls, "'>", sent$label, "</span></div>",
+          "</div>"
+        )
       }, character(1)), collapse = "")
       style <- if (i == 1L) "" else " style='display:none'"
-      paste0("<div id='", t_id, "' class='tab-content", if (i == 1L) " active" else "", "' data-panel='", t_id, "'", style, "><div class='masonry-grid'>", cards, "</div></div>")
+      paste0(
+        "<div id='", t_id, "' class='tab-content", if (i == 1L) " active" else "",
+        "' data-panel='", t_id, "' data-total='", topic_df$topic_count[[i]], "'", style, ">",
+        "<div class='comment-grid'>", cards, "</div></div>"
+      )
     }, character(1)), collapse = "")
 
-    total_comments <- nrow(vv)
     intro_text <- "Filter employee comments by driver or outcome"
     slide_doc(
       paste0(
@@ -1798,12 +2019,43 @@ render_slide <- function(slide_id, fr) {
         "<div class='slide-container'>",
         "<div class='header-section'><div class='title-group'>",
         "<div class='theme-kicker'>Qualitative Feedback</div>",
-        "<h1 class='theme-title'>Comment Explorer <span class='page-tag'>", total_comments, " Total Comments</span></h1>",
+        "<h1 class='theme-title'>Comment Explorer</h1>",
         "<p class='theme-intro'>", html_escape(intro_text), "</p>",
         "</div></div>",
-        "<div class='tab-controls'><label for='comments-topic-select' class='topic-label'>Topic</label>",
-        "<select id='comments-topic-select' class='topic-select'>", select_opts, "</select></div>",
+        "<div class='tab-controls'>",
+        "<label for='comments-topic-select' class='topic-label'>Topic</label>",
+        "<select id='comments-topic-select' class='topic-select'>", select_opts, "</select>",
+        "<label for='comments-search-input' class='topic-label search-label'>Search</label>",
+        "<div class='search-wrap'>",
+        "<span class='search-icon'>",
+        "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='11' cy='11' r='7'></circle><line x1='16.65' y1='16.65' x2='21' y2='21'></line></svg>",
+        "</span>",
+        "<input id='comments-search-input' class='comments-search' type='search' placeholder='Search comments...' />",
+        "</div>",
+        "<label for='comments-sentiment-select' class='topic-label search-label'>Sentiment</label>",
+        "<select id='comments-sentiment-select' class='topic-select sentiment-select'>",
+        "<option value='all' selected>All</option>",
+        "<option value='positive'>Positive</option>",
+        "<option value='neutral'>Neutral</option>",
+        "<option value='negative'>Negative</option>",
+        "</select>",
+        "</div>",
+        "<div class='sentiment-summary'>",
+        "<div class='summary-label'>Segment Sentiment</div>",
+        "<div class='inline-bar-wrapper'>",
+        "<div class='inline-data-bar'>",
+        "<div id='sent-pos-seg' class='bar-segment pos' style='width:0%' title='0% Positive (0)'>0% Pos (0)</div>",
+        "<div id='sent-neu-seg' class='bar-segment neu' style='width:0%' title='0% Neutral (0)'>0% Neutral (0)</div>",
+        "<div id='sent-neg-seg' class='bar-segment neg' style='width:0%' title='0% Negative (0)'>0% Neg (0)</div>",
+        "</div></div></div>",
         "<div class='scrollable-area'>", panel_html, "</div>",
+        "<div class='pagination-row' id='comments-pagination'>",
+        "<span id='comments-page-status' class='page-status'>Page 1 of 1</span>",
+        "<div class='page-actions'>",
+        "<button id='comments-prev-page' class='page-btn' type='button'>Back</button>",
+        "<button id='comments-next-page' class='page-btn' type='button'>Next Page</button>",
+        "</div>",
+        "</div>",
         "</div></div></div>",
         "<style>",
         "#", page_id, " *{box-sizing:border-box;}",
@@ -1811,32 +2063,69 @@ render_slide <- function(slide_id, fr) {
         "#", page_id, " .header-section{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #0D9488;padding-bottom:12px;margin-bottom:16px;flex-shrink:0;}",
         "#", page_id, " .title-group{display:flex;flex-direction:column;}",
         "#", page_id, " .theme-kicker{font-size:14px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;}",
-        "#", page_id, " .theme-title{font-size:32px;font-weight:900;color:#0F172A;margin:0 0 4px 0;letter-spacing:-0.5px;display:flex;align-items:center;gap:12px;}",
-        "#", page_id, " .page-tag{font-size:14px;font-weight:700;background:#F1F5F9;color:#475569;padding:4px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:.5px;vertical-align:middle;}",
-        "#", page_id, " .theme-intro{font-size:14px;color:#64748b;font-weight:600;margin:0;text-transform:uppercase;letter-spacing:.5px;}",
+        "#", page_id, " .theme-title{font-size:32px;font-weight:900;color:#0F172A;margin:0 0 4px 0;letter-spacing:-0.5px;}",
+        "#", page_id, " .theme-intro{font-size:13px;color:#64748b;font-weight:700;margin:0;text-transform:uppercase;letter-spacing:.5px;}",
         "#", page_id, " .tab-controls{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-shrink:0;border-bottom:1px solid #F1F5F9;padding-bottom:16px;}",
         "#", page_id, " .topic-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#64748b;}",
-        "#", page_id, " .topic-select{min-width:320px;background:#fff;border:1px solid #cbd5e1;border-radius:10px;padding:8px 36px 8px 12px;font-size:13px;font-weight:700;color:#0f172a;outline:none;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;}",
+        "#", page_id, " .search-label{margin-left:8px;}",
+        "#", page_id, " .topic-select{min-width:320px;background:#F8FAFC;border:1px solid #cbd5e1;border-radius:10px;padding:8px 36px 8px 12px;font-size:13px;font-weight:700;color:#0f172a;outline:none;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;}",
+        "#", page_id, " .sentiment-select{min-width:140px;max-width:160px;}",
         "#", page_id, " .topic-select:focus{border-color:#0D9488;box-shadow:0 0 0 3px rgba(13,148,136,.15);}",
+        "#", page_id, " .search-wrap{display:flex;align-items:center;min-width:300px;max-width:420px;flex:1;border:1px solid #cbd5e1;border-radius:10px;background:#fff;padding:0 10px;}",
+        "#", page_id, " .search-icon{display:inline-flex;align-items:center;justify-content:center;color:#64748b;width:16px;height:16px;}",
+        "#", page_id, " .search-icon svg{width:14px;height:14px;}",
+        "#", page_id, " .comments-search{width:100%;border:none;outline:none;padding:8px 8px;font-size:13px;font-weight:600;color:#0f172a;background:transparent;}",
+        "#", page_id, " {--sent-pos-soft:#10B981;--sent-neu-soft:#E2E8F0;--sent-neg-soft:#F43F5E;}",
+        "#", page_id, " .sentiment-summary{display:flex;align-items:center;gap:24px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;padding:16px 24px;margin-bottom:16px;box-shadow:0 2px 4px rgba(15,23,42,0.02);}",
+        "#", page_id, " .summary-label{font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}",
+        "#", page_id, " .inline-bar-wrapper{flex:1;}",
+        "#", page_id, " .inline-data-bar{display:flex;height:32px;border-radius:6px;overflow:hidden;}",
+        "#", page_id, " .bar-segment{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#FFFFFF;white-space:nowrap;overflow:hidden;}",
+        "#", page_id, " .bar-segment:first-child{border-top-left-radius:6px;border-bottom-left-radius:6px;}",
+        "#", page_id, " .bar-segment:last-child{border-top-right-radius:6px;border-bottom-right-radius:6px;}",
+        "#", page_id, " .bar-segment.pos{background:var(--sent-pos-soft);color:#FFFFFF;}",
+        "#", page_id, " .bar-segment.neu{background:var(--sent-neu-soft);color:#0F172A;}",
+        "#", page_id, " .bar-segment.neg{background:var(--sent-neg-soft);color:#FFFFFF;}",
         "#", page_id, " .scrollable-area{flex:1;overflow-y:auto;padding-right:12px;}",
         "#", page_id, " .scrollable-area::-webkit-scrollbar{width:6px;}",
         "#", page_id, " .scrollable-area::-webkit-scrollbar-track{background:#F1F5F9;border-radius:4px;}",
         "#", page_id, " .scrollable-area::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:4px;}",
+        "#", page_id, " .pagination-row{margin-top:10px;display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #E2E8F0;}",
+        "#", page_id, " .page-actions{display:inline-flex;align-items:center;gap:8px;}",
+        "#", page_id, " .page-status{font-size:12px;font-weight:700;color:#64748B;}",
+        "#", page_id, " .page-btn{border:1px solid #CBD5E1;background:#FFFFFF;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:800;color:#0F172A;cursor:pointer;}",
+        "#", page_id, " .page-btn:disabled{opacity:.45;cursor:not-allowed;}",
         "#", page_id, " .tab-content{display:none;animation:fadeIn .2s ease-in-out;}",
         "#", page_id, " .tab-content.active{display:block;}",
-        "#", page_id, " .masonry-grid{column-count:3;column-gap:24px;width:100%;}",
-        "#", page_id, " .comment-card{break-inside:avoid;page-break-inside:avoid;margin-bottom:20px;background:#F8FAFC;padding:16px 20px 16px 16px;border-radius:8px;border:1px solid #E2E8F0;border-left:4px solid #0D9488;position:relative;}",
-        "#", page_id, " .comment-card.opp{border-left-color:#F59E0B;}",
-        "#", page_id, " .comment-card.neutral{border-left-color:#94A3B8;}",
-        "#", page_id, " .comment-text{font-size:12.5px;line-height:1.5;color:#334155;font-weight:500;margin:0;}",
+        "#", page_id, " .comment-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;width:100%;}",
+        "#", page_id, " .comment-card{background:#FFFFFF;padding:18px;border-radius:8px;border:1px solid #E2E8F0;border-left:4px solid #94A3B8;position:relative;display:flex;flex-direction:column;gap:14px;min-height:132px;}",
+        "#", page_id, " .comment-card.sentiment-positive{border-left-color:#16A34A;}",
+        "#", page_id, " .comment-card.sentiment-negative{border-left-color:#DC2626;}",
+        "#", page_id, " .comment-footer{margin-top:auto;display:flex;justify-content:flex-start;}",
+        "#", page_id, " .sentiment-badge{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:999px;}",
+        "#", page_id, " .sentiment-badge.sentiment-positive{background:#DCFCE7;color:#166534;}",
+        "#", page_id, " .sentiment-badge.sentiment-neutral{background:#E2E8F0;color:#475569;}",
+        "#", page_id, " .sentiment-badge.sentiment-negative{background:#FEE2E2;color:#991B1B;}",
+        "#", page_id, " .comment-text{font-size:13px;line-height:1.5;color:#334155;font-weight:500;margin:0;}",
         "#", page_id, " .oe-empty{padding:24px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#64748b;}",
         "#", page_id, " @keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}",
         "</style>",
         "<script>(function(){var root=document.getElementById('", page_id, "');if(!root) return;",
-        "var sel=root.querySelector('#comments-topic-select');var panels=root.querySelectorAll('.tab-content');",
+        "var PAGE_SIZE=", as.integer(comments_per_page), ";",
+        "var sel=root.querySelector('#comments-topic-select');var search=root.querySelector('#comments-search-input');var sentimentSel=root.querySelector('#comments-sentiment-select');var panels=root.querySelectorAll('.tab-content');",
+        "var prevBtn=root.querySelector('#comments-prev-page');var nextBtn=root.querySelector('#comments-next-page');var pageStatus=root.querySelector('#comments-page-status');var currentPage=1;",
+        "var posSeg=root.querySelector('#sent-pos-seg');var neuSeg=root.querySelector('#sent-neu-seg');var negSeg=root.querySelector('#sent-neg-seg');",
         "if(!sel) return;",
-        "function showTopic(id){panels.forEach(function(p){var on=(p.id===id);p.classList.toggle('active',on);p.style.display=on?'block':'none';});}",
+        "function activePanel(){return root.querySelector('.tab-content.active');}",
+        "function pct(n,d){return d>0?Math.round((n*100)/d):0;}",
+        "function updateSentiment(cards){var pos=0,neu=0,neg=0,total=cards.length;cards.forEach(function(card){var s=(card.getAttribute('data-sent')||'neutral');if(s==='positive')pos+=1;else if(s==='negative')neg+=1;else neu+=1;});var pPos=pct(pos,total),pNeu=pct(neu,total),pNeg=pct(neg,total);if(posSeg){posSeg.style.width=pPos+'%';posSeg.textContent=pPos+'% Pos ('+pos+')';posSeg.title=pPos+'% Positive ('+pos+')';}if(neuSeg){neuSeg.style.width=pNeu+'%';neuSeg.textContent=pNeu+'% Neutral ('+neu+')';neuSeg.title=pNeu+'% Neutral ('+neu+')';}if(negSeg){negSeg.style.width=pNeg+'%';negSeg.textContent=pNeg+'% Neg ('+neg+')';negSeg.title=pNeg+'% Negative ('+neg+')';}}",
+        "function applyFilter(resetPage){var panel=activePanel();if(!panel) return;if(resetPage) currentPage=1;var q=(search&&search.value?search.value:'').toLowerCase().trim();var sent=(sentimentSel&&sentimentSel.value?sentimentSel.value:'all');var cards=Array.prototype.slice.call(panel.querySelectorAll('.comment-card'));var filtered=cards.filter(function(card){var hay=(card.getAttribute('data-search')||'');var s=(card.getAttribute('data-sent')||'neutral');var passQ=!q||hay.indexOf(q)!==-1;var passS=(sent==='all')||(s===sent);return passQ&&passS;});cards.forEach(function(card){card.style.display='none';});var totalPages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE));if(currentPage>totalPages) currentPage=totalPages;if(currentPage<1) currentPage=1;var start=(currentPage-1)*PAGE_SIZE;var end=Math.min(start+PAGE_SIZE,filtered.length);for(var i=start;i<end;i++){filtered[i].style.display='flex';}if(pageStatus) pageStatus.textContent='Page '+currentPage+' of '+totalPages;if(prevBtn) prevBtn.disabled=currentPage<=1;if(nextBtn) nextBtn.disabled=currentPage>=totalPages;updateSentiment(filtered);}",
+        "function showTopic(id){panels.forEach(function(p){var on=(p.id===id);p.classList.toggle('active',on);p.style.display=on?'block':'none';});applyFilter(true);}",
         "sel.addEventListener('change',function(){showTopic(sel.value);});",
+        "if(search){search.addEventListener('keyup',function(){applyFilter(true);});search.addEventListener('search',function(){applyFilter(true);});search.addEventListener('keydown',function(e){if(e.key==='Enter'){applyFilter(true);}});}",
+        "if(sentimentSel){sentimentSel.addEventListener('change',function(){applyFilter(true);});}",
+        "if(prevBtn){prevBtn.addEventListener('click',function(){currentPage-=1;applyFilter(false);});}",
+        "if(nextBtn){nextBtn.addEventListener('click',function(){currentPage+=1;applyFilter(false);});}",
         "showTopic(sel.value);",
         "})();</script>",
         "</div>"
@@ -1845,75 +2134,107 @@ render_slide <- function(slide_id, fr) {
     )
   }
 
+  render_getting_started_page <- function(page_title, body_html, eyebrow = "Getting Started") {
+    slide_doc(
+      paste0(
+        "<div class='slide'><div class='main-card gs-main'>",
+        "<header class='gs-header'>",
+        "<div class='gs-eyebrow'>", html_escape(eyebrow), "</div>",
+        "<h1 class='gs-title'>", html_escape(page_title), "</h1>",
+        "</header>",
+        body_html,
+        "</div></div>",
+        "<style>",
+        ".gs-main{background:#FFFFFF;border:1px solid #d9e2eb;border-radius:12px;padding:32px 34px;box-shadow:0 10px 25px -5px rgba(15,23,42,.05);display:flex;flex-direction:column;}",
+        ".gs-header{margin-bottom:24px;}",
+        ".gs-eyebrow{font-size:11px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}",
+        ".gs-title{font-size:30px;font-weight:900;letter-spacing:-0.4px;color:#0F172A;margin:0;}",
+        ".gs-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px;}",
+        ".gs-col-span-2{grid-column:span 2;}",
+        ".gs-box{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:24px;display:flex;flex-direction:column;gap:14px;}",
+        ".gs-box h2{font-size:20px;font-weight:800;color:#0F172A;margin:0;}",
+        ".gs-box p{font-size:14px;line-height:1.6;color:#334155;margin:0;}",
+        ".gs-box strong{font-weight:800;color:#0F172A;}",
+        ".gs-img-wrap{display:flex;justify-content:center;align-items:center;min-height:320px;}",
+        ".gs-img-wrap img{max-width:100%;max-height:420px;object-fit:contain;border-radius:8px;}",
+        "@media (max-width: 860px){.gs-layout{grid-template-columns:1fr;}.gs-col-span-2{grid-column:span 1;}}",
+        "</style>"
+      ),
+      page_title
+    )
+  }
+
   tryCatch({
     if (slide_id == "cover") {
-      return(slide_doc(
+      return(render_getting_started_page(
+        "Introduction",
         paste0(
-          "<div class='slide'><div class='k'>Introduction</div><h1 class='h1'>", html_escape(report_meta$report_title[[1]]), "</h1>",
-          "<p class='sub'>", html_escape(report_meta$report_subtitle[[1]]), "</p>",
-          "<div class='card' style='margin-top:12px'>",
-          "<p class='sub'>Use the left navigation to move through the story by section. Use the filters at the top to explore Company, Department, Identity (voluntary), Location, Employee Type, Tenure, and Work Arrangement. Slides update where sufficient sample size exists.</p>",
-          "<p class='sub' style='margin-top:10px'>This report combines quantified organizational health indicators with curated qualitative interpretation to support practical decision making.</p>",
-          "</div>",
-          "<div class='card' style='margin-top:12px'>",
-          "<div class='m' style='font-size:18px'>Distribution Policy</div>",
-          "<p class='sub' style='margin-top:8px'>The questionnaire framework and individual scale items used in this Organizational Health and Effectiveness Profile are the exclusive intellectual property of Monark Inc. Materials are confidential and must not be shared externally, reproduced, or redistributed in any format without prior written consent from an authorized Monark representative.</p>",
-          "<p class='sub' style='margin-top:8px'><strong>For additional information:</strong><br>Monark Inc.<br>Calgary, Alberta<br>T: 403-604-9854<br>www.leadwithmonark.com</p>",
-          "</div></div>"
-        ),
-        "Introduction"
+          "<div class='gs-layout' style='grid-template-columns:1fr;'>",
+          "<section class='gs-box'>",
+          "<h2>", html_escape(report_meta$report_title[[1]]), "</h2>",
+          "<p>", html_escape(report_meta$report_subtitle[[1]]), "</p>",
+          "<p>Use the left navigation to move through the story by section. Use the filters at the top to explore Company, Department, Identity (voluntary), Location, Employee Type, Tenure, and Work Arrangement. Slides update where sufficient sample size exists.</p>",
+          "<p>This report combines quantified organizational health indicators with curated qualitative interpretation to support practical decision making.</p>",
+          "</section>",
+          "<section class='gs-box'>",
+          "<h2>Distribution Policy</h2>",
+          "<p>The questionnaire framework and individual scale items used in this Organizational Health and Effectiveness Profile are the exclusive intellectual property of Monark Inc. Materials are confidential and must not be shared externally, reproduced, or redistributed in any format without prior written consent from an authorized Monark representative.</p>",
+          "<p><strong>For additional information:</strong><br>Monark Inc.<br>Calgary, Alberta<br>T: 403-604-9854<br>www.leadwithmonark.com</p>",
+          "</section>",
+          "</div>"
+        )
       ))
     }
     if (slide_id == "ohep_model_image") {
       img_path <- file.path(demo_dir, "images", "ohepModel.png")
       if (!file.exists(img_path)) return(no_data_slide("Missing image: Demo/images/ohepModel.png"))
-      return(slide_doc(
+      return(render_getting_started_page(
+        "About the OHEP",
         paste0(
-          "<div class='slide'><div class='k'>Getting Started</div><h1 class='h1'>About the OHEP</h1>",
-          "<div class='grid2'>",
-          "<div class='card'>",
-          "<div class='m' style='font-size:22px'>Why Organizational Health</div>",
-          "<p class='sub'>Organizational health is a forward-looking driver of sustained performance, yet many critical factors do not appear in retrospective financial statements. Monark's OHEP framework translates these factors into measurable, decision-ready indicators.</p>",
-          "<p class='sub' style='margin-top:10px'>Developed in 2015 and continuously refined through peer-reviewed research, executive input, and field application, the OHEP is built around scientifically validated constructs linked to both financial and non-financial outcomes.</p>",
-          "<div class='m' style='font-size:18px;margin-top:12px'>Survey Objectives</div>",
-          "<p class='sub' style='margin-top:6px'>Track progress on key health factors and outcomes, benchmark performance to the OHEP Index, identify emerging risk areas early, and prioritize targeted interventions with measurable impact.</p>",
-          "</div>",
-          "<div class='card' style='padding:16px;display:flex;justify-content:center;align-items:center'>",
-          "<img src='./images/ohepModel.png' alt='OHEP Model' style='max-width:100%;max-height:520px;object-fit:contain;border-radius:8px'/>",
-          "</div>",
-          "</div>",
-          "<div class='card' style='margin-top:12px'><p class='sub'>Upon completion, results are statistically analyzed against outcome measures and benchmarked to the OHEP Index. The final report integrates quantitative results and qualitative themes to support leadership action planning.</p></div>",
+          "<div class='gs-layout'>",
+          "<section class='gs-box'>",
+          "<h2>Why Organizational Health</h2>",
+          "<p>Organizational health is a forward-looking driver of sustained performance, yet many critical factors do not appear in retrospective financial statements. Monark's OHEP framework translates these factors into measurable, decision-ready indicators.</p>",
+          "<p>Developed in 2015 and continuously refined through peer-reviewed research, executive input, and field application, the OHEP is built around scientifically validated constructs linked to both financial and non-financial outcomes.</p>",
+          "<p><strong>Survey Objectives:</strong> Track progress on key health factors and outcomes, benchmark performance to the OHEP Index, identify emerging risk areas early, and prioritize targeted interventions with measurable impact.</p>",
+          "</section>",
+          "<section class='gs-box gs-img-wrap'><img src='./images/ohepModel.png' alt='OHEP Model'/></section>",
+          "<section class='gs-box gs-col-span-2'><p>Upon completion, results are statistically analyzed against outcome measures and benchmarked to the OHEP Index. The final report integrates quantitative results and qualitative themes to support leadership action planning.</p></section>",
           "</div>"
-        ),
-        "About the OHEP"
+        )
       ))
     }
     if (slide_id == "methodology") {
-      return(slide_doc(
+      return(render_getting_started_page(
+        "Methodology",
         paste0(
-          "<div class='slide'><div class='k'>Getting Started</div><h1 class='h1'>Methodology</h1>",
-          "<div class='grid2'>",
-          "<div class='card'><div class='m' style='font-size:22px'>Defining Terminology</div>",
-          "<p class='sub'><strong>OHEP Index:</strong> Fundamental scores are benchmarked to organizations in energy and investment industries, adjusted for organizational size so no single company skews the index. This provides contextual interpretation beyond raw scores.</p>",
-          "<p class='sub' style='margin-top:8px'><strong>Percentage Agreement:</strong> Item-level agreement and disagreement percentages complement mean scores and improve interpretability at the question level.</p>",
-          "<p class='sub' style='margin-top:8px'><strong>Anonymity:</strong> Responses are confidential and presented in aggregate. Monark does not release raw respondent-level data to client management or directors.</p>",
-          "</div>",
-          "<div class='card'><div class='m' style='font-size:22px'>Survey Details (Arctic Slope)</div>",
-          "<p class='sub'>The survey included 85 scale questions and 5 open-ended questions. Scale responses used a 1-5 Likert format (Strongly Disagree to Strongly Agree), with Not Applicable excluded from scale averages.</p>",
-          "<p class='sub' style='margin-top:8px'>Data collection window: June 18, 2025 to July 11, 2025.</p>",
-          "<p class='sub' style='margin-top:8px'>2025 response profile: 64% overall participation, with stronger office participation than field participation. Average completion time was approximately 18 minutes.</p>",
-          "</div>",
-          "</div>",
-          "<div class='card' style='margin-top:14px'><div class='m' style='font-size:22px'>Interpretation Guidance</div><p class='sub'>Use OHEP summary, drivers, outcomes, and comments together. Summary pages show where to focus; driver and outcome pages show what is moving performance; qualitative pages provide operational context behind the scores.</p></div>",
+          "<div class='gs-layout'>",
+          "<section class='gs-box'>",
+          "<h2>Defining Terminology</h2>",
+          "<p><strong>OHEP Index:</strong> Fundamental scores are benchmarked to organizations in energy and investment industries, adjusted for organizational size so no single company skews the index. This provides contextual interpretation beyond raw scores.</p>",
+          "<p><strong>Percentage Agreement:</strong> Item-level agreement and disagreement percentages complement mean scores and improve interpretability at the question level.</p>",
+          "<p><strong>Anonymity:</strong> Responses are confidential and presented in aggregate. Monark does not release raw respondent-level data to client management or directors.</p>",
+          "</section>",
+          "<section class='gs-box'>",
+          "<h2>Survey Details (Arctic Slope)</h2>",
+          "<p>The survey included 85 scale questions and 5 open-ended questions. Scale responses used a 1-5 Likert format (Strongly Disagree to Strongly Agree), with Not Applicable excluded from scale averages.</p>",
+          "<p>Data collection window: June 18, 2025 to July 11, 2025.</p>",
+          "<p>2025 response profile: 64% overall participation, with stronger office participation than field participation. Average completion time was approximately 18 minutes.</p>",
+          "</section>",
+          "<section class='gs-box gs-col-span-2'>",
+          "<h2>Interpretation Guidance</h2>",
+          "<p>Use OHEP summary, drivers, outcomes, and comments together. Summary pages show where to focus; driver and outcome pages show what is moving performance; qualitative pages provide operational context behind the scores.</p>",
+          "</section>",
           "</div>"
-        ),
-        "Methodology"
+        )
       ))
     }
     if (slide_id == "orientation_model") {
       md <- build_model_data(fid)
       if (is.null(md)) return(no_data_slide("Model unavailable for this filter."))
-      return(render_html_obj(model_page(
+      md$summary$title <- ""
+      md$summary$subtitle <- ""
+      return(widget_shell_doc(model_page(
         model_data = md,
         color_overrides = list(
           model_zone_ni = "#FDD34C",
@@ -1925,7 +2246,7 @@ render_slide <- function(slide_id, fr) {
           model_point_as = "#059669",
           model_point_il = "#0D9488"
         )
-      ), "OHEP Results"))
+      ), title = "OHEP Results", eyebrow = "OHEP Summary", description = NULL))
     }
     if (slide_id == "survey_overview") {
       prior_n <- if (is.finite(prior_year)) sum(rows_sub$year == prior_year) else 0L
@@ -1944,7 +2265,25 @@ render_slide <- function(slide_id, fr) {
     if (slide_id == "priority_matrix") {
       pts <- build_matrix_points(fid)
       if (nrow(pts) < 1L) return(no_data_slide())
-      return(render_html_obj(decision_matrix_page(points = pts, title = "Priority Matrix", subtitle = filter_label(fr)), "Priority Matrix"))
+      priority_controls <- paste0(
+        "<div class='page-control-group'>",
+        "<label for='ohep-decision-matrix-axis' class='page-control-label'>Y-Axis:</label>",
+        "<select id='ohep-decision-matrix-axis' class='page-control-select'>",
+        "<option value='overall' selected>Outcomes (Overall)</option>",
+        "<option value='engagement'>Engagement</option>",
+        "<option value='burnout'>Burnout</option>",
+        "<option value='work_satisfaction'>Work Satisfaction</option>",
+        "<option value='enps'>eNPS</option>",
+        "</select>",
+        "</div>"
+      )
+      return(widget_shell_doc(
+        decision_matrix_page(points = pts, theme_kicker = "", title = "", subtitle = "", show_axis_control = FALSE),
+        title = "Priority Matrix",
+        eyebrow = "OHEP Summary",
+        description = NULL,
+        controls_html = priority_controls
+      ))
     }
     if (slide_id == "outcomes_overview") {
       ov <- build_outcomes_overview_data(rows_sub, fid)
@@ -2021,7 +2360,33 @@ render_slide <- function(slide_id, fr) {
     if (slide_id == "segment_heatmap") {
       hm <- build_heatmap()
       if (is.null(hm)) return(no_data_slide())
-      return(render_html_obj(heatmap_page(heatmap_data = hm), "Heatmap"))
+      compare_keys <- names(hm$compare_sets)
+      if (is.null(compare_keys) || length(compare_keys) < 1L) compare_keys <- "Company"
+      compare_default <- if ("Company" %in% compare_keys) "Company" else compare_keys[[1]]
+      compare_opts <- paste(vapply(compare_keys, function(key) {
+        paste0(
+          "<option value='", html_escape(key), "'",
+          if (identical(key, compare_default)) " selected" else "",
+          ">",
+          html_escape(key),
+          "</option>"
+        )
+      }, character(1)), collapse = "")
+      segment_controls <- paste0(
+        "<div class='page-control-group'>",
+        "<label for='ohep-heatmap-page-compare' class='page-control-label'>Compare By:</label>",
+        "<select id='ohep-heatmap-page-compare' class='page-control-select'>",
+        compare_opts,
+        "</select>",
+        "</div>"
+      )
+      return(widget_shell_doc(
+        heatmap_page(heatmap_data = hm, show_compare_control = FALSE),
+        title = "Segment Analysis",
+        eyebrow = "OHEP Summary",
+        description = NULL,
+        controls_html = segment_controls
+      ))
     }
     if (slide_id == "open_ended_overall_summary") {
       oe <- open_ended_by_filter[[fid]]
