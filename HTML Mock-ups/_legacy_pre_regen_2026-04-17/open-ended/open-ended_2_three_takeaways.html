@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Open-Ended Feedback Summary - Landscape</title>
+
+<style>
+  * { box-sizing: border-box; }
+
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    background: #F8FAFC; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+    margin: 0; 
+  }
+
+  /* --- 16:9 SLIDE CONTAINER --- */
+  .summary-container {
+    width: 1280px; /* Standard 16:9 presentation width */
+    min-height: 720px; /* Standard 16:9 presentation height */
+    background: white; 
+    padding: 50px 60px; 
+    border-radius: 16px; 
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); 
+    border: 1px solid #E2E8F0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* --- HEADER SECTION (Side-by-Side) --- */
+  .header-section { 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 50px;
+    margin-bottom: 40px; 
+  }
+  
+  .header-titles {
+    flex: 0 0 auto;
+  }
+
+  .kicker { 
+    font-size: 14px; 
+    font-weight: 800; 
+    color: #0EA5E9; 
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+    margin-bottom: 8px; 
+    display: block; 
+  }
+  
+  .main-title { 
+    font-size: 32px; 
+    font-weight: 900; 
+    color: #0F172A; 
+    margin: 0; 
+    letter-spacing: -0.5px; 
+  }
+
+  .question-block {
+    flex: 1;
+    background: #F1F5F9;
+    padding: 20px 28px;
+    border-radius: 10px;
+    border-left: 5px solid #334155;
+  }
+
+  .question-text {
+    font-size: 17px;
+    font-weight: 600;
+    color: #334155;
+    margin: 0;
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  /* --- INSIGHT CARDS (3-Column Grid) --- */
+  .insights-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    flex: 1; /* Allows grid to fill the remaining slide height */
+  }
+
+  .insight-card {
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid #E2E8F0;
+    background: #FFFFFF;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .insight-card:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+    transform: translateY(-4px);
+  }
+
+  /* Color Accents moved to the Top for column layout */
+  .theme-comm { border-top: 8px solid #0EA5E9; }
+  .theme-emp  { border-top: 8px solid #14B8A6; }
+  .theme-acc  { border-top: 8px solid #6366F1; }
+
+  .insight-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #0F172A;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.3;
+  }
+
+  /* Accent dots next to titles */
+  .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .theme-comm .dot { background: #0EA5E9; }
+  .theme-emp .dot { background: #14B8A6; }
+  .theme-acc .dot { background: #6366F1; }
+
+  .insight-body {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  /* --- FOOTER --- */
+  .footer {
+    margin-top: auto; /* Pushes footer to the absolute bottom */
+    padding-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .brand {
+    font-size: 18px;
+    font-weight: 800;
+    color: #334155;
+    letter-spacing: -0.5px;
+  }
+  .brand-dot { color: #0EA5E9; }
+
+</style>
+</head>
+
+<body>
+
+<div class="summary-container">
+
+  <div class="header-section">
+    <div class="header-titles">
+      <span class="kicker">Qualitative Feedback</span>
+      <h1 class="main-title">Open-Ended Summary</h1>
+    </div>
+    
+    <div class="question-block">
+      <p class="question-text">"Are there any specific areas where you feel the leadership team could improve in order to better support employees at Surge?"</p>
+    </div>
+  </div>
+
+  <div class="insights-grid">
+    
+    <div class="insight-card theme-comm">
+      <h3 class="insight-title"><div class="dot"></div> Communication & Transparency</h3>
+      <p class="insight-body">
+        A significant portion of the feedback centers on the need for improved communication from leadership. This includes clearer articulation of corporate strategy, long-term goals, and the rationale behind decisions. Employees desire more consistent engagement, such as "fireside chats" or casual meetings, to foster trust and alignment across the organization. There is also a call for more timely communication regarding changes in policies or supervisor absences.
+      </p>
+    </div>
+
+    <div class="insight-card theme-emp">
+      <h3 class="insight-title"><div class="dot"></div> Empowerment & Recognition</h3>
+      <p class="insight-body">
+        Several comments highlight a desire for increased employee empowerment and trust, with concerns raised about micromanagement. Employees want to feel valued and recognized for their contributions, with suggestions for giving credit to those who excel. There's also a call for more investment in employee development, cross-functional collaboration, and acknowledging the impact of each department on the organization's success.
+      </p>
+    </div>
+
+    <div class="insight-card theme-acc">
+      <h3 class="insight-title"><div class="dot"></div> Accountability & Fairness</h3>
+      <p class="insight-body">
+        Feedback indicates a need for greater accountability within teams, with leadership addressing performance issues more proactively. Ensuring policies are applied equally across the organization is also a key concern. Additionally, there are suggestions for improvements to compensation, benefits, and work-life balance, such as increased work-from-home flexibility and personal days for contractors. The on-boarding process for contractors needs improvement.
+      </p>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <div class="brand"><span class="brand-dot">•</span> monark</div>
+  </div>
+
+</div>
+
+</body>
+</html>

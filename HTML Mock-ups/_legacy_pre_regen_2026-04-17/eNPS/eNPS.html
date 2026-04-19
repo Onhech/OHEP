@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OHEP Executive Dashboard - eNPS</title>
+
+<style>
+  * { box-sizing: border-box; }
+
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    background: #E2E8F0; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    min-height: 100vh;
+    margin: 0; 
+  }
+
+  /* --- STRICT 16:9 SLIDE CONTAINER --- */
+  .slide-container {
+    width: 1280px; 
+    height: 720px; /* Locked height */
+    background: #F8FAFC; 
+    padding: 24px 32px; 
+    border-radius: 8px; 
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1); 
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow: hidden; 
+  }
+
+  /* --- TOP ROW --- */
+  .top-row {
+    display: flex;
+    gap: 20px;
+    height: 300px; 
+    flex-shrink: 0;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(15,23,42,.03);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .enps-card { flex: 1.2; }
+  .drivers-card { flex: 1; }
+
+  /* Typography & Colors */
+  .color-risk { color: #f97316; } 
+  .color-watch { color: #D97706; }
+  .color-good { color: #16A34A; }
+
+  .bg-pro { background: #0D9488; } 
+  .bg-pas { background: #94A3B8; } 
+  .bg-det { background: #E11D48; } 
+  
+  .txt-pro { color: #0D9488; }
+  .txt-pas { color: #94A3B8; }
+  .txt-det { color: #E11D48; }
+
+  .title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-size: 22px;
+    font-weight: 900;
+    color: #111827;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+  }
+
+  .card-sub { font-size: 13px; color: #64748B; font-weight: 500; margin: 4px 0 0 0; }
+
+  /* --- HERO METRICS --- */
+  .metrics-container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 24px; 
+  }
+
+  .hero-row {
+    display: flex;
+    align-items: flex-end; 
+    gap: 20px;
+  }
+
+  .hero-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .hero-value {
+    font-size: 56px;
+    font-weight: 900;
+    color: #0F172A;
+    line-height: 1;
+    letter-spacing: -2px;
+  }
+
+  .delta-pill { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 6px; 
+    padding: 6px 12px; 
+    border-radius: 6px; 
+    font-size: 13px; 
+    font-weight: 800; 
+    letter-spacing: 0.5px; 
+    margin-bottom: 6px; 
+  }
+  .dp-pos { background: #DCFCE7; color: #16A34A; }
+
+  /* --- TUG OF WAR (Diverging Bar) --- */
+  .tug-container { display: flex; flex-direction: column; justify-content: center; margin-top: auto; padding-bottom: 10px;}
+  .tug-axis { height: 42px; display: flex; width: 100%; position: relative; align-items: center; margin-bottom: 20px;}
+  .tug-mid { position: absolute; left: 50%; height: 56px; width: 2px; background: #94A3B8; z-index: 2; transform: translateX(-50%);}
+  .tug-mid-lbl { position: absolute; left: 50%; top: -20px; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: #94A3B8; text-transform: uppercase; }
+  .tug-left { position: absolute; right: 50%; height: 100%; border-radius: 6px 0 0 6px; display: flex; align-items: center; justify-content: flex-end; padding-right: 12px; font-size: 14px; font-weight: 800; color: white;}
+  .tug-right { position: absolute; left: 50%; height: 100%; border-radius: 0 6px 6px 0; display: flex; align-items: center; justify-content: flex-start; padding-left: 12px; font-size: 14px; font-weight: 800; color: white;}
+  .tug-labels { display: flex; justify-content: space-between; align-items: center; }
+  .t-leg-group { display: flex; flex-direction: column; gap: 2px; }
+  .t-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+  .t-math { font-size: 18px; font-weight: 900; color: #0F172A; }
+
+  /* --- OUTCOMES (DRIVERS) TABLE --- */
+  .table-outcomes { width: 100%; border-collapse: collapse; margin-top: auto; }
+  .table-outcomes th {
+    text-align: left;
+    padding-bottom: 10px;
+    font-size: 10px;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  .table-outcomes th.right-align { text-align: right; }
+  .table-outcomes td { padding: 14px 0; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+  .table-outcomes tr:last-child td { border-bottom: none; padding-bottom: 0;}
+
+  .row-rank { font-size: 22px; font-weight: 800; color: #cbd5e1; margin-right: 12px; font-variant-numeric: tabular-nums;}
+  .row-name { font-size: 15px; font-weight: 800; color: #111827; }
+
+  .company-score-stack { display: flex; flex-direction: column; align-items: flex-end; }
+  .row-score-val { font-size: 15px; font-weight: 800; line-height: 1; }
+  .row-status { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 4px; }
+
+  /* --- BOTTOM ROW: DISTRIBUTION CHART (UPDATED) --- */
+  .bottom-row {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
+  .dist-wrapper { 
+    display: flex; 
+    flex-direction: column; 
+    width: 100%;
+    max-width: 950px; 
+    margin: 10px auto 0 auto; 
+  }
+  
+  .dist-bars { 
+    display: flex; 
+    align-items: flex-end; 
+    justify-content: center; 
+    gap: 40px; 
+    border-bottom: 2px solid #E2E8F0; 
+    padding-bottom: 0;
+    height: 120px;
+  }
+  
+  .d-bar-group { 
+    display: flex; 
+    align-items: flex-end; 
+    gap: 12px; 
+    height: 100%; 
+  }
+  
+  .d-bar { 
+    width: 56px; 
+    border-radius: 4px 4px 0 0; 
+  }
+  
+  .dist-labels { 
+    display: flex; 
+    align-items: flex-start; 
+    justify-content: center; 
+    gap: 40px; 
+    margin-top: 12px; 
+  }
+  
+  .l-group { 
+    display: flex; 
+    align-items: flex-start; 
+    gap: 12px; 
+  }
+
+  .d-lbl { 
+    width: 56px; 
+    text-align: center; 
+    font-size: 13px; 
+    font-weight: 800; 
+    color: #64748B; 
+  }
+  
+  .dist-brackets { 
+    display: flex; 
+    justify-content: center; 
+    gap: 40px;
+    margin-top: 24px; 
+    border-top: 1px dashed #E2E8F0;
+    padding-top: 16px;
+  }
+  
+  .bracket { 
+    text-align: center; 
+    font-size: 13px; 
+    font-weight: 800; 
+    text-transform: uppercase; 
+    letter-spacing: 0.5px;
+  }
+  
+  .b-det { width: 464px; } 
+  .b-pas { width: 124px; } 
+  .b-pro { width: 124px; } 
+
+</style>
+</head>
+<body>
+
+<div class="slide-container">
+  
+  <div class="top-row">
+    
+    <div class="card enps-card">
+      <div class="title-bar" style="margin-bottom: 0;">
+        <div style="display: flex; flex-direction: column;">
+          <h2 class="card-title">Employee Net Promoter Score (eNPS)</h2>
+          <p class="card-sub">Calculated difference between promoters and detractors.</p>
+        </div>
+      </div>
+
+      <div class="metrics-container">
+        <div class="hero-row">
+          <div>
+            <div class="hero-label">Net Score</div>
+            <div class="hero-value">+34</div>
+          </div>
+          <div style="padding-bottom: 6px;">
+            <span class="delta-pill dp-pos">▲ +12 vs Industry</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tug-container">
+        <div class="tug-axis">
+          <div class="tug-mid"><span class="tug-mid-lbl">Baseline</span></div>
+          <div class="tug-left bg-det" style="width: 14%;">14%</div>
+          <div class="tug-right bg-pro" style="width: 48%;">48%</div>
+        </div>
+        
+        <div class="tug-labels">
+          <div class="t-leg-group" style="align-items: flex-start;">
+            <span class="t-title txt-det">Detractors</span>
+            <span class="t-math">- 14</span>
+          </div>
+          <div class="t-leg-group" style="align-items: flex-end;">
+            <span class="t-title txt-pro">Promoters</span>
+            <span class="t-math">+ 48</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card drivers-card">
+      <div class="title-bar" style="margin-bottom: 0;">
+        <h2 class="card-title">Key Drivers</h2>
+      </div>
+      <p class="card-sub">The fundamentals driving <strong>eNPS</strong> most.</p>
+      
+      <table class="table-outcomes">
+        <thead>
+          <tr>
+            <th>Fundamental</th>
+            <th class="right-align">Your Company</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="row-rank">1</span>
+              <span class="row-name">Purpose</span>
+            </td>
+            <td>
+              <div class="company-score-stack">
+                <span class="row-score-val color-watch">42nd Percentile</span>
+                <span class="row-status color-watch">Industry Standard</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="row-rank">2</span>
+              <span class="row-name">Leadership</span>
+            </td>
+            <td>
+              <div class="company-score-stack">
+                <span class="row-score-val color-risk">32nd Percentile</span>
+                <span class="row-status color-risk">Area for Growth</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <span class="row-rank">3</span>
+              <span class="row-name">Performance Development</span>
+            </td>
+            <td>
+              <div class="company-score-stack">
+                <span class="row-score-val color-good">68th Percentile</span>
+                <span class="row-status color-good">Above Standard</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div> 
+
+  <div class="bottom-row">
+    <div class="card" style="width: 100%;">
+      
+      <div class="title-bar" style="margin-bottom: 0;">
+        <h2 class="card-title">Population Distribution</h2>
+      </div>
+      <p class="card-sub">Detailed breakdown of the 0-10 rating scale across the organization.</p>
+      
+      <div class="dist-wrapper">
+        <div class="dist-bars">
+          <div class="d-bar-group">
+            <div class="d-bar bg-det" style="height: 5%;"></div>
+            <div class="d-bar bg-det" style="height: 2%;"></div>
+            <div class="d-bar bg-det" style="height: 1%;"></div>
+            <div class="d-bar bg-det" style="height: 3%;"></div>
+            <div class="d-bar bg-det" style="height: 4%;"></div>
+            <div class="d-bar bg-det" style="height: 25%;"></div>
+            <div class="d-bar bg-det" style="height: 15%;"></div>
+          </div>
+
+          <div class="d-bar-group">
+            <div class="d-bar bg-pas" style="height: 45%;"></div>
+            <div class="d-bar bg-pas" style="height: 75%;"></div>
+          </div>
+
+          <div class="d-bar-group">
+            <div class="d-bar bg-pro" style="height: 55%;"></div>
+            <div class="d-bar bg-pro" style="height: 100%;"></div>
+          </div>
+        </div>
+
+        <div class="dist-labels">
+          <div class="l-group">
+            <span class="d-lbl">0</span>
+            <span class="d-lbl">1</span>
+            <span class="d-lbl">2</span>
+            <span class="d-lbl">3</span>
+            <span class="d-lbl">4</span>
+            <span class="d-lbl">5</span>
+            <span class="d-lbl">6</span>
+          </div>
+          <div class="l-group">
+            <span class="d-lbl">7</span>
+            <span class="d-lbl">8</span>
+          </div>
+          <div class="l-group">
+            <span class="d-lbl">9</span>
+            <span class="d-lbl">10</span>
+          </div>
+        </div>
+
+        <div class="dist-brackets">
+          <div class="bracket b-det txt-det">Detractors (14%)</div>
+          <div class="bracket b-pas txt-pas">Passives (38%)</div>
+          <div class="bracket b-pro txt-pro">Promoters (48%)</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>Inte

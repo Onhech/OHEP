@@ -2062,11 +2062,9 @@ ohepRDisplayr <- function() {
             glue::glue("<div class=\"nl-pill\">{env$escape_text(a$label)} <span class=\"score{a$cls}\">{env$escape_text(a$score)}</span></div>")
           }, character(1)), collapse = "")
           quotes_html <- paste(vapply(th$quotes, function(q) {
-            tags <- paste(vapply(q$tags, function(tg) glue::glue("<span class=\"nl-tag\">{env$escape_text(tg)}</span>"), character(1)), collapse = "")
             glue::glue(
               "<div class=\"nl-quote-block\">
                  <div class=\"nl-quote-text\">{env$escape_text(q$text)}</div>
-                 <div class=\"nl-tags\">{tags}</div>
                </div>"
             )
           }, character(1)), collapse = "")

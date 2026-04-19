@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OHEP Benchmark Band - Centered Delta</title>
+<style>
+  body{
+    font-family: Arial, sans-serif;
+    background:#f8fafc;
+    padding:30px;
+  }
+
+  .card{
+    width:780px;
+    background:#fff;
+    border:1px solid #e2e8f0;
+    border-radius:18px;
+    padding:28px;
+    box-shadow:0 10px 24px rgba(15,23,42,.05);
+  }
+
+  /* --- HEADER --- */
+  .title{
+    font-size:22px;
+    font-weight:800;
+    color:#111827;
+    margin-bottom:12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .status-pill {
+    font-size: 12px;
+    font-weight: 700;
+    background: #FEF3C7;
+    color: #92400E;
+    padding: 6px 12px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* --- METRICS AREA --- */
+  .metrics-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0px; /* 1. REDUCED GAP between hero and sub-context */
+    margin-bottom: 16px; 
+  }
+
+  .hero-row {
+    display: flex;
+    align-items: center; /* 2. CHANGED to center to align delta vertically with the whole block */
+    gap: 16px;
+  }
+
+  .hero-block {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero-value {
+    font-size: 44px;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+
+  .hero-label {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f766e;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2px; /* Slight bump up from the number */
+  }
+
+  /* Two-Column Delta Block */
+  .delta-block {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+	padding-top: 20px;
+  }
+
+  .delta-block.positive { color: #16A34A; }
+  .delta-block.negative { color: #DC2626; }
+  .delta-block.neutral { color: #64748B; }
+
+  .delta-icon {
+    font-size: 24px; 
+    line-height: 1;
+  }
+
+  .delta-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .delta-value {
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .delta-year {
+    font-size: 11px;
+    color: #94A3B8;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-top: 2px;
+    line-height: 1;
+  }
+
+  /* Supporting Context (Raw Score) */
+  .sub-context {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+    display: inline-block; 
+    /* Removed padding-top entirely */
+  }
+  .sub-context strong {
+    color: #111827;
+    font-weight: 700;
+  }
+  .sub-delta {
+    color: #16A34A;
+    font-weight: 700;
+  }
+
+  /* --- VISUAL BAND --- */
+  .band-wrap{
+    position:relative;
+    margin-top:8px;
+    padding-top:16px; 
+  }
+
+  .band{
+    position:relative;
+    height:30px;
+    border-radius:999px;
+    overflow:hidden;
+    display:flex;
+    border:1px solid #e5e7eb;
+  }
+
+  .z1,.z2,.z3,.z4{ position:relative; }
+  .z1{width:40%; background:#FCD34D;}
+  .z2{width:20%; background:#BBF7D0;}
+  .z3{width:25%; background:#4ADE80;}
+  .z4{width:15%; background:#14B8A6;}
+
+  .tick{
+    position:absolute;
+    top:0;
+    width:2px;
+    height:30px;
+    background:rgba(15,23,42,.18);
+    z-index:2;
+    transform:translateX(-50%);
+  }
+
+  .tick-label{
+    position:absolute;
+    top:10px;
+    transform:translate(-50%, -100%);
+    font-size:12px;
+    font-weight: 600;
+    color:#64748b;
+    white-space:nowrap;
+    line-height:1;
+  }
+
+  .midpoint{
+    position:absolute;
+    top:32px;              
+    left:50%;
+    width:2px;
+    height:32px;           
+    background:#94A3B8; 
+    transform:translate(-50%, -50%);
+    border-radius:0px;
+    z-index:3;
+  }
+
+  .marker{
+    position:absolute;
+    top:32px;              
+    left:42%; 
+    width:5px;
+    height:50px;           
+    background:#111827;
+    transform:translate(-50%, -50%);
+    border-radius:4px;
+    z-index:5;
+  }
+  
+  /* Top Triangle pointing down 
+  .marker::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 10px solid #111827; 
+  }*/
+  
+/* Bottom Triangle pointing up 
+  .marker::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 10px solid #111827; 
+  }*/
+
+  /* --- LABELS --- */
+  .labels{
+    display:flex;
+    align-items:center;
+    font-size:13px;
+    color:#64748b;
+    margin-top:12px;
+  }
+
+  .labels span{
+    display:flex;
+    justify-content:center;
+    text-align:center;
+  }
+
+  .labels span:nth-child(1){width:40%;}
+  .labels span:nth-child(2){width:20%; font-weight:800; color:#166534;}
+  .labels span:nth-child(3){width:25%;}
+  .labels span:nth-child(4){width:15%;}
+</style>
+</head>
+<body>
+  <div class="card">
+    
+    <div class="title">
+      Strategy 
+      <span class="status-pill">Priority Area</span>
+    </div>
+
+    <div class="metrics-container">
+      
+      <div class="hero-row">
+        <div class="hero-block">
+          <div class="hero-label">Percentile</div>
+          <div class="hero-value">42nd</div>
+        </div>
+        
+        <div class="delta-block positive">
+          <div class="delta-icon">▲</div>
+          <div class="delta-details">
+            <div class="delta-value">+7 pts</div>
+            <div class="delta-year">vs. 2024</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-context">
+        Score: <strong>3.60</strong> <span class="sub-delta">(+0.12)</span>
+      </div>
+
+    </div>
+
+    <div class="band-wrap">
+      <div class="tick-label" style="left:40%;">40</div>
+      <div class="tick-label" style="left:50%;">50</div>
+      <div class="tick-label" style="left:60%;">60</div>
+      <div class="tick-label" style="left:85%;">85</div>
+
+      <div class="band">
+        <div class="z1"></div>
+        <div class="z2"></div>
+        <div class="z3"></div>
+        <div class="z4"></div>
+
+        <div class="tick" style="left:40%;"></div>
+        <div class="tick" style="left:60%;"></div>
+        <div class="tick" style="left:85%;"></div>
+      </div>
+
+      <div class="midpoint"></div>
+      
+      <div class="marker"></div>
+    </div>
+
+    <div class="labels">
+      <span>Needs improvement</span>
+      <span>Industry standard</span>
+      <span>Above standard</span>
+      <span>Industry leader</span>
+    </div>
+    
+  </div>
+</body>
+</html>
