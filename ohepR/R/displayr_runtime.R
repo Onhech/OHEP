@@ -2675,15 +2675,13 @@ ohepRDisplayr <- function() {
   --hm-header-border: {c$heatmap_table_header_border};
   --hm-row-label: {c$heatmap_row_label_text};
   --hm-row-border: {c$heatmap_row_border};
-  --hm-pill-text: {c$heatmap_pill_text};
+  --hm-cell-text: {c$heatmap_pill_text};
+  --hm-heat-low: #EF4444;
+  --hm-heat-mid: #FDE047;
+  --hm-heat-high: #16A34A;
   --hm-pill-na-bg: {c$heatmap_pill_na_bg};
   --hm-pill-na-text: {c$heatmap_pill_na_text};
   --hm-pill-na-border: {c$heatmap_pill_na_border};
-  --hm-pill-pos-strong: #6FCF97;
-  --hm-pill-pos-soft: #E4F7EC;
-  --hm-pill-neutral: {c$heatmap_pill_neutral};
-  --hm-pill-neg-soft: #F9E3E7;
-  --hm-pill-neg-strong: #F2B8C2;
   width: 100%;
   background: transparent;
   padding: 0;
@@ -2743,7 +2741,7 @@ ohepRDisplayr <- function() {
   width: 120px;
   height: 6px;
   border-radius: 99px;
-  background: linear-gradient(to right, var(--hm-legend-start), var(--hm-legend-mid), var(--hm-legend-end));
+  background: linear-gradient(to right, var(--hm-heat-low), var(--hm-heat-mid), var(--hm-heat-high));
 }}
 {scope} .hm-compare {{
   display: inline-flex;
@@ -2782,34 +2780,66 @@ ohepRDisplayr <- function() {
 {scope} .hm-table-wrap::-webkit-scrollbar {{ height: 8px; }}
 {scope} .hm-table-wrap::-webkit-scrollbar-track {{ background: #F8FAFC; }}
 {scope} .hm-table-wrap::-webkit-scrollbar-thumb {{ background: #CBD5E1; border-radius: 4px; }}
-{scope} .hm-table {{ width: 100%; min-width: 900px; border-collapse: collapse; }}
+{scope} .hm-table {{
+  width: 100%;
+  min-width: 900px;
+  border-collapse: separate;
+  border-spacing: 4px;
+  table-layout: fixed;
+  background: #FFFFFF;
+}}
 {scope} .hm-table th {{
-  padding: 12px 10px;
-  border-bottom: 1px solid var(--hm-header-border);
+  padding: 8px 12px 16px 12px;
   text-transform: uppercase;
   font-size: 10px;
   font-weight: 800;
   color: var(--hm-header-text);
   text-align: center;
   vertical-align: bottom;
-  min-width: 120px;
+  min-width: 0;
   line-height: 1.35;
+  white-space: normal;
+  word-wrap: break-word;
 }}
 {scope} .hm-table th:first-child {{
   text-align: left;
-  min-width: 180px;
+  width: 220px;
+  min-width: 220px;
+  padding-left: 0;
   color: var(--hm-row-label);
 }}
-{scope} .hm-table td {{ padding: 10px 8px; border-bottom: 1px solid var(--hm-row-border); text-align: center; vertical-align: middle; }}
-{scope} .hm-table tr:last-child td {{ border-bottom: none; }}
-{scope} .hm-table td:first-child {{ text-align: left; font-size: 12px; font-weight: 700; color: var(--hm-row-label); background: #FFFFFF; }}
-{scope} .hm-pill {{ display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; border-radius: 6px; color: var(--hm-pill-text); font-size: 12px; font-weight: 800; line-height: 1; }}
-{scope} .hm-pill-pos-strong {{ background: var(--hm-pill-pos-strong); }}
-{scope} .hm-pill-pos-soft {{ background: var(--hm-pill-pos-soft); }}
-{scope} .hm-pill-neutral {{ background: var(--hm-pill-neutral); }}
-{scope} .hm-pill-neg-soft {{ background: var(--hm-pill-neg-soft); }}
-{scope} .hm-pill-neg-strong {{ background: var(--hm-pill-neg-strong); }}
-{scope} .hm-pill-na {{ background: var(--hm-pill-na-bg); color: var(--hm-pill-na-text); border: 1px dashed var(--hm-pill-na-border); font-weight: 700; }}
+{scope} .hm-table td {{
+  padding: 14px 8px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--hm-cell-text);
+  border-radius: 6px;
+  transition: transform .1s ease, filter .2s ease;
+}}
+{scope} .hm-table td:first-child {{
+  text-align: left;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hm-row-label);
+  background: transparent;
+  padding-left: 0;
+}}
+{scope} .hm-table td.hm-value:hover {{
+  filter: brightness(.95);
+  transform: scale(1.02);
+  cursor: pointer;
+}}
+{scope} .hm-table td.hm-na {{
+  background: var(--hm-pill-na-bg);
+  color: var(--hm-pill-na-text);
+  border: 1px dashed var(--hm-pill-na-border);
+  font-weight: 700;
+}}
+{scope} .hm-table td.text-white {{
+  color: #FFFFFF;
+}}
 "
     )
   }
@@ -2829,21 +2859,6 @@ ohepRDisplayr <- function() {
     )
     dat <- env$normalize_heatmap_data(heatmap_data)
 
-    classify_cell <- function(value, row_mean, row_max_abs_delta) {
-      if (!is.finite(value)) return("hm-pill-na")
-      if (!is.finite(row_mean) || !is.finite(row_max_abs_delta) || row_max_abs_delta <= 0) return("hm-pill-neutral")
-      delta <- value - row_mean
-      intensity <- abs(delta) / row_max_abs_delta
-      if (!is.finite(intensity) || intensity < 0.16) return("hm-pill-neutral")
-      if (delta > 0) {
-        return(if (intensity >= 0.55) "hm-pill-pos-strong" else "hm-pill-pos-soft")
-      }
-      if (delta < 0) {
-        return(if (intensity >= 0.55) "hm-pill-neg-strong" else "hm-pill-neg-soft")
-      }
-      "hm-pill-neutral"
-    }
-
     build_table_html <- function(tables) {
       all_groups <- unique(unlist(lapply(tables, function(table_obj) names(table_obj$data)[-1]), use.names = FALSE))
       header_html <- glue::glue_collapse(vapply(c("Category", all_groups), function(h) {
@@ -2857,20 +2872,14 @@ ohepRDisplayr <- function() {
 
         row_html <- vapply(seq_len(nrow(df)), function(i) {
           category <- env$escape_text(df$Category[[i]])
-          row_values <- vapply(all_groups, function(group_name) {
-            if (!(group_name %in% groups)) return(NA_real_)
-            suppressWarnings(as.numeric(df[[group_name]][[i]]))
-          }, numeric(1))
-          row_mean <- suppressWarnings(mean(row_values, na.rm = TRUE))
-          if (!is.finite(row_mean)) row_mean <- NA_real_
-          row_centered <- row_values - row_mean
-          row_max_abs_delta <- suppressWarnings(max(abs(row_centered), na.rm = TRUE))
-          if (!is.finite(row_max_abs_delta)) row_max_abs_delta <- 0
           cell_html <- vapply(all_groups, function(group_name) {
             value <- if (group_name %in% groups) suppressWarnings(as.numeric(df[[group_name]][[i]])) else NA_real_
-            cls <- classify_cell(value, row_mean, row_max_abs_delta)
             txt <- if (is.finite(value)) sprintf("%.2f", value) else "NA"
-            glue::glue("<td><span class=\"hm-pill {cls}\">{txt}</span></td>")
+            if (is.finite(value)) {
+              glue::glue("<td class=\"hm-value\" data-value=\"{txt}\">{txt}</td>")
+            } else {
+              "<td class=\"hm-na\">NA</td>"
+            }
           }, character(1))
           glue::glue("<tr><td>{category}</td>{glue::glue_collapse(cell_html, sep = '')}</tr>")
         }, character(1))
@@ -2952,10 +2961,81 @@ ohepRDisplayr <- function() {
             var host = document.getElementById('{env$escape_text(id)}-table-host');
             var tableMap = {compare_table_json};
             var currentView = 'drivers';
+            function lerp(a, b, t) {{
+              return Math.round(a + (b - a) * t);
+            }}
+            function hexToRgb(hex) {{
+              var clean = (hex || '').replace('#', '').trim();
+              if (clean.length === 3) clean = clean.split('').map(function(ch) {{ return ch + ch; }}).join('');
+              var num = parseInt(clean, 16);
+              return {{
+                r: (num >> 16) & 255,
+                g: (num >> 8) & 255,
+                b: num & 255
+              }};
+            }}
+            function rgbToHex(rgb) {{
+              function h(n) {{
+                var s = Number(n).toString(16);
+                return s.length === 1 ? '0' + s : s;
+              }}
+              return '#' + h(rgb.r) + h(rgb.g) + h(rgb.b);
+            }}
+            function mix(c1, c2, t) {{
+              return {{
+                r: lerp(c1.r, c2.r, t),
+                g: lerp(c1.g, c2.g, t),
+                b: lerp(c1.b, c2.b, t)
+              }};
+            }}
+            function luminance(rgb) {{
+              return (0.299 * rgb.r) + (0.587 * rgb.g) + (0.114 * rgb.b);
+            }}
+            function applyHeatmapGradient() {{
+              if (!host) return;
+              var cells = host.querySelectorAll('td.hm-value[data-value]');
+              if (!cells || !cells.length) return;
+              var vals = [];
+              cells.forEach(function(td) {{
+                var v = parseFloat(td.getAttribute('data-value'));
+                if (Number.isFinite(v)) vals.push(v);
+              }});
+              if (!vals.length) return;
+              vals.sort(function(a, b) {{ return a - b; }});
+              var min = vals[0];
+              var max = vals[vals.length - 1];
+              var mid = vals[Math.floor(vals.length / 2)];
+              if (!Number.isFinite(mid)) mid = (min + max) / 2;
+              if (!(mid > min && mid < max)) mid = (min + max) / 2;
+              var low = hexToRgb('#EF4444');
+              var med = hexToRgb('#FDE047');
+              var high = hexToRgb('#16A34A');
+              cells.forEach(function(td) {{
+                var v = parseFloat(td.getAttribute('data-value'));
+                if (!Number.isFinite(v)) return;
+                var rgb;
+                if (max <= min) {{
+                  rgb = med;
+                }} else if (v <= mid) {{
+                  var denomL = (mid - min);
+                  var tL = denomL <= 0 ? 0.5 : (v - min) / denomL;
+                  tL = Math.max(0, Math.min(1, tL));
+                  rgb = mix(low, med, tL);
+                }} else {{
+                  var denomH = (max - mid);
+                  var tH = denomH <= 0 ? 0.5 : (v - mid) / denomH;
+                  tH = Math.max(0, Math.min(1, tH));
+                  rgb = mix(med, high, tH);
+                }}
+                td.style.backgroundColor = rgbToHex(rgb);
+                td.classList.toggle('text-white', luminance(rgb) < 150);
+              }});
+            }}
             function renderTable(key) {{
               if (!host) return;
               var viewMap = tableMap[currentView] || tableMap['drivers'] || {{}};
               host.innerHTML = viewMap[key] || viewMap['{env$escape_text(compare_default)}'] || '';
+              applyHeatmapGradient();
             }}
             if (sel) {{
               sel.value = '{env$escape_text(compare_default)}';
