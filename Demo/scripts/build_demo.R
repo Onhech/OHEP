@@ -1797,6 +1797,8 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
 
   pe <- marts$predictive_edges
   d <- pe[normalize_outcome_label(pe$outcome) == outcome_name & tolower(pe$subset) == "all", , drop = FALSE]
+  d <- d[tolower(trimws(as.character(d$fundamental))) != "ohep", , drop = FALSE]
+  d <- d[as.character(d$fundamental) %in% fundamentals, , drop = FALSE]
   if (nrow(d) < 1L) {
     d <- data.frame(fundamental = fundamentals[seq_len(min(5, length(fundamentals)))], strength = seq(0.4, 0.2, length.out = min(5, length(fundamentals))), stringsAsFactors = FALSE)
   }

@@ -546,9 +546,11 @@ build_dashboard_data_from_marts <- function(company, year, fundamental, marts) {
     if (nrow(p) > 0L) {
       p <- p[order(abs(suppressWarnings(as.numeric(p$strength))), decreasing = TRUE), , drop = FALSE]
       p <- utils::head(p, 3L)
+      out_lbl <- trimws(as.character(p$outcome))
+      out_lbl[out_lbl %in% c("Turnover Intention", "Turnover Intentions")] <- "Turnover Intent"
       outcome_df <- data.frame(
         rank = seq_len(nrow(p)),
-        outcome = as.character(p$outcome),
+        outcome = out_lbl,
         percentile = pmax(0, pmin(100, round(abs(suppressWarnings(as.numeric(p$strength))) * 100))),
         stringsAsFactors = FALSE
       )
@@ -557,7 +559,7 @@ build_dashboard_data_from_marts <- function(company, year, fundamental, marts) {
   if (nrow(outcome_df) < 1L) {
     outcome_df <- data.frame(
       rank = c(1, 2, 3),
-      outcome = c("Turnover Intentions", "Work Satisfaction", "Engagement"),
+      outcome = c("Turnover Intent", "Work Satisfaction", "Engagement"),
       percentile = c(40, 55, 60),
       stringsAsFactors = FALSE
     )
@@ -862,9 +864,11 @@ build_dashboard_data_from_filtered_user_data <- function(
     if (nrow(p) > 0L) {
       p <- p[order(abs(suppressWarnings(as.numeric(p$strength))), decreasing = TRUE), , drop = FALSE]
       p <- utils::head(p, 3L)
+      out_lbl <- trimws(as.character(p$outcome))
+      out_lbl[out_lbl %in% c("Turnover Intention", "Turnover Intentions")] <- "Turnover Intent"
       outcome_df <- data.frame(
         rank = seq_len(nrow(p)),
-        outcome = as.character(p$outcome),
+        outcome = out_lbl,
         percentile = pmax(0, pmin(100, round(abs(suppressWarnings(as.numeric(p$strength))) * 100))),
         stringsAsFactors = FALSE
       )
@@ -873,7 +877,7 @@ build_dashboard_data_from_filtered_user_data <- function(
   if (nrow(outcome_df) < 1L) {
     outcome_df <- data.frame(
       rank = c(1, 2, 3),
-      outcome = c("Turnover Intentions", "Work Satisfaction", "Engagement"),
+      outcome = c("Turnover Intent", "Work Satisfaction", "Engagement"),
       percentile = c(40, 55, 60),
       stringsAsFactors = FALSE
     )

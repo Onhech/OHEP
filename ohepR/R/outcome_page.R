@@ -24,7 +24,7 @@ outcome_page <- function(
   if (is.null(outcome_data)) {
     outcome_data <- list(
       summary = data.frame(
-        outcome = "Turnover Intentions",
+        outcome = "Turnover Intent",
         status_label = "Area for Growth",
         percentile = 32,
         percentile_delta = -5,

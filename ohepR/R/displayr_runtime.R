@@ -882,7 +882,7 @@ ohepRDisplayr <- function() {
 
       out <- data.frame(
         rank = c(1, 2, 3),
-        outcome = c("Turnover Intentions", "Work Satisfaction", "Engagement"),
+        outcome = c("Turnover Intent", "Work Satisfaction", "Engagement"),
         percentile = c(
           calc_outcome_pct(c("turnover_1", "turnover_2", "turnover_3"), reverse = TRUE),
           calc_outcome_pct(c("workSat_1", "workSat_2"), reverse = FALSE),
@@ -907,9 +907,11 @@ ohepRDisplayr <- function() {
         strength_vals <- suppressWarnings(as.numeric(sub_pred$strength))
         sub_pred <- sub_pred[order(abs(strength_vals), decreasing = TRUE), , drop = FALSE]
         sub_pred <- utils::head(sub_pred, 3L)
+        out_lbl <- trimws(as.character(sub_pred$Outcome))
+        out_lbl[out_lbl %in% c("Turnover Intention", "Turnover Intentions")] <- "Turnover Intent"
         out_rows <- data.frame(
           rank = seq_len(nrow(sub_pred)),
-          outcome = as.character(sub_pred$Outcome),
+          outcome = out_lbl,
           percentile = clamp_pct(abs(suppressWarnings(as.numeric(sub_pred$strength))) * 100),
           stringsAsFactors = FALSE
         )
