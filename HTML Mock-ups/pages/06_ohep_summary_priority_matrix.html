@@ -1,0 +1,163 @@
+<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Priority Matrix</title><style>html,body{margin:0;padding:0;background:#f1f5f9;color:#0f172a;font-family:'Avenir Next','Segoe UI',sans-serif;}.slide{padding:24px 20px 30px 20px;max-width:1380px;margin:0 auto;}.k{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#0f8694;font-weight:700;margin-bottom:8px;}.h1{font-size:34px;line-height:1.15;margin:0 0 10px 0;}.sub{font-size:17px;color:#4b5563;line-height:1.45;}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}.card{background:#fff;border:1px solid #d9e2eb;border-radius:12px;padding:14px;}.m{font-size:30px;font-weight:700;}.s{font-size:12px;color:#667085;}.q{font-size:16px;line-height:1.4;font-style:italic;}.widget-wrap{display:flex;justify-content:center;align-items:flex-start;width:100%;}.page-shell{background:#fff;border:1px solid #d9e2eb;border-radius:16px;padding:28px 30px;box-shadow:0 10px 30px rgba(15,23,42,.08);}.page-header{margin-bottom:20px;}.page-header-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;}.page-title-group{display:flex;flex-direction:column;min-width:0;}.page-header .k{margin-bottom:10px;}.page-title{font-size:34px;line-height:1.1;font-weight:900;letter-spacing:-.03em;color:#0f172a;margin:0;}.page-divider{width:100%;height:2px;background:#0f8694;margin:14px 0 14px;}.page-description{font-size:15px;line-height:1.55;color:#475569;max-width:1080px;}.page-controls{display:flex;justify-content:flex-end;align-items:center;gap:12px;flex-wrap:wrap;}.page-control-group{display:inline-flex;align-items:center;gap:10px;}.page-control-label{font-size:12px;font-weight:800;color:#64748B;text-transform:uppercase;letter-spacing:.5px;}.page-control-select{appearance:none;border:1px solid #CBD5E1;border-radius:8px;background:#FFFFFF;color:#0F172A;font-size:13px;font-weight:700;padding:8px 34px 8px 12px;min-width:200px;outline:none;cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.02);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748B'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;}.page-control-select:focus{border-color:#0D9488;box-shadow:0 0 0 3px rgba(13,148,136,.15);}.page-widget{width:100%;}.page-widget > .widget-wrap{justify-content:flex-start;}</style></head><body><div class='slide'><div class='page-shell'><header class='page-header'><div class='page-header-top'><div class='page-title-group'><div class='k'>OHEP Summary</div><h1 class='page-title'>Priority Matrix</h1></div><div class='page-controls'><div class='page-control-group'><label for='ohep-decision-matrix-axis' class='page-control-label'>Y-Axis:</label><select id='ohep-decision-matrix-axis' class='page-control-select'><option value='overall' selected>Outcomes (Overall)</option><option value='engagement'>Engagement</option><option value='burnout'>Burnout</option><option value='work_satisfaction'>Work Satisfaction</option><option value='turnover_intent'>Turnover Intent</option><option value='enps'>eNPS</option></select></div></div></div><div class='page-divider'></div></header><div class='page-widget'><div class='widget-wrap'><style>#ohep-decision-matrix, #ohep-decision-matrix * { box-sizing: border-box; }
+#ohep-decision-matrix.ohep-dm-root {
+  --matrix-shell-bg: #E2E8F0;
+  --matrix-slide-bg: #F8FAFC;
+  --matrix-header-divider: #CBD5E1;
+  --matrix-theme-kicker: #475569;
+  --matrix-title: #0F172A;
+  --matrix-subtitle: #64748B;
+  --matrix-axis-line: #94A3B8;
+  --matrix-axis-text: #64748B;
+  --matrix-axis-main: #334155;
+  --matrix-plot-bg: #FFFFFF;
+  --matrix-quadrant-tl-bg: #FFF1F2;
+  --matrix-quadrant-tl-text: #E11D48;
+  --matrix-quadrant-tr-bg: #F0FDFA;
+  --matrix-quadrant-tr-text: #0F766E;
+  --matrix-quadrant-bl-bg: #F8FAFC;
+  --matrix-quadrant-bl-text: #64748B;
+  --matrix-quadrant-br-bg: #F1F5F9;
+  --matrix-quadrant-br-text: #94A3B8;
+  --matrix-quadrant-divider: #CBD5E1;
+  --matrix-dot-critical: #E11D48;
+  --matrix-dot-leverage: #0F766E;
+  --matrix-dot-monitor: #64748B;
+  --matrix-dot-maintain: #64748B;
+  --matrix-point-border: #FFFFFF;
+  --matrix-point-shadow: rgba(0,0,0,0.15);
+  --matrix-label-bg: #FFFFFF;
+  --matrix-label-text: #334155;
+  --matrix-label-border: #E2E8F0;
+  --matrix-label-shadow: rgba(0,0,0,0.08);
+  --matrix-brand-text: #334155;
+  --matrix-brand-dot: #0EA5E9;
+  width: 1280px;
+  min-height: 720px;
+  aspect-ratio: 16 / 9;
+  background: transparent;
+  padding: 8px 0 0;
+  border-radius: 0;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+#ohep-decision-matrix .header-section { display: flex; flex-direction: column; border-bottom: 2px solid var(--matrix-header-divider); padding-bottom: 12px; margin-bottom: 20px; flex-shrink: 0; }
+#ohep-decision-matrix .theme-kicker { font-size: 14px; font-weight: 800; color: var(--matrix-theme-kicker); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+#ohep-decision-matrix .title { font-size: 32px; font-weight: 900; color: var(--matrix-title); margin: 0 0 6px 0; letter-spacing: -0.5px; }
+#ohep-decision-matrix .subtitle { font-size: 15px; color: var(--matrix-subtitle); font-weight: 500; margin: 0; }
+#ohep-decision-matrix .controls-bar { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 14px; }
+#ohep-decision-matrix .axis-filter { display: inline-flex; align-items: center; gap: 10px; }
+#ohep-decision-matrix .axis-filter-label { font-size: 12px; font-weight: 800; color: var(--matrix-axis-text); text-transform: uppercase; letter-spacing: 0.5px; }
+#ohep-decision-matrix .axis-select {
+  appearance: none;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  background: #F8FAFC;
+  color: var(--matrix-title);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 34px 8px 12px;
+  min-width: 220px;
+  outline: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748B'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+}
+#ohep-decision-matrix .axis-select:focus { border-color: #0D9488; box-shadow: 0 0 0 3px rgba(13,148,136,.15); }
+#ohep-decision-matrix .chart-wrapper { display: flex; position: relative; flex: 1; min-height: 0; margin-top: 10px; }
+#ohep-decision-matrix .y-axis { width: 60px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-bottom: 20px; flex-shrink: 0; }
+#ohep-decision-matrix .y-axis-text { font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }
+#ohep-decision-matrix .y-axis-main { transform: rotate(-90deg); white-space: nowrap; font-size: 16px; font-weight: 900; letter-spacing: 1.5px; color: var(--matrix-axis-main); }
+#ohep-decision-matrix .matrix-container { position: relative; flex-grow: 1; border-left: 3px solid var(--matrix-axis-line); border-bottom: 3px solid var(--matrix-axis-line); display: flex; flex-wrap: wrap; background: var(--matrix-plot-bg); border-radius: 0 8px 0 0; overflow: hidden; }
+#ohep-decision-matrix .quadrant { width: 50%; height: 50%; box-sizing: border-box; padding: 24px; font-size: 16px; font-weight: 900; letter-spacing: 1px; position: relative; }
+#ohep-decision-matrix .q-tl { background-color: var(--matrix-quadrant-tl-bg); color: var(--matrix-quadrant-tl-text); border-right: 2px dashed var(--matrix-quadrant-divider); border-bottom: 2px dashed var(--matrix-quadrant-divider); }
+#ohep-decision-matrix .q-tr { background-color: var(--matrix-quadrant-tr-bg); color: var(--matrix-quadrant-tr-text); border-bottom: 2px dashed var(--matrix-quadrant-divider); text-align: right; }
+#ohep-decision-matrix .q-bl { background-color: var(--matrix-quadrant-bl-bg); color: var(--matrix-quadrant-bl-text); border-right: 2px dashed var(--matrix-quadrant-divider); display: flex; align-items: flex-end; }
+#ohep-decision-matrix .q-br { background-color: var(--matrix-quadrant-br-bg); color: var(--matrix-quadrant-br-text); display: flex; align-items: flex-end; justify-content: flex-end; }
+#ohep-decision-matrix .points-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+#ohep-decision-matrix .point { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; transition: transform 0.2s ease, z-index 0s; }
+#ohep-decision-matrix .point:hover { transform: translate(-50%, -50%) scale(1.08); z-index: 20; }
+#ohep-decision-matrix .dot { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--matrix-point-border); box-shadow: 0 4px 8px var(--matrix-point-shadow); }
+#ohep-decision-matrix .dot-critical { background: var(--matrix-dot-critical); }
+#ohep-decision-matrix .dot-leverage { background: var(--matrix-dot-leverage); }
+#ohep-decision-matrix .dot-monitor { background: var(--matrix-dot-monitor); }
+#ohep-decision-matrix .dot-maintain { background: var(--matrix-dot-maintain); }
+#ohep-decision-matrix .label { position: absolute; top: 50%; background: var(--matrix-label-bg); padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; color: var(--matrix-label-text); box-shadow: 0 4px 10px var(--matrix-label-shadow); border: 1px solid var(--matrix-label-border); white-space: nowrap; line-height: 1; transform: translateY(-50%); }
+#ohep-decision-matrix .label-right { left: 28px; }
+#ohep-decision-matrix .label-left { right: 28px; }
+#ohep-decision-matrix .x-axis { display: flex; justify-content: space-between; align-items: center; padding-left: 60px; margin-top: 20px; flex-shrink: 0; }
+#ohep-decision-matrix .x-axis-text { font-size: 14px; font-weight: 800; color: var(--matrix-axis-text); letter-spacing: 0.5px; }
+#ohep-decision-matrix .x-axis-main { font-size: 16px; font-weight: 900; letter-spacing: 1.5px; color: var(--matrix-axis-main); }</style>
+<div id="ohep-decision-matrix" class="ohep-dm-root">
+  
+  
+  <div class="chart-wrapper">
+    <div class="y-axis">
+      <div class="y-axis-text">HIGH</div>
+      <div class="y-axis-main">IMPACT ON OUTCOMES</div>
+      <div class="y-axis-text">LOW</div>
+    </div>
+    <div class="matrix-container">
+      <div class="quadrant q-tl">CRITICAL FOCUS</div>
+      <div class="quadrant q-tr">LEVERAGE</div>
+      <div class="quadrant q-bl">MONITOR</div>
+      <div class="quadrant q-br">MAINTAIN</div>
+      <div class="points-layer">
+        <div class="point" data-top-overall="26.0" data-dot-overall="dot-leverage" data-top-engagement="22.2" data-dot-engagement="dot-leverage" data-top-burnout="40.8" data-dot-burnout="dot-leverage" data-top-work_satisfaction="20.4" data-dot-work_satisfaction="dot-leverage" data-top-turnover_intent="42.6" data-dot-turnover_intent="dot-leverage" data-top-enps="21.2" data-dot-enps="dot-leverage" style="left: 68.3%; top: 26.0%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-right">Purpose</div>
+</div><div class="point" data-top-overall="17.8" data-dot-overall="dot-critical" data-top-engagement="29.0" data-dot-engagement="dot-critical" data-top-burnout="12.0" data-dot-burnout="dot-critical" data-top-work_satisfaction="32.5" data-dot-work_satisfaction="dot-critical" data-top-turnover_intent="12.0" data-dot-turnover_intent="dot-critical" data-top-enps="33.9" data-dot-enps="dot-critical" style="left: 23.5%; top: 17.8%;">
+  <div class="dot dot-critical"></div>
+  <div class="label label-right">Strategy</div>
+</div><div class="point" data-top-overall="12.0" data-dot-overall="dot-leverage" data-top-engagement="12.0" data-dot-engagement="dot-leverage" data-top-burnout="28.1" data-dot-burnout="dot-leverage" data-top-work_satisfaction="12.0" data-dot-work_satisfaction="dot-leverage" data-top-turnover_intent="30.4" data-dot-turnover_intent="dot-leverage" data-top-enps="12.0" data-dot-enps="dot-leverage" style="left: 82.6%; top: 12.0%;">
+  <div class="dot dot-leverage"></div>
+  <div class="label label-right">Leadership</div>
+</div><div class="point" data-top-overall="33.0" data-dot-overall="dot-critical" data-top-engagement="38.1" data-dot-engagement="dot-critical" data-top-burnout="20.1" data-dot-burnout="dot-critical" data-top-work_satisfaction="36.1" data-dot-work_satisfaction="dot-critical" data-top-turnover_intent="19.4" data-dot-turnover_intent="dot-critical" data-top-enps="37.3" data-dot-enps="dot-critical" style="left: 16.9%; top: 33.0%;">
+  <div class="dot dot-critical"></div>
+  <div class="label label-right">Communication</div>
+</div><div class="point" data-top-overall="82.2" data-dot-overall="dot-maintain" data-top-engagement="76.7" data-dot-engagement="dot-maintain" data-top-burnout="82.2" data-dot-burnout="dot-maintain" data-top-work_satisfaction="75.9" data-dot-work_satisfaction="dot-maintain" data-top-turnover_intent="78.2" data-dot-turnover_intent="dot-maintain" data-top-enps="84.5" data-dot-enps="dot-maintain" style="left: 92.0%; top: 82.2%;">
+  <div class="dot dot-maintain"></div>
+  <div class="label label-left">Learning &amp; innovation</div>
+</div><div class="point" data-top-overall="70.5" data-dot-overall="dot-maintain" data-top-engagement="65.3" data-dot-engagement="dot-maintain" data-top-burnout="71.9" data-dot-burnout="dot-maintain" data-top-work_satisfaction="69.9" data-dot-work_satisfaction="dot-maintain" data-top-turnover_intent="72.1" data-dot-turnover_intent="dot-maintain" data-top-enps="69.6" data-dot-enps="dot-maintain" style="left: 66.4%; top: 70.5%;">
+  <div class="dot dot-maintain"></div>
+  <div class="label label-right">Respect, care, and trust</div>
+</div><div class="point" data-top-overall="79.8" data-dot-overall="dot-monitor" data-top-engagement="75.5" data-dot-engagement="dot-monitor" data-top-burnout="81.1" data-dot-burnout="dot-monitor" data-top-work_satisfaction="79.6" data-dot-work_satisfaction="dot-monitor" data-top-turnover_intent="80.6" data-dot-turnover_intent="dot-monitor" data-top-enps="82.2" data-dot-enps="dot-monitor" style="left: 32.4%; top: 79.8%;">
+  <div class="dot dot-monitor"></div>
+  <div class="label label-right">Performance development</div>
+</div><div class="point" data-top-overall="88.0" data-dot-overall="dot-maintain" data-top-engagement="88.0" data-dot-engagement="dot-maintain" data-top-burnout="88.0" data-dot-burnout="dot-maintain" data-top-work_satisfaction="88.0" data-dot-work_satisfaction="dot-maintain" data-top-turnover_intent="88.0" data-dot-turnover_intent="dot-maintain" data-top-enps="88.0" data-dot-enps="dot-maintain" style="left: 84.4%; top: 88.0%;">
+  <div class="dot dot-maintain"></div>
+  <div class="label label-right">Safety</div>
+</div>
+      </div>
+    </div>
+  </div>
+  <div class="x-axis">
+    <div class="x-axis-text">LAGGING</div>
+    <div class="x-axis-main">PERFORMANCE VS. BENCHMARK</div>
+    <div class="x-axis-text">LEADING</div>
+  </div>
+  <script>
+    (function() {
+      var root = document.getElementById('ohep-decision-matrix');
+      if (!root) return;
+      var axisSel = root.querySelector('.axis-select') || document.getElementById('ohep-decision-matrix-axis');
+      if (!axisSel) return;
+      var points = root.querySelectorAll('.point');
+      function applyAxis(key) {
+        points.forEach(function(pt) {
+          var top = pt.getAttribute('data-top-' + key);
+          var dotCls = pt.getAttribute('data-dot-' + key);
+          if (top) pt.style.top = top + '%';
+          var dot = pt.querySelector('.dot');
+          if (dot && dotCls) dot.className = 'dot ' + dotCls;
+        });
+      }
+      axisSel.addEventListener('change', function() { applyAxis(axisSel.value); });
+      applyAxis(axisSel.value || 'overall');
+    })();
+  </script>
+</div></div></div></div></div></body></html>

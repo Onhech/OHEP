@@ -10,6 +10,17 @@ suppressPackageStartupMessages({
 
 `%||%` <- function(x, y) if (is.null(x) || length(x) < 1L) y else x
 first_or <- function(x, y) if (is.null(x) || length(x) < 1L) y else x[[1]]
+normalize_outcome_label <- function(x) {
+  y <- trimws(as.character(x))
+  yl <- tolower(y)
+  out <- y
+  out[yl %in% c("work satisfaction", "work satisfaction.", "work satisfaction score", "satisfaction", "work satisfaction index")] <- "Work Satisfaction"
+  out[yl %in% c("turnover intention", "turnover intentions", "turnover intent", "turnover", "intent to leave")] <- "Turnover Intent"
+  out[yl %in% c("enps", "e nps")] <- "eNPS"
+  out[yl %in% c("engagement")] <- "Engagement"
+  out[yl %in% c("burnout")] <- "Burnout"
+  out
+}
 
 script_path <- tryCatch({
   arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
@@ -298,7 +309,10 @@ question_map <- function(txt) {
     return(list(type = "outcome", fundamental = "Burnout", reverse = TRUE))
   }
   if (grepl("satisfied with my job|happy and fulfilled|working .*1 year", t)) {
-    return(list(type = "outcome", fundamental = "Work satisfaction", reverse = FALSE))
+    return(list(type = "outcome", fundamental = "Work Satisfaction", reverse = FALSE))
+  }
+  if (grepl("leave this organization|looking for another job|intend to leave|likely to leave|quit", t)) {
+    return(list(type = "outcome", fundamental = "Turnover Intent", reverse = TRUE))
   }
   if (grepl("purpose|meaningful|proud|community|stakeholders", t)) return(list(type = "fundamental", fundamental = "Purpose", reverse = FALSE))
   if (grepl("strategy|priorities|strategic objectives|accountable|decision", t)) return(list(type = "fundamental", fundamental = "Strategy", reverse = FALSE))
@@ -310,6 +324,34 @@ question_map <- function(txt) {
   if (grepl("safety|safe workplace|safety incidents|safety culture|training", t)) return(list(type = "fundamental", fundamental = "Safety", reverse = FALSE))
   list(type = "fundamental", fundamental = "Purpose", reverse = FALSE)
 }
+
+load_turnover_item_templates <- function(path) {
+  fallback <- c(
+    "I think I will be working at organization 5 years from now.",
+    "I think I will be working at ORGANIZATION 1 year from now.",
+    "I often think of quitting my job at ORGANIZATION."
+  )
+  if (!file.exists(path)) return(fallback)
+  key <- tryCatch(utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE), error = function(e) NULL)
+  if (!is.data.frame(key) || nrow(key) < 1L || !all(c("item", "Description") %in% names(key))) return(fallback)
+  turnover_ids <- c("turnover_1", "turnover_2", "turnover_3")
+  sub <- key[tolower(trimws(as.character(key$item))) %in% turnover_ids, c("item", "Description"), drop = FALSE]
+  if (nrow(sub) < 1L) return(fallback)
+  ord <- match(turnover_ids, tolower(trimws(as.character(sub$item))))
+  desc <- as.character(sub$Description[ord])
+  desc <- desc[nzchar(trimws(desc))]
+  if (length(desc) < 3L) {
+    needed <- fallback[seq_len(3L)]
+    for (d in desc) needed <- setdiff(needed, d)
+    desc <- c(desc, needed)
+  }
+  as.character(desc[seq_len(3L)])
+}
+
+turnover_item_templates <- load_turnover_item_templates(
+  file.path(ohep_dir, "inst", "extdata", "index_data", "user_data_key.csv")
+)
+turnover_item_idx <- 0L
 
 item_rows <- list()
 user_items <- list()
@@ -323,10 +365,17 @@ for (col in question_cols) {
   values <- suppressWarnings(as.numeric(raw[[col]]))
   values <- jitter_likert(values)
   user_items[[item_id]] <- values
+  item_text <- normalize_text(col)
+  if (identical(m$fundamental, "Turnover Intent")) {
+    turnover_item_idx <- turnover_item_idx + 1L
+    if (turnover_item_idx <= length(turnover_item_templates)) {
+      item_text <- turnover_item_templates[[turnover_item_idx]]
+    }
+  }
   item_rows[[length(item_rows) + 1L]] <- data.frame(
     type = m$type,
     item_id = item_id,
-    item_text = normalize_text(col),
+    item_text = item_text,
     fundamental_id = m$fundamental,
     facet_id = m$fundamental,
     is_reverse_scored = as.logical(m$reverse),
@@ -428,7 +477,7 @@ build_predictive <- function(df, meta, year_val) {
     if (length(ids) < 1L) next
     resp[[f]] <- rowMeans(as.data.frame(rows[ids]), na.rm = TRUE)
   }
-  outcomes <- c("Engagement", "Burnout", "Work satisfaction")
+  outcomes <- c("Engagement", "Burnout", "Work Satisfaction", "Turnover Intent")
   fundamentals <- setdiff(unique(meta$fundamental_id), outcomes)
   out <- list()
   for (f in fundamentals) {
@@ -461,8 +510,25 @@ build_predictive <- function(df, meta, year_val) {
   }
   do.call(rbind, out)
 }
-
-predictive_data <- build_predictive(user_data, item_data, report_year)
+predictive_csv_path <- file.path(ohep_dir, "inst", "extdata", "predictiva_data", "predictive_data.csv")
+if (!file.exists(predictive_csv_path)) {
+  stop(sprintf("Missing predictive data source: %s", predictive_csv_path), call. = FALSE)
+}
+predictive_data <- read_required_csv(
+  predictive_csv_path,
+  c("Fundamental", "Outcome", "subset", "strength", "strength_ci_low", "strength_ci_high", "type", "direction", "significant", "N"),
+  "predictive_data.csv"
+)
+predictive_data$Fundamental <- trimws(as.character(predictive_data$Fundamental))
+predictive_data$Outcome <- normalize_outcome_label(predictive_data$Outcome)
+predictive_data$subset <- trimws(as.character(predictive_data$subset))
+predictive_data$subset[!nzchar(predictive_data$subset)] <- "All"
+predictive_data$strength <- suppressWarnings(as.numeric(predictive_data$strength))
+predictive_data$strength_ci_low <- suppressWarnings(as.numeric(predictive_data$strength_ci_low))
+predictive_data$strength_ci_high <- suppressWarnings(as.numeric(predictive_data$strength_ci_high))
+predictive_data$significant <- as_flag(predictive_data$significant)
+predictive_data$N <- suppressWarnings(as.integer(predictive_data$N))
+predictive_data <- predictive_data[is.finite(predictive_data$strength), , drop = FALSE]
 marts <- prep_ohep_snapshot(user_data, index_data, predictive_data)
 
 slugify <- function(x) {
@@ -628,11 +694,13 @@ page_header_html <- function(eyebrow, title, description = NULL, controls_html =
   )
 }
 
-widget_shell_doc <- function(obj, title, eyebrow, description = NULL, controls_html = NULL) {
+widget_shell_doc <- function(obj, title, eyebrow, description = NULL, controls_html = NULL, pre_widget_html = NULL) {
+  pre_widget_node <- if (!is.null(pre_widget_html) && nzchar(trimws(pre_widget_html))) pre_widget_html else ""
   slide_doc(
     paste0(
       "<div class='slide'><div class='page-shell'>",
       page_header_html(eyebrow, title, description, controls_html),
+      pre_widget_node,
       "<div class='page-widget'>", render_html_fragment(obj), "</div>",
       "</div></div>"
     ),
@@ -654,6 +722,60 @@ score_value <- function(value, min_scale, max_scale, reverse) {
     max_scale <- 5
   }
   if (isTRUE(reverse)) min_scale + max_scale - val else val
+}
+
+append_turnover_intent_rows <- function(kpi_df, outcome_df) {
+  if (!is.data.frame(kpi_df) || nrow(kpi_df) < 1L) return(list(kpi = kpi_df, outcome = outcome_df))
+  keys <- unique(kpi_df[, c("filter_id", "company", "year"), drop = FALSE])
+  add_kpi <- list()
+  add_outcome <- list()
+  for (i in seq_len(nrow(keys))) {
+    fid <- as.character(keys$filter_id[[i]])
+    yr <- suppressWarnings(as.integer(keys$year[[i]]))
+    cmp <- as.character(keys$company[[i]])
+    sub <- kpi_df[kpi_df$filter_id == fid & kpi_df$year == yr & kpi_df$metric_group == "outcome", , drop = FALSE]
+    burn <- suppressWarnings(as.numeric(first_or(sub$score[tolower(sub$metric_id) == "burnout"], NA_real_)))
+    sat <- suppressWarnings(as.numeric(first_or(sub$score[tolower(sub$metric_id) == "work satisfaction"], NA_real_)))
+    if (!is.finite(burn) || !is.finite(sat)) next
+    # Turnover Intent is displayed as reverse-scored (higher is better), aligned to Burnout.
+    turnover_score <- pmax(1, pmin(5, round((burn + sat) / 2, 2)))
+    existing <- sub[tolower(sub$metric_id) == "turnover intent", , drop = FALSE]
+    if (nrow(existing) > 0L) next
+    n_burn <- suppressWarnings(as.integer(first_or(sub$n[tolower(sub$metric_id) == "burnout"], NA_integer_)))
+    n_sat <- suppressWarnings(as.integer(first_or(sub$n[tolower(sub$metric_id) == "work satisfaction"], NA_integer_)))
+    n_val <- suppressWarnings(min(c(n_burn, n_sat), na.rm = TRUE))
+    if (!is.finite(n_val)) n_val <- suppressWarnings(as.integer(first_or(sub$n, NA_integer_)))
+    pct <- pmax(1, pmin(99, round((turnover_score / 5) * 100)))
+    add_kpi[[length(add_kpi) + 1L]] <- data.frame(
+      filter_id = fid,
+      company = cmp,
+      year = yr,
+      metric_group = "outcome",
+      metric_id = "Turnover Intent",
+      metric_label = "Turnover Intent",
+      score = turnover_score,
+      percentile = pct,
+      n = as.integer(n_val),
+      stringsAsFactors = FALSE
+    )
+    add_outcome[[length(add_outcome) + 1L]] <- data.frame(
+      filter_id = fid,
+      year = yr,
+      outcome_id = "Turnover Intent",
+      outcome_label = "Turnover Intent",
+      score = turnover_score,
+      percentile = pct,
+      n = as.integer(n_val),
+      stringsAsFactors = FALSE
+    )
+  }
+  if (length(add_kpi) > 0L) {
+    kpi_df <- rbind(kpi_df, do.call(rbind, add_kpi))
+  }
+  if (is.data.frame(outcome_df) && length(add_outcome) > 0L) {
+    outcome_df <- rbind(outcome_df, do.call(rbind, add_outcome))
+  }
+  list(kpi = kpi_df, outcome = outcome_df)
 }
 
 outcome_meta <- item_data[item_data$type == "outcome", c("item_id", "fundamental_id", "is_reverse_scored", "response_scale_min", "response_scale_max"), drop = FALSE]
@@ -842,6 +964,9 @@ for (i in seq_len(nrow(filter_grid))) {
 kpi_scores_history <- if (length(kpi_history_rows) > 0L) do.call(rbind, kpi_history_rows) else data.frame()
 fundamental_history <- if (length(fundamental_history_rows) > 0L) do.call(rbind, fundamental_history_rows) else data.frame()
 outcome_history <- if (length(outcome_history_rows) > 0L) do.call(rbind, outcome_history_rows) else data.frame()
+turnover_augmented <- append_turnover_intent_rows(kpi_scores_history, outcome_history)
+kpi_scores_history <- turnover_augmented$kpi
+outcome_history <- turnover_augmented$outcome
 kpi_scores <- kpi_scores_history[kpi_scores_history$year == report_year, , drop = FALSE]
 item_scores <- if (length(item_rows_out) > 0L) do.call(rbind, item_rows_out) else data.frame()
 demographics_panels <- if (length(demo_panel_rows) > 0L) do.call(rbind, demo_panel_rows) else data.frame()
@@ -1040,6 +1165,13 @@ history_year_label <- function(year_value) {
   if (is.null(lbl) || !nzchar(lbl)) as.character(year_value) else lbl
 }
 
+ordinal_suffix <- function(n) {
+  n <- suppressWarnings(as.integer(n))
+  if (!is.finite(n)) return("th")
+  if ((n %% 100L) %in% c(11L, 12L, 13L)) return("th")
+  switch(as.character(n %% 10L), "1" = "st", "2" = "nd", "3" = "rd", "th")
+}
+
 build_model_data <- function(fid) {
   k <- kpi_scores[kpi_scores$filter_id == fid, , drop = FALSE]
   f <- k[k$metric_group == "fundamental", , drop = FALSE]
@@ -1059,7 +1191,8 @@ build_model_data <- function(fid) {
   }
   f_delta <- vapply(f_delta_raw, amplify_delta, numeric(1), scale = 2.2, min_abs = 0.08, digits = 2L)
 
-  current_outcome_pct <- ifelse(o$metric_id == "eNPS", 50 + o$score / 2, round((o$score / 5) * 100))
+  outcome_display_score <- as.numeric(o$score)
+  current_outcome_pct <- ifelse(o$metric_id == "eNPS", 50 + o$score / 2, round((outcome_display_score / 5) * 100))
 
   o_delta_raw <- vapply(o$metric_id, function(mid) {
     hist <- metric_history_pair(outcome_history, fid, "outcome_id", mid)
@@ -1069,14 +1202,34 @@ build_model_data <- function(fid) {
   }, numeric(1))
   o_delta <- vapply(o_delta_raw, amplify_delta, numeric(1), scale = 2.0, min_abs = 0.10, digits = 2L)
 
+  # Ensure demo contains all three delta states for point-color examples:
+  # green (up), grey (flat), red (down).
+  ensure_delta_variety <- function(x) {
+    if (!is.numeric(x) || length(x) < 1L) return(x)
+    has_pos <- any(is.finite(x) & x > 0)
+    has_neg <- any(is.finite(x) & x < 0)
+    has_zero <- any(is.finite(x) & x == 0)
+    idx <- which(is.finite(x))
+    if (length(idx) < 1L) return(x)
+    p_idx <- idx[[1]]
+    z_idx <- idx[[min(2L, length(idx))]]
+    n_idx <- idx[[min(3L, length(idx))]]
+    if (!has_pos) x[[p_idx]] <- 0.12
+    if (!has_zero) x[[z_idx]] <- 0
+    if (!has_neg) x[[n_idx]] <- -0.12
+    x
+  }
+  f_delta <- ensure_delta_variety(f_delta)
+  o_delta <- ensure_delta_variety(o_delta)
+
   list(
-    summary = data.frame(title = "Organizational Health Model", subtitle = "", fundamentals_label = "Fundamentals", outcomes_label = "Outcomes", raw_avg_label = "Score", delta_label = paste("vs", history_year_label(if (is.finite(prior_year)) prior_year else (report_year - 1L))), stringsAsFactors = FALSE),
+    summary = data.frame(title = "Organizational Health Model", subtitle = "", fundamentals_label = "Drivers", outcomes_label = "Outcomes", raw_avg_label = "Score", delta_label = paste("vs", history_year_label(if (is.finite(prior_year)) prior_year else (report_year - 1L))), stringsAsFactors = FALSE),
     fundamentals = data.frame(label = f$metric_label, percentile = pmax(1, pmin(99, round((f$score / 5) * 100))), raw_avg = round(f$score, 2), delta = f_delta, shape = "circle", stringsAsFactors = FALSE),
     outcomes = data.frame(
       label = o$metric_label,
       percentile = pmax(1, pmin(99, current_outcome_pct)),
       prior_percentile = NA_real_,
-      raw_avg = round(o$score, 2),
+      raw_avg = round(outcome_display_score, 2),
       delta = o_delta,
       shape = "diamond",
       stringsAsFactors = FALSE
@@ -1106,6 +1259,7 @@ build_matrix_points <- function(fid) {
     impact_engagement = c(0.82, 0.76, 0.91, 0.68, 0.34, 0.44, 0.35, 0.24),
     impact_burnout = c(0.63, 0.88, 0.74, 0.81, 0.27, 0.36, 0.28, 0.22),
     impact_work_satisfaction = c(0.79, 0.69, 0.86, 0.66, 0.33, 0.38, 0.30, 0.23),
+    impact_turnover_intent = c(0.58, 0.83, 0.68, 0.77, 0.29, 0.34, 0.27, 0.21),
     impact_enps = c(0.84, 0.73, 0.92, 0.70, 0.29, 0.42, 0.31, 0.26),
     stringsAsFactors = FALSE
   )
@@ -1126,6 +1280,7 @@ build_matrix_points <- function(fid) {
   x$impact_engagement[!is.finite(x$impact_engagement)] <- 0.30
   x$impact_burnout[!is.finite(x$impact_burnout)] <- 0.30
   x$impact_work_satisfaction[!is.finite(x$impact_work_satisfaction)] <- 0.30
+  x$impact_turnover_intent[!is.finite(x$impact_turnover_intent)] <- 0.30
   x$impact_enps[!is.finite(x$impact_enps)] <- 0.30
 
   # Inject deterministic filter-aware variation so each global filter value
@@ -1163,6 +1318,7 @@ build_matrix_points <- function(fid) {
   x$impact_engagement <- pmax(0.08, pmin(0.95, x$impact_engagement + outcome_shift("Engagement", 0.28) + hash_jitter(paste(fid, "engagement", sep = "|"), 0.03)))
   x$impact_burnout <- pmax(0.08, pmin(0.95, x$impact_burnout - outcome_shift("Burnout", 0.28) + hash_jitter(paste(fid, "burnout", sep = "|"), 0.03)))
   x$impact_work_satisfaction <- pmax(0.08, pmin(0.95, x$impact_work_satisfaction + outcome_shift("Work Satisfaction", 0.28) + hash_jitter(paste(fid, "work_satisfaction", sep = "|"), 0.03)))
+  x$impact_turnover_intent <- pmax(0.08, pmin(0.95, x$impact_turnover_intent - outcome_shift("Turnover Intent", 0.28) + hash_jitter(paste(fid, "turnover_intent", sep = "|"), 0.03)))
   x$impact_enps <- pmax(0.08, pmin(0.95, x$impact_enps + outcome_shift("eNPS", 0.012) + hash_jitter(paste(fid, "enps", sep = "|"), 0.03)))
 
   data.frame(
@@ -1173,6 +1329,7 @@ build_matrix_points <- function(fid) {
     impact_engagement = x$impact_engagement,
     impact_burnout = x$impact_burnout,
     impact_work_satisfaction = x$impact_work_satisfaction,
+    impact_turnover_intent = x$impact_turnover_intent,
     impact_enps = x$impact_enps,
     stringsAsFactors = FALSE
   )
@@ -1193,7 +1350,7 @@ build_heatmap <- function(fr) {
     "Burnout",
     "Engagement",
     "Work Satisfaction",
-    "Turnover Intention"
+    "Turnover Intent"
   )
 
   short_label <- function(x) {
@@ -1235,7 +1392,7 @@ build_heatmap <- function(fr) {
     "Burnout" = c("Burnout"),
     "Engagement" = c("Engagement"),
     "Work Satisfaction" = c("Work Satisfaction", "Work satisfaction", "Satisfaction"),
-    "Turnover Intention" = c("Turnover Intention", "Turnover", "Intent to Leave")
+    "Turnover Intent" = c("Turnover Intent", "Turnover Intention", "Turnover Intentions", "Turnover", "Intent to Leave")
   )
   overall_outcome_scores <- setNames(
     sapply(outcome_rows, function(lbl) {
@@ -1282,7 +1439,9 @@ build_heatmap <- function(fr) {
               kpi_scores$metric_id %in% mids
           ]
           vv <- as.numeric(first_or(v, NA_real_))
-          if (is.finite(vv)) return(round(vv, 2))
+          if (is.finite(vv)) {
+            return(round(vv, 2))
+          }
         }
         if (identical(metric_group, "fundamental")) {
           fake_score(segment_id, paste(seg_val, as.character(fr$filter_id[[1]]), sep = "::"), fu)
@@ -1323,7 +1482,7 @@ build_heatmap <- function(fr) {
   names(compare_sets_outcomes) <- vapply(dimension_defs, function(dd) dd$label, character(1))
 
   list(
-    title = "",
+    title = "Heat Map",
     subtitle = "",
     legend_low = "Lower",
     legend_high = "Higher",
@@ -1480,14 +1639,24 @@ filter_label <- function(fr) {
 }
 
 build_outcome_data <- function(outcome_name, rows_sub, fid) {
+  outcome_name <- normalize_outcome_label(outcome_name)
   rows_curr <- rows_sub[rows_sub$year == report_year, , drop = FALSE]
   if (nrow(rows_curr) < 1L) return(NULL)
   rows_prior <- rows_sub[rows_sub$year == (report_year - 1L), , drop = FALSE]
+  k_now_raw <- kpi_scores[
+    kpi_scores$filter_id == fid &
+      kpi_scores$metric_group == "outcome" &
+      normalize_outcome_label(kpi_scores$metric_id) == outcome_name,
+    "score",
+    drop = TRUE
+  ]
+  base_outcome_score <- suppressWarnings(as.numeric(first_or(k_now_raw, NA_real_)))
+  if (!is.finite(base_outcome_score)) {
+    base_outcome_score <- if (identical(outcome_name, "Turnover Intent")) 3.20 else 3.60
+  }
 
-  m <- item_data[item_data$type == "outcome" & tolower(item_data$fundamental_id) == tolower(outcome_name), , drop = FALSE]
-  if (nrow(m) < 1L) return(NULL)
+  m <- item_data[item_data$type == "outcome" & normalize_outcome_label(item_data$fundamental_id) == outcome_name, , drop = FALSE]
   m <- m[m$item_id %in% names(rows_curr), , drop = FALSE]
-  if (nrow(m) < 1L) return(NULL)
 
   score_value <- function(value, min_scale, max_scale, reverse) {
     val <- suppressWarnings(as.numeric(value))
@@ -1506,7 +1675,7 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
   }
 
   item_rows <- list()
-  for (i in seq_len(nrow(m))) {
+  if (nrow(m) > 0L) for (i in seq_len(nrow(m))) {
     iid <- as.character(m$item_id[[i]])
     min_s <- as.numeric(m$response_scale_min[[i]])
     max_s <- as.numeric(m$response_scale_max[[i]])
@@ -1557,17 +1726,77 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
       stringsAsFactors = FALSE
     )
   }
-  if (length(item_rows) < 1L) return(NULL)
-  items_df <- do.call(rbind, item_rows)
+  items_df <- if (length(item_rows) > 0L) do.call(rbind, item_rows) else data.frame()
+  if (!is.data.frame(items_df) || nrow(items_df) < 1L) {
+    if (identical(outcome_name, "Turnover Intent")) {
+      turnover_labels <- turnover_item_templates
+      turnover_means <- pmin(5, pmax(1, c(
+        base_outcome_score + 0.08,
+        base_outcome_score + 0.02,
+        base_outcome_score - 0.12
+      )))
+      sentiment_split <- function(mn) {
+        if (!is.finite(mn)) return(c(33, 34, 33))
+        if (mn >= 4.0) return(c(10, 20, 70))
+        if (mn >= 3.4) return(c(15, 30, 55))
+        if (mn >= 3.0) return(c(20, 35, 45))
+        c(35, 35, 30)
+      }
+      s <- t(vapply(turnover_means, sentiment_split, numeric(3)))
+      items_df <- data.frame(
+        column = ifelse(seq_along(turnover_labels) %% 2L == 1L, "left", "right"),
+        section = outcome_name,
+        section_order = 1L,
+        item_order = seq_along(turnover_labels),
+        label = as.character(turnover_labels),
+        mean = as.numeric(turnover_means),
+        disagree_pct = as.numeric(s[, 1]),
+        neutral_pct = as.numeric(s[, 2]),
+        agree_pct = as.numeric(s[, 3]),
+        vs_industry = c(2, 0, -3),
+        vs_prior = c(1, 0, -1),
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+  if (!is.data.frame(items_df) || nrow(items_df) < 1L) {
+    fallback <- item_scores[item_scores$filter_id == fid & item_scores$fundamental_id %in% c("Burnout", "Work satisfaction", "Work Satisfaction"), , drop = FALSE]
+    if (nrow(fallback) < 1L) {
+      fallback <- item_scores[item_scores$filter_id == fid, , drop = FALSE]
+    }
+    if (nrow(fallback) > 0L) {
+      fallback <- fallback[order(-as.numeric(fallback$mean)), , drop = FALSE]
+      fallback <- utils::head(fallback, 8L)
+      fallback$item_order <- seq_len(nrow(fallback))
+      items_df <- data.frame(
+        column = ifelse(fallback$item_order %% 2L == 1L, "left", "right"),
+        section = outcome_name,
+        section_order = 1L,
+        item_order = fallback$item_order,
+        label = as.character(fallback$item_label),
+        mean = as.numeric(fallback$mean),
+        agree_pct = as.numeric(fallback$agree_pct),
+        neutral_pct = as.numeric(fallback$neutral_pct),
+        disagree_pct = as.numeric(fallback$disagree_pct),
+        vs_industry = as.numeric(fallback$vs_industry),
+        vs_prior = as.numeric(fallback$vs_prior),
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+  if (!is.data.frame(items_df) || nrow(items_df) < 1L) {
+    return(NULL)
+  }
 
-  k_now <- kpi_scores[kpi_scores$filter_id == fid & kpi_scores$metric_group == "outcome" & tolower(kpi_scores$metric_id) == tolower(outcome_name), "score", drop = TRUE]
-  score_now <- as.numeric(first_or(k_now, mean(items_df$mean, na.rm = TRUE)))
-  hist_pair <- metric_history_pair(outcome_history, fid, "outcome_id", outcome_name)
+  score_now <- as.numeric(first_or(k_now_raw, mean(items_df$mean, na.rm = TRUE)))
+  hist_keys <- unique(outcome_history$outcome_id[normalize_outcome_label(outcome_history$outcome_id) == outcome_name])
+  hist_key <- if (length(hist_keys) > 0L) as.character(hist_keys[[1]]) else outcome_name
+  hist_pair <- metric_history_pair(outcome_history, fid, "outcome_id", hist_key)
   score_prior <- suppressWarnings(as.numeric(first_or(hist_pair$prior$score, NA_real_)))
   score_delta <- if (is.finite(score_prior)) score_now - score_prior else 0
 
   pe <- marts$predictive_edges
-  d <- pe[tolower(pe$outcome) == tolower(outcome_name) & tolower(pe$subset) == "all", , drop = FALSE]
+  d <- pe[normalize_outcome_label(pe$outcome) == outcome_name & tolower(pe$subset) == "all", , drop = FALSE]
   if (nrow(d) < 1L) {
     d <- data.frame(fundamental = fundamentals[seq_len(min(5, length(fundamentals)))], strength = seq(0.4, 0.2, length.out = min(5, length(fundamentals))), stringsAsFactors = FALSE)
   }
@@ -1599,7 +1828,7 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
 }
 
 build_outcomes_overview_data <- function(rows_sub, fid) {
-  outcome_names <- c("Engagement", "Burnout", "Work satisfaction")
+  outcome_names <- c("Engagement", "Burnout", "Work Satisfaction", "Turnover Intent")
   detail <- lapply(outcome_names, function(nm) build_outcome_data(nm, rows_sub, fid))
   ok <- vapply(detail, function(x) !is.null(x), logical(1))
   detail <- detail[ok]
@@ -1612,7 +1841,7 @@ build_outcomes_overview_data <- function(rows_sub, fid) {
   percentile <- round((score_now / 5) * 100)
 
   pe <- marts$predictive_edges
-  pe <- pe[tolower(pe$subset) == "all" & tolower(pe$outcome) %in% tolower(outcome_names), , drop = FALSE]
+  pe <- pe[tolower(pe$subset) == "all" & normalize_outcome_label(pe$outcome) %in% normalize_outcome_label(outcome_names), , drop = FALSE]
   if (nrow(pe) > 0L) {
     pe$strength <- suppressWarnings(as.numeric(pe$strength))
     drv <- stats::aggregate(abs(strength) ~ fundamental, data = pe, FUN = function(x) mean(x, na.rm = TRUE))
@@ -1659,6 +1888,103 @@ build_outcomes_overview_data <- function(rows_sub, fid) {
     ),
     drivers = drivers,
     items = items_all[, c("column", "section", "section_order", "item_order", "label", "mean", "agree_pct", "neutral_pct", "disagree_pct", "vs_industry", "vs_prior"), drop = FALSE]
+  )
+}
+
+build_drivers_overview_data <- function(fid) {
+  drv <- kpi_scores[
+    kpi_scores$filter_id == fid & kpi_scores$metric_group == "fundamental",
+    c("metric_id", "metric_label", "score", "percentile"),
+    drop = FALSE
+  ]
+  if (nrow(drv) < 1L) return(NULL)
+
+  score_now <- suppressWarnings(mean(as.numeric(drv$score), na.rm = TRUE))
+  if (!is.finite(score_now)) score_now <- 4.00
+  pct_now <- suppressWarnings(round(mean(as.numeric(drv$percentile), na.rm = TRUE)))
+  if (!is.finite(pct_now)) pct_now <- round((score_now / 5) * 100)
+
+  prev <- if (is.finite(prior_year)) {
+    kpi_scores[kpi_scores$filter_id == fid & kpi_scores$metric_group == "fundamental" & kpi_scores$year == prior_year, c("metric_id", "score", "percentile"), drop = FALSE]
+  } else {
+    kpi_scores[0, c("metric_id", "score", "percentile"), drop = FALSE]
+  }
+  score_prev <- suppressWarnings(mean(as.numeric(prev$score), na.rm = TRUE))
+  if (!is.finite(score_prev)) score_prev <- score_now - 0.05
+  pct_prev <- suppressWarnings(round(mean(as.numeric(prev$percentile), na.rm = TRUE)))
+  if (!is.finite(pct_prev)) pct_prev <- pct_now - 1L
+
+  pe <- marts$predictive_edges
+  pe <- pe[
+    as.character(pe$Fundamental) == "OHEP" &
+      tolower(as.character(pe$subset)) == "all",
+    ,
+    drop = FALSE
+  ]
+  if ("significant" %in% names(pe)) {
+    sig <- as_flag(pe$significant)
+    if (any(sig, na.rm = TRUE)) pe <- pe[sig, , drop = FALSE]
+  }
+  if (nrow(pe) > 0L) {
+    pe$Outcome <- normalize_outcome_label(pe$Outcome)
+    pe <- pe[!pe$Outcome %in% c("Outcomes"), , drop = FALSE]
+    pe$strength <- suppressWarnings(as.numeric(pe$strength))
+    pe <- pe[is.finite(pe$strength), , drop = FALSE]
+    pe <- pe[order(abs(pe$strength), decreasing = TRUE), , drop = FALSE]
+    pe <- utils::head(pe, 3L)
+    outcomes <- data.frame(
+      rank = seq_len(nrow(pe)),
+      outcome = as.character(pe$Outcome),
+      percentile = pmax(1, pmin(99, round(abs(as.numeric(pe$strength)) * 100))),
+      stringsAsFactors = FALSE
+    )
+  } else {
+    outcomes <- data.frame(
+      rank = 1:3,
+      outcome = c("Engagement", "Burnout", "Work Satisfaction"),
+      percentile = c(65, 62, 59),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  items <- item_scores[item_scores$filter_id == fid, , drop = FALSE]
+  items <- items[order(-as.numeric(items$mean)), , drop = FALSE]
+  items <- utils::head(items, 8L)
+  if (nrow(items) < 1L) return(NULL)
+  items$item_order <- seq_len(nrow(items))
+  sentiment_safe <- function(x, fallback) {
+    xx <- suppressWarnings(as.numeric(x))
+    ifelse(is.finite(xx), xx, fallback)
+  }
+  items_df <- data.frame(
+    column = ifelse(items$item_order %% 2L == 1L, "left", "right"),
+    section = "Drivers Overview",
+    section_order = 1L,
+    item_order = items$item_order,
+    label = as.character(items$item_label),
+    mean = as.numeric(items$mean),
+    disagree_pct = sentiment_safe(items$disagree_pct, 33),
+    neutral_pct = sentiment_safe(items$neutral_pct, 34),
+    agree_pct = sentiment_safe(items$agree_pct, 33),
+    vs_industry = as.numeric(items$vs_industry),
+    vs_prior = as.numeric(items$vs_prior),
+    stringsAsFactors = FALSE
+  )
+
+  list(
+    fundamental = data.frame(
+      fundamental_label = "Drivers Overview",
+      drivers_table_title = "Key Outcomes",
+      drivers_row_label = "Outcome",
+      percentile = pct_now,
+      percentile_delta = as.integer(round(pct_now - pct_prev)),
+      delta_label = paste0("vs. ", if (is.finite(prior_year)) prior_year else (report_year - 1L)),
+      score = round(score_now, 2),
+      score_delta = round(score_now - score_prev, 2),
+      stringsAsFactors = FALSE
+    ),
+    outcomes = outcomes,
+    items = items_df
   )
 }
 
@@ -1821,7 +2147,7 @@ build_fallback_open_ended <- function(fid) {
   k_now <- kpi_scores[kpi_scores$filter_id == fid, , drop = FALSE]
   fk <- k_now[k_now$metric_group == "fundamental", c("metric_id", "metric_label", "score"), drop = FALSE]
   if (nrow(fk) > 0L) fk <- fk[order(-fk$score), , drop = FALSE]
-  strengths <- if (nrow(fk) > 0L) paste(utils::head(fk$metric_label, 2L), collapse = ", ") else "higher-scoring fundamentals"
+  strengths <- if (nrow(fk) > 0L) paste(utils::head(fk$metric_label, 2L), collapse = ", ") else "higher-scoring drivers"
   risks <- if (nrow(fk) > 0L) paste(utils::head(fk$metric_label[order(fk$score)], 2L), collapse = ", ") else "emerging risk areas"
   list(
     summary = data.frame(
@@ -1833,7 +2159,7 @@ build_fallback_open_ended <- function(fid) {
         ". The most frequent concerns center on ", risks,
         ". These themes translate comment-level feedback into practical priorities."
       ),
-      score_label = "Average Fundamental Score",
+      score_label = "Average Driver Score",
       context_note = "Fallback narrative generated from current scores.",
       stringsAsFactors = FALSE
     ),
@@ -1968,7 +2294,7 @@ build_open_ended_data <- function(fid, fr, rows_curr) {
 
   takeaway_outcome_map <- c(
     takeaway_1 = "Engagement",
-    takeaway_2 = "Work satisfaction",
+    takeaway_2 = "Work Satisfaction",
     takeaway_3 = "Burnout"
   )
   verbatim_df <- if (nrow(quote_df) > 0L) {
@@ -2111,50 +2437,50 @@ theme_slide_labels <- c("Strategy Gap", "Work Strain", "Burnout Risk")
 
 slides <- data.frame(
   slide_id = c(
-    "cover", "ohep_model_image", "methodology", "participation_profile",
+    "cover", "ohep_model_image", "participation_profile",
     "orientation_model", "demographics_overview", "priority_matrix", "segment_heatmap",
-    paste0("fundamental_", slugify(fundamentals)),
-    "outcomes_overview", "engagement_deep_dive", "burnout_deep_dive", "work_satisfaction_deep_dive", "enps",
     "open_ended_overall_summary",
     theme_slide_ids,
+    "drivers_overview", paste0("fundamental_", slugify(fundamentals)),
+    "outcomes_overview", "engagement_deep_dive", "burnout_deep_dive", "work_satisfaction_deep_dive", "turnover_intent_deep_dive", "enps",
     "open_ended_action_plan",
     "comments_explorer"
   ),
   slide_label = c(
-    "Introduction", "About the OHEP", "Methodology", "Participation Profile",
-    "OHEP Results", "Demographics", "Priority Matrix", "Segment Heatmap",
-    fundamentals,
-    "Overall", "Engagement", "Burnout", "Work Satisfaction", "eNPS",
+    "Introduction", "About the OHEP", "Participation Profile",
+    "OHEP Results", "Demographics", "Priority Matrix", "Heat Map",
     "Overview",
     theme_slide_labels,
+    "Overall", fundamentals,
+    "Overall", "Engagement", "Burnout", "Work Satisfaction", "Turnover Intent", "eNPS",
     "Action Plan",
     "Comments"
   ),
   section_id = c(
-    "system_orientation", "system_orientation", "system_orientation", "system_orientation",
+    "system_orientation", "system_orientation", "system_orientation",
     "ohep_summary", "ohep_summary", "ohep_summary", "ohep_summary",
-    rep("drivers", length(fundamentals)),
-    "outcomes", "outcomes", "outcomes", "outcomes", "outcomes",
     "insights",
     rep("insights", length(theme_slide_ids)),
+    "drivers", rep("drivers", length(fundamentals)),
+    "outcomes", "outcomes", "outcomes", "outcomes", "outcomes", "outcomes",
     "action_plan",
     "comments"
   ),
   nav_level = c(
-    rep(0L, 8L),
-    rep(0L, length(fundamentals)),
-    0L, 0L, 0L, 0L, 0L,
+    rep(0L, 7L),
     0L,
     rep(0L, length(theme_slide_ids)),
+    0L, rep(1L, length(fundamentals)),
+    0L, 1L, 1L, 1L, 1L, 1L,
     0L,
     0L
   ),
   nav_group = c(
-    rep("", 8L),
-    rep("", length(fundamentals)),
-    "", "", "", "", "",
+    rep("", 7L),
     "",
-    rep("Themes", length(theme_slide_ids)),
+    rep("", length(theme_slide_ids)),
+    "", rep("", length(fundamentals)),
+    "", "", "", "", "", "",
     "",
     ""
   ),
@@ -2163,8 +2489,8 @@ slides <- data.frame(
 slides$sort_order <- seq_len(nrow(slides))
 
 section_meta <- data.frame(
-  section_id = c("system_orientation","ohep_summary","drivers","outcomes","insights","action_plan","comments"),
-  section_label = c("Getting Started","OHEP Summary","Drivers","Outcomes","Insights","Action Plan","Comments"),
+  section_id = c("system_orientation","ohep_summary","insights","drivers","outcomes","action_plan","comments"),
+  section_label = c("Getting Started","OHEP Summary","Insights","Drivers","Outcomes","Action Plan","Comments"),
   section_order = seq_len(7),
   stringsAsFactors = FALSE
 )
@@ -2189,11 +2515,124 @@ render_slide <- function(slide_id, fr) {
   fid <- fr$filter_id[[1]]
   rows_sub <- apply_filter(user_data, fr)
   rows_curr <- rows_sub[rows_sub$year == report_year, , drop = FALSE]
-  if (nrow(rows_curr) < 8L && !slide_id %in% c("cover", "methodology", "ohep_model_image", "orientation_model")) {
+  if (nrow(rows_curr) < 8L && !slide_id %in% c("cover", "ohep_model_image", "orientation_model")) {
     return(no_data_slide("Too few responses for this filter combination."))
   }
 
   k_now <- kpi_scores[kpi_scores$filter_id == fid, , drop = FALSE]
+  current_n <- nrow(rows_curr)
+  overall_percentile <- suppressWarnings(round(mean(as.numeric(k_now$percentile), na.rm = TRUE)))
+  if (!is.finite(overall_percentile)) overall_percentile <- 67
+  k_prev <- if (is.finite(prior_year)) {
+    kpi_scores[kpi_scores$filter_id == fid & kpi_scores$year == prior_year, , drop = FALSE]
+  } else {
+    kpi_scores[0, , drop = FALSE]
+  }
+  overall_percentile_prev <- suppressWarnings(round(mean(as.numeric(k_prev$percentile), na.rm = TRUE)))
+  if (!is.finite(overall_percentile_prev)) overall_percentile_prev <- overall_percentile - 2L
+  overall_percentile_delta <- as.integer(round(overall_percentile - overall_percentile_prev))
+  if (!is.finite(overall_percentile_delta)) overall_percentile_delta <- 0L
+  score_rows_now <- k_now[
+    k_now$metric_group == "fundamental" |
+      (k_now$metric_group == "outcome" & k_now$metric_id != "eNPS"),
+    ,
+    drop = FALSE
+  ]
+  score_rows_prev <- k_prev[
+    k_prev$metric_group == "fundamental" |
+      (k_prev$metric_group == "outcome" & k_prev$metric_id != "eNPS"),
+    ,
+    drop = FALSE
+  ]
+  overall_score <- suppressWarnings(mean(as.numeric(score_rows_now$score), na.rm = TRUE))
+  if (!is.finite(overall_score)) overall_score <- 4.15
+  overall_score_prev <- suppressWarnings(mean(as.numeric(score_rows_prev$score), na.rm = TRUE))
+  if (!is.finite(overall_score_prev)) overall_score_prev <- overall_score - 0.10
+  overall_score_delta <- round(overall_score - overall_score_prev, 2)
+  if (!is.finite(overall_score_delta)) overall_score_delta <- 0
+  status_class_for <- function(status_label) {
+    switch(
+      status_label,
+      "Needs Improvement" = "status-needs",
+      "Industry Standard" = "status-standard",
+      "Above Standard" = "status-above",
+      "Industry Leader" = "status-leader",
+      "status-standard"
+    )
+  }
+  overall_status <- if (overall_percentile < 35) {
+    "Needs Improvement"
+  } else if (overall_percentile < 65) {
+    "Industry Standard"
+  } else if (overall_percentile < 90) {
+    "Above Standard"
+  } else {
+    "Industry Leader"
+  }
+  overall_status_class <- status_class_for(overall_status)
+  summarize_group <- function(group_now, group_prev) {
+    score_now <- suppressWarnings(mean(as.numeric(group_now$score), na.rm = TRUE))
+    if (!is.finite(score_now)) score_now <- 4.00
+    score_prev <- suppressWarnings(mean(as.numeric(group_prev$score), na.rm = TRUE))
+    if (!is.finite(score_prev)) score_prev <- score_now - 0.05
+    score_delta <- round(score_now - score_prev, 2)
+    pct_now <- suppressWarnings(round(mean(as.numeric(group_now$percentile), na.rm = TRUE)))
+    if (!is.finite(pct_now)) pct_now <- round((score_now / 5) * 100)
+    pct_prev <- suppressWarnings(round(mean(as.numeric(group_prev$percentile), na.rm = TRUE)))
+    if (!is.finite(pct_prev)) pct_prev <- pct_now - 1L
+    pct_delta <- as.integer(round(pct_now - pct_prev))
+    status <- if (pct_now < 35) {
+      "Needs Improvement"
+    } else if (pct_now < 65) {
+      "Industry Standard"
+    } else if (pct_now < 90) {
+      "Above Standard"
+    } else {
+      "Industry Leader"
+    }
+    list(
+      score = score_now,
+      score_delta = score_delta,
+      percentile = pct_now,
+      percentile_delta = pct_delta,
+      status = status,
+      status_class = status_class_for(status)
+    )
+  }
+  drivers_overview <- summarize_group(
+    k_now[k_now$metric_group == "fundamental", , drop = FALSE],
+    k_prev[k_prev$metric_group == "fundamental", , drop = FALSE]
+  )
+  outcomes_overview <- summarize_group(
+    k_now[k_now$metric_group == "outcome" & normalize_outcome_label(k_now$metric_id) != "eNPS", , drop = FALSE],
+    k_prev[k_prev$metric_group == "outcome" & normalize_outcome_label(k_prev$metric_id) != "eNPS", , drop = FALSE]
+  )
+  driver_now <- k_now[k_now$metric_group == "fundamental", c("metric_label", "score"), drop = FALSE]
+  if (nrow(driver_now) > 0L) {
+    driver_now <- driver_now[order(-as.numeric(driver_now$score)), , drop = FALSE]
+  }
+  strengths_txt <- if (nrow(driver_now) >= 2L) {
+    paste(driver_now$metric_label[[1]], driver_now$metric_label[[2]], sep = " & ")
+  } else {
+    "Leadership & Purpose"
+  }
+  follow_up_txt <- if (nrow(driver_now) >= 2L) {
+    low <- driver_now[order(as.numeric(driver_now$score)), , drop = FALSE]
+    paste(low$metric_label[[1]], low$metric_label[[2]], sep = " & ")
+  } else {
+    "Strategy & Burnout"
+  }
+  strengths_labels <- if (nrow(driver_now) >= 2L) {
+    as.character(driver_now$metric_label[seq_len(2)])
+  } else {
+    c("Safety", "Purpose")
+  }
+  follow_up_labels <- if (nrow(driver_now) >= 2L) {
+    low <- driver_now[order(as.numeric(driver_now$score)), , drop = FALSE]
+    as.character(low$metric_label[seq_len(2)])
+  } else {
+    c("Learning & innovation", "Performance development")
+  }
 
   render_comments_explorer_page <- function(oe) {
     v <- oe$verbatim
@@ -2202,11 +2641,11 @@ render_slide <- function(slide_id, fr) {
     if (!("outcome" %in% names(v))) v$outcome <- ""
     vv <- v
     vv$fundamental <- trimws(as.character(vv$fundamental))
-    vv$outcome <- trimws(as.character(vv$outcome))
+    vv$outcome <- normalize_outcome_label(trimws(as.character(vv$outcome)))
     vv$fundamental[!nzchar(vv$fundamental)] <- NA_character_
     vv$outcome[!nzchar(vv$outcome)] <- NA_character_
 
-    outcome_topics <- c("Engagement", "Burnout", "Work Satisfaction", "eNPS")
+    outcome_topics <- c("Engagement", "Burnout", "Work Satisfaction", "Turnover Intent", "eNPS")
     topic_df <- rbind(
       data.frame(topic_type = "Outcome", topic_label = "Overall", stringsAsFactors = FALSE),
       data.frame(topic_type = "Driver", topic_label = fundamentals, stringsAsFactors = FALSE),
@@ -2222,7 +2661,7 @@ render_slide <- function(slide_id, fr) {
       } else if (identical(topic_label, "Overall")) {
         vv
       } else {
-        vv[vv$outcome == topic_label, , drop = FALSE]
+        vv[normalize_outcome_label(vv$outcome) == normalize_outcome_label(topic_label), , drop = FALSE]
       }
     }
 
@@ -2232,7 +2671,7 @@ render_slide <- function(slide_id, fr) {
       } else if (identical(topic_label, "Overall")) {
         row <- k_now[k_now$metric_group %in% c("fundamental", "outcome"), , drop = FALSE]
       } else {
-        row <- k_now[k_now$metric_group == "outcome" & tolower(k_now$metric_label) == tolower(topic_label), , drop = FALSE]
+        row <- k_now[k_now$metric_group == "outcome" & normalize_outcome_label(k_now$metric_label) == normalize_outcome_label(topic_label), , drop = FALSE]
       }
       score_txt <- if (nrow(row) > 0L && is.finite(suppressWarnings(as.numeric(row$score[[1]])))) sprintf("%.2f", as.numeric(row$score[[1]])) else "n/a"
       priors <- c(
@@ -2384,7 +2823,7 @@ render_slide <- function(slide_id, fr) {
         "#", page_id, " .search-icon svg{width:14px;height:14px;}",
         "#", page_id, " .comments-search{width:100%;border:none;outline:none;padding:8px 8px;font-size:13px;font-weight:600;color:#0f172a;background:transparent;}",
         "#", page_id, " {--sent-pos-soft:#10B981;--sent-neu-soft:#E2E8F0;--sent-neg-soft:#F43F5E;}",
-        "#", page_id, " .sentiment-summary{display:flex;align-items:center;gap:24px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;padding:16px 24px;margin-bottom:16px;box-shadow:0 2px 4px rgba(15,23,42,0.02);}",
+        "#", page_id, " .sentiment-summary{display:flex;align-items:center;gap:24px;background:#FFFFFF;border:none;border-radius:8px;padding:16px 24px;margin-bottom:16px;box-shadow:0 2px 4px rgba(15,23,42,0.02);}",
         "#", page_id, " .summary-label{font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}",
         "#", page_id, " .inline-bar-wrapper{flex:1;}",
         "#", page_id, " .inline-data-bar{display:flex;height:32px;border-radius:6px;overflow:hidden;}",
@@ -2470,6 +2909,16 @@ render_slide <- function(slide_id, fr) {
         ".hero-card{border-left:4px solid #0D9488;}",
         ".hero-title{font-size:20px;font-weight:800;color:#0F172A;margin:0 0 12px 0;text-align:left;}",
         ".hero-desc{font-size:15px;color:#334155;line-height:1.6;max-width:800px;margin:0;text-align:left;}",
+        ".exec-snapshot{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;margin-bottom:6px;}",
+        ".exec-main{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:18px;}",
+        ".exec-main h3{font-size:13px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#0D9488;margin:0 0 10px 0;}",
+        ".exec-line{font-size:14px;color:#334155;line-height:1.5;margin:0;}",
+        ".exec-strong{font-size:26px;font-weight:900;color:#0F172A;line-height:1.1;margin:2px 0 6px 0;}",
+        ".exec-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}",
+        ".exec-pill{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:8px;padding:12px;}",
+        ".exec-pill .k{font-size:10px;font-weight:800;color:#64748B;text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px 0;}",
+        ".exec-pill .v{font-size:20px;font-weight:900;color:#0F172A;line-height:1.1;}",
+        ".exec-pill .s{font-size:12px;font-weight:700;color:#334155;line-height:1.3;margin-top:4px;}",
         ".steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}",
         ".step-box{display:flex;flex-direction:column;gap:12px;align-items:flex-start;text-align:left;}",
         ".step-icon{width:40px;height:40px;background:#F0FDFA;color:#0D9488;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;}",
@@ -2507,7 +2956,7 @@ render_slide <- function(slide_id, fr) {
         ".guidance-icon{width:24px;height:24px;color:#0D9488;margin-bottom:4px;}",
         ".guidance-card h3{font-size:16px;font-weight:800;color:#0D9488;margin:0;}",
         ".guidance-card p{font-size:14px;line-height:1.6;color:#334155;margin:0;}",
-        "@media (max-width: 900px){.layout-split{grid-template-columns:1fr;}.steps-grid{grid-template-columns:1fr;}}",
+        "@media (max-width: 900px){.layout-split{grid-template-columns:1fr;}.steps-grid{grid-template-columns:1fr;}.exec-snapshot{grid-template-columns:1fr;}.exec-kpis{grid-template-columns:1fr;}}",
         "@media (max-width: 980px){.metrics-banner{grid-template-columns:1fr 1fr;}.content-split{grid-template-columns:1fr;gap:24px;}}",
         "@media (max-width: 860px){.gs-layout{grid-template-columns:1fr;}.gs-col-span-2{grid-column:span 1;}}",
         "</style>"
@@ -2587,7 +3036,7 @@ render_slide <- function(slide_id, fr) {
         "Implement a monthly development check-in for supervisors and mid-level leaders focused on support and growth, not just task updates.",
         "Provide targeted coaching for critical people-leader roles on communication, delegation, and strain management."
       )),
-      action_card(5, "Protect sustainable performance across fundamentals", "High performance should come from system strength, not repeated heroics by a small group.", c(
+      action_card(5, "Protect sustainable performance across drivers", "High performance should come from system strength, not repeated heroics by a small group.", c(
         "Map where extra effort and interrupted recovery are propping up delivery, and address those pressure points directly.",
         "Reset team-level workload, coverage, and responsiveness norms where current expectations are no longer realistic."
       ))
@@ -2622,28 +3071,140 @@ render_slide <- function(slide_id, fr) {
 
   tryCatch({
     if (slide_id == "cover") {
-      return(render_getting_started_page(
-        "Welcome to OHEP Insights",
+      return(slide_doc(
         paste0(
-          "<div class='intro-container'>",
-          "<div class='info-card hero-card'>",
-          "<h2 class='hero-title'>Your Workforce Intelligence Hub</h2>",
-          "<p class='hero-desc'>This dashboard transforms raw employee feedback into actionable, decision-ready intelligence. By combining quantitative health scores with expert-curated qualitative themes, the Organizational Health and Outcomes Profile (OHEP) empowers leaders to identify hidden risks, celebrate cultural wins, and drive targeted interventions that impact the bottom line.</p>",
+          "<div class='slide'><div class='cc-wrap'>",
+          "<svg style='display:none;'>",
+          "<symbol id='cc-icon-up' viewBox='0 0 24 24' fill='none' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M5 10l7-7m0 0l7 7m-7-7v18' /></symbol>",
+          "<symbol id='cc-icon-target' viewBox='0 0 24 24' fill='none' stroke='currentColor'><circle cx='12' cy='12' r='10'/><circle cx='12' cy='12' r='6'/><circle cx='12' cy='12' r='2'/></symbol>",
+          "<symbol id='cc-icon-lock' viewBox='0 0 24 24' fill='none' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' /></symbol>",
+          "</svg>",
+          "<section class='cc-hero'>",
+          "<div class='cc-eyebrow'>Getting Started</div>",
+          "<h1 class='cc-title'>Arctic Slope's Organizational Health &amp; Effectiveness Insights</h1>",
+          "<p class='cc-sub'>Welcome to your Workforce Intelligence Hub. This dashboard converts employee feedback into decision-ready insight, combining quantitative scores with curated qualitative themes so leadership can focus on what matters most.</p>",
+          "</section>",
+          "<section class='cc-insights'>",
+          "<article class='cc-card cc-card-north'>",
+          "<div class='cc-label'>Overall Index Position</div>",
+          "<div class='cc-metric'>", overall_percentile, "<span class='cc-metric-sfx'>", ordinal_suffix(overall_percentile), "</span></div>",
+          "<div class='cc-metric-sub'>Percentile rank against industry benchmarks.</div>",
+          "<div class='cc-stat-row'>",
+          "<div class='cc-pill'><strong>", formatC(current_n, format = "d", big.mark = ","), "</strong> Responses</div>",
+          "<div class='cc-pill'><strong>82%</strong> Participation</div>",
           "</div>",
-          "<div class='info-card'>",
-          "<h3 class='hero-title' style='margin-bottom:24px;'>Navigating Your Dashboard</h3>",
-          "<div class='steps-grid'>",
-          "<div class='step-box'><div class='step-icon'>1</div><h4 class='step-title'>Review the Summaries</h4><p class='step-desc'>Start at the Executive Summary to grasp top-level eNPS, participation rates, and overall organizational health scores.</p></div>",
-          "<div class='step-box'><div class='step-icon'>2</div><h4 class='step-title'>Segment the Data</h4><p class='step-desc'>Use the global filters to slice data by Department, Location, or Tenure to uncover highly specific operational insights.</p></div>",
-          "<div class='step-box'><div class='step-icon'>3</div><h4 class='step-title'>Explore the \"Why\"</h4><p class='step-desc'>Dive into the Qualitative Feedback and Priority Matrix to hear the employee voice and know exactly where to take action.</p></div>",
+          "</article>",
+          "<article class='cc-card'>",
+          "<div class='cc-label'>Key Strengths</div>",
+          "<div class='cc-list-item'>",
+          "<div class='cc-icon-box cc-success'><svg><use href='#cc-icon-up'></use></svg></div>",
+          "<div><div class='cc-item-text'>", html_escape(strengths_labels[[1]]), "</div><div class='cc-item-sub'>Highest-scoring driver</div></div>",
           "</div>",
+          "<div class='cc-list-item'>",
+          "<div class='cc-icon-box cc-success'><svg><use href='#cc-icon-up'></use></svg></div>",
+          "<div><div class='cc-item-text'>", html_escape(strengths_labels[[2]]), "</div><div class='cc-item-sub'>Highest-scoring driver</div></div>",
           "</div>",
-          "<div class='info-card policy-card'>",
-          "<svg class='policy-icon' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'></path></svg>",
-          "<div class='policy-content'><h4>Confidentiality & Distribution Policy</h4><p>The framework, algorithms, and scale items within this platform are proprietary. Data presented herein is confidential and strictly for internal leadership use. To protect psychological safety, all employee responses are aggregated, and demographic filters are disabled if the respondent group falls below the anonymity threshold (N=5).</p></div>",
+          "</article>",
+          "<article class='cc-card'>",
+          "<div class='cc-label'>Follow-Up Areas</div>",
+          "<div class='cc-list-item'>",
+          "<div class='cc-icon-box cc-warning'><svg><use href='#cc-icon-target'></use></svg></div>",
+          "<div><div class='cc-item-text'>", html_escape(follow_up_labels[[1]]), "</div><div class='cc-item-sub'>Priority driver to address</div></div>",
           "</div>",
-          "</div>"
-        )
+          "<div class='cc-list-item'>",
+          "<div class='cc-icon-box cc-warning'><svg><use href='#cc-icon-target'></use></svg></div>",
+          "<div><div class='cc-item-text'>", html_escape(follow_up_labels[[2]]), "</div><div class='cc-item-sub'>Priority driver to address</div></div>",
+          "</div>",
+          "</article>",
+          "</section>",
+          "<section class='cc-method'>",
+          "<div class='cc-mcol'>",
+          "<div class='cc-mval'>82%</div>",
+          "<div class='cc-mlbl'>Response Rate</div>",
+          "<div class='cc-msub'>", formatC(current_n, format = "d", big.mark = ","), " total participants.</div>",
+          "</div>",
+          "<div class='cc-mcol'>",
+          "<div class='cc-mval'>85</div>",
+          "<div class='cc-mlbl'>Scale Questions</div>",
+          "<div class='cc-msub'>+ 5 open-ended questions.</div>",
+          "</div>",
+          "<div class='cc-mcol'>",
+          "<div class='cc-mval'>18m</div>",
+          "<div class='cc-mlbl'>Avg. Completion</div>",
+          "<div class='cc-msub'>1-5 Likert format utilized.</div>",
+          "</div>",
+          "<div class='cc-mcol'>",
+          "<div class='cc-mval cc-mval-dark'>Jun 18 - Jul 11</div>",
+          "<div class='cc-mlbl'>2025 Window</div>",
+          "<div class='cc-msub'>Data collection period.</div>",
+          "</div>",
+          "</section>",
+          "<section class='cc-nav-sec'>",
+          "<h2 class='cc-sec-title'>Navigating Your Dashboard</h2>",
+          "<div class='cc-nav-grid'>",
+          "<button type='button' class='cc-nav-card' data-slide-target='orientation_model'>",
+          "<div class='cc-nav-step'>1</div><h3>Review Overall Results</h3><p>Start with OHEP Summary for overall index position, participation, and core organizational signals.</p>",
+          "</button>",
+          "<button type='button' class='cc-nav-card' data-slide-target='open_ended_overall_summary'>",
+          "<div class='cc-nav-step'>2</div><h3>Explore the Why</h3><p>Use Insights and Action Plan to move from evidence to targeted execution priorities.</p>",
+          "</button>",
+          "<button type='button' class='cc-nav-card' data-slide-target='segment_heatmap'>",
+          "<div class='cc-nav-step'>3</div><h3>Segment the Data</h3><p>Drill into Drivers, Outcomes, and Heat Map filters to validate where patterns are concentrated.</p>",
+          "</button>",
+          "</div>",
+          "</section>",
+          "<section class='cc-policy'>",
+          "<svg><use href='#cc-icon-lock'></use></svg>",
+          "<div><strong>Confidentiality &amp; Distribution Policy</strong><p>The framework, algorithms, and scale items within this platform are proprietary. Data presented herein is confidential and strictly for internal leadership use. To protect psychological safety, all employee responses are aggregated, and demographic filters are disabled if the respondent group falls below the anonymity threshold (N=5).</p></div>",
+          "</section>",
+          "</div></div>",
+          "<style>",
+          ".cc-wrap{width:100%;max-width:1180px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px -5px rgba(15,23,42,.06);}",
+          ".cc-hero{background:linear-gradient(135deg,#0F766E 0%,#0D9488 100%);padding:52px 44px 92px 44px;color:#FFFFFF;border-radius:0 0 24px 24px;}",
+          ".cc-eyebrow{font-size:12px;font-weight:800;color:#CCFBF1;text-transform:uppercase;letter-spacing:1.3px;margin-bottom:12px;}",
+          ".cc-title{font-size:36px;font-weight:900;letter-spacing:-.5px;line-height:1.12;margin:0 0 14px 0;max-width:860px;}",
+          ".cc-sub{font-size:16px;line-height:1.55;color:rgba(255,255,255,.92);margin:0;max-width:760px;}",
+          ".cc-insights{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:20px;padding:0 44px;margin-top:-56px;position:relative;z-index:5;}",
+          ".cc-card{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;padding:28px;box-shadow:0 10px 25px -5px rgba(15,23,42,.09),0 4px 6px -4px rgba(15,23,42,.06);}",
+          ".cc-card-north{border-top:4px solid #0D9488;}",
+          ".cc-label{font-size:12px;font-weight:800;color:#64748B;text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;}",
+          ".cc-metric{font-size:56px;font-weight:900;color:#0F172A;line-height:1;letter-spacing:-1px;margin-bottom:8px;}",
+          ".cc-metric-sfx{font-size:24px;color:#334155;}",
+          ".cc-metric-sub{font-size:13px;font-weight:600;color:#64748B;margin-bottom:14px;}",
+          ".cc-stat-row{display:flex;gap:10px;flex-wrap:wrap;padding-top:14px;border-top:1px solid #E2E8F0;}",
+          ".cc-pill{background:#F8FAFC;border:1px solid #E2E8F0;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;color:#334155;}",
+          ".cc-list-item{display:flex;align-items:flex-start;gap:12px;margin-bottom:15px;}",
+          ".cc-list-item:last-child{margin-bottom:0;}",
+          ".cc-icon-box{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}",
+          ".cc-icon-box svg{width:18px;height:18px;stroke-width:2.5;}",
+          ".cc-success{background:#DCFCE7;color:#16A34A;}",
+          ".cc-warning{background:#FEF3C7;color:#D97706;}",
+          ".cc-item-text{font-size:16px;font-weight:800;color:#0F172A;line-height:1.3;}",
+          ".cc-item-sub{font-size:12px;font-weight:600;color:#64748B;margin-top:4px;}",
+          ".cc-method{margin:44px 44px 12px 44px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;display:grid;grid-template-columns:repeat(4,1fr);padding:24px 0;}",
+          ".cc-mcol{padding:0 24px;border-right:1px solid #E2E8F0;display:flex;flex-direction:column;justify-content:center;}",
+          ".cc-mcol:last-child{border-right:none;}",
+          ".cc-mval{font-size:34px;font-weight:900;color:#0D9488;line-height:1;letter-spacing:-1px;margin-bottom:10px;}",
+          ".cc-mval-dark{font-size:28px;color:#0F172A;letter-spacing:-.5px;}",
+          ".cc-mlbl{font-size:12px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}",
+          ".cc-msub{font-size:12px;color:#64748B;line-height:1.4;}",
+          ".cc-nav-sec{padding:24px 44px 18px 44px;}",
+          ".cc-sec-title{font-size:20px;font-weight:900;color:#0F172A;letter-spacing:-.4px;margin:0 0 20px 0;}",
+          ".cc-nav-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}",
+          ".cc-nav-card{text-align:left;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:22px;cursor:pointer;transition:all .2s ease;display:flex;flex-direction:column;appearance:none;}",
+          ".cc-nav-card:hover{border-color:#0D9488;box-shadow:0 10px 15px -3px rgba(13,148,136,.10);transform:translateY(-2px);}",
+          ".cc-nav-step{width:28px;height:28px;background:#F0FDFA;color:#0D9488;border-radius:99px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;margin-bottom:14px;}",
+          ".cc-nav-card h3{font-size:16px;font-weight:800;color:#0F172A;margin:0 0 8px 0;}",
+          ".cc-nav-card p{font-size:13px;line-height:1.5;color:#334155;margin:0;}",
+          ".cc-policy{margin:0 44px 40px 44px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:18px 22px;display:flex;gap:14px;align-items:flex-start;}",
+          ".cc-policy svg{width:20px;height:20px;color:#64748B;flex-shrink:0;}",
+          ".cc-policy strong{font-size:12px;color:#334155;display:block;margin-bottom:4px;}",
+          ".cc-policy p{font-size:12px;line-height:1.5;color:#64748B;margin:0;}",
+          "@media (max-width: 1120px){.cc-insights{grid-template-columns:1fr;}.cc-method{grid-template-columns:1fr 1fr;}.cc-nav-grid{grid-template-columns:1fr;}.cc-nav-sec{padding-top:20px;}.cc-hero{padding-bottom:74px;}}",
+          "@media (max-width: 760px){.cc-wrap{border-radius:12px;}.cc-hero,.cc-insights,.cc-nav-sec{padding-left:20px;padding-right:20px;}.cc-insights{margin-top:-42px;}.cc-method{margin-left:20px;margin-right:20px;grid-template-columns:1fr;}.cc-mcol{padding:12px 20px;border-right:none;border-bottom:1px solid #E2E8F0;}.cc-mcol:last-child{border-bottom:none;}.cc-policy{margin-left:20px;margin-right:20px;margin-bottom:22px;}}",
+          "</style>"
+        ),
+        "Introduction"
       ))
     }
     if (slide_id == "ohep_model_image") {
@@ -2653,56 +3214,35 @@ render_slide <- function(slide_id, fr) {
         "The OHEP Framework",
         paste0(
           "<div class='fw-container'>",
-          "<div class='info-card layout-split'>",
+          "<div class='info-card'>",
+          "<div class='layout-split'>",
           "<div class='text-content'>",
           "<h2>Why Organizational Health?</h2>",
           "<p>Organizational health is the ultimate forward-looking driver of sustained performance. Traditional financial statements tell you where you've been; engagement metrics tell you where you are going.</p>",
           "<p>Our scientifically validated framework is built to shift leadership from reactive to proactive. We isolate the daily operational inputs (Drivers) that directly correlate to critical business outputs (Outcomes).</p>",
-          "<div class='highlight-box'><h4>The Objective</h4><p>Track progress, benchmark performance against industry standards, identify emerging flight risks early, and prioritize targeted interventions that yield measurable ROI.</p></div>",
           "</div>",
           "<div class='image-content'><img src='./images/ohepModel.png' alt='OHEP Drivers and Outcomes Framework' class='framework-asset'/></div>",
           "</div>",
-          "</div>"
-        )
-      ))
-    }
-    if (slide_id == "methodology") {
-      return(render_getting_started_page(
-        "Methodology",
-        paste0(
-          "<div class='methodology-wrap'>",
-          "<div class='metrics-banner'>",
-          "<div class='metric-block' style='padding-left:0;'>",
-          "<div class='metric-val'>64%</div>",
-          "<div class='metric-lbl'>Response Rate</div>",
-          "<div class='metric-sub'>&nbsp;</div>",
-          "</div>",
-          "<div class='metric-block'>",
-          "<div class='metric-val'>85</div>",
-          "<div class='metric-lbl'>Scale Questions</div>",
-          "<div class='metric-sub'>+ 5 open-ended questions.</div>",
-          "</div>",
-          "<div class='metric-block'>",
-          "<div class='metric-val'>18m</div>",
-          "<div class='metric-lbl'>Avg. Completion</div>",
-          "<div class='metric-sub'>1-5 Likert format utilized.</div>",
-          "</div>",
-          "<div class='metric-block'>",
-          "<div class='metric-val' style='font-size:20px;padding-top:8px;color:#0F172A;'>Jun 18 - Jul 11</div>",
-          "<div class='metric-lbl' style='margin-top:4px;'>2025 Window</div>",
-          "</div>",
-          "</div>",
+          "<div style='width:100%;height:1px;background:#E2E8F0;margin:32px 0;'></div>",
           "<div class='content-split'>",
           "<div class='terms-section'>",
           "<h2 class='section-title'>Defining Terminology</h2>",
-          "<div class='term-item'><div class='term-name'>OHEP Index</div><div class='term-desc'>Fundamental scores are benchmarked to organizations in energy and investment industries, adjusted for organizational size so no single company skews the index. This provides contextual interpretation beyond raw scores.</div></div>",
-          "<div class='term-item'><div class='term-name'>Percentage Agreement</div><div class='term-desc'>Item-level agreement and disagreement percentages complement mean scores and improve interpretability at the question level.</div></div>",
+          "<div class='term-item'><div class='term-name'>OHEP Index</div><div class='term-desc'>Driver scores are benchmarked to organizations in energy and investment industries, adjusted for organizational size so no single company skews the index. This provides contextual interpretation beyond raw scores.</div></div>",
+          "<div class='term-item'><div class='term-name'>Percentile Rank (Z-Score Based)</div><div class='term-desc'>Percentile rank is calculated using the standard Z-score formula (Z = (X - \u03bc) / \u03c3), where X is your current score, \u03bc is the historical index mean, and \u03c3 is the historical index standard deviation. The Z value is then mapped through the normal CDF to produce the displayed 1-99 percentile rank.</div></div>",
+          "<div class='term-item'><div class='term-name'>Percentage Agreement</div><div class='term-desc'>Item-level agreement and disagreement percentages complement mean scores and improve interpretability at the question level, showing the full distribution of sentiment.</div></div>",
           "<div class='term-item'><div class='term-name'>Anonymity</div><div class='term-desc'>Responses are confidential and presented in aggregate. Monark does not release raw respondent-level data to client management or directors.</div></div>",
           "</div>",
+          "<div style='display:flex;flex-direction:column;gap:16px;'>",
           "<div class='guidance-card'>",
           "<svg class='guidance-icon' fill='none' viewBox='0 0 24 24' stroke='currentColor' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>",
           "<h3>Interpretation Guidance</h3>",
           "<p>Use OHEP summary, drivers, outcomes, and comments together. Summary pages show <strong>where</strong> to focus; driver and outcome pages show <strong>what</strong> is moving performance; qualitative pages provide <strong>operational context</strong> behind the scores.</p>",
+          "</div>",
+          "<div class='guidance-card' style='background:#F8FAFC;border-color:#E2E8F0;'>",
+          "<h3 style='color:#0F172A;'>The Objective</h3>",
+          "<p>Track progress, benchmark performance against industry standards, identify emerging flight risks early, and prioritize targeted interventions that yield measurable ROI.</p>",
+          "</div>",
+          "</div>",
           "</div>",
           "</div>",
           "</div>"
@@ -2717,6 +3257,75 @@ render_slide <- function(slide_id, fr) {
       if (is.null(md)) return(no_data_slide("Model unavailable for this filter."))
       md$summary$title <- ""
       md$summary$subtitle <- ""
+      render_overview_card <- function(title, ov) {
+        pct <- as.integer(max(0, min(100, ov$percentile)))
+        dlt <- as.integer(ov$percentile_delta)
+        tr_cls <- if (dlt > 0) "up" else if (dlt < 0) "down" else "flat"
+        score_delta_cls <- if (ov$score_delta > 0) "pos" else if (ov$score_delta < 0) "neg" else "neu"
+        paste0(
+          "<div class='ohep-overview-card'>",
+          "<div class='hdr'><h2 class='title'>", html_escape(title), "</h2><div class='badge ", ov$status_class, "'>", html_escape(ov$status), "</div></div>",
+          "<div class='metric-label'>Percentile</div>",
+          "<div class='pct-row'>",
+          "<div class='pct-val'>", pct, "<span class='pct-sfx'>", ordinal_suffix(pct), "</span></div>",
+          "<div class='trend ", tr_cls, "'><div class='trend-arrow'></div><div><div class='trend-pts'>", if (dlt > 0) "+" else "", dlt, " pts</div><div class='trend-vs'>VS. ", if (is.finite(prior_year)) prior_year else report_year - 1L, "</div></div></div>",
+          "</div>",
+          "<div class='score'>Score: <strong>", sprintf('%.2f', ov$score), "</strong> <span class='", score_delta_cls, "'>(", if (ov$score_delta > 0) "+" else "", sprintf('%.2f', ov$score_delta), ")</span></div>",
+          "<div class='ticks'><span class='tick' style='left:35%;'>35</span><span class='tick mid' style='left:50%;'>50</span><span class='tick' style='left:65%;'>65</span><span class='tick' style='left:90%;'>90</span></div>",
+          "<div class='bar'><div class='seg1'></div><div class='seg2'></div><div class='seg3'></div><div class='seg4'></div><div class='line' style='left:", pct, "%;'></div></div>",
+          "<div class='lbls'><div class='lbl l1'>Needs Improvement</div><div class='lbl l2'>Industry standard</div><div class='lbl l3'>Above standard</div><div class='lbl l4'>Leader</div></div>",
+          "</div>"
+        )
+      }
+      ohep_snapshot_html <- paste0(
+        "<style>",
+        ".ohep-overview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:0 0 18px 0;}",
+        ".ohep-overview-card{border:1px solid #E2E8F0;border-radius:12px;background:#FFFFFF;padding:24px 28px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.02),0 2px 4px -1px rgba(0,0,0,0.02);}",
+        ".ohep-overview-card .hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:20px;}",
+        ".ohep-overview-card .title{font-size:20px;font-weight:900;color:#0F172A;text-transform:uppercase;letter-spacing:-.4px;margin:0;}",
+        ".ohep-overview-card .badge{padding:6px 14px;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;}",
+        ".ohep-overview-card .badge.status-needs{background:#FCD34D;color:#713F12;}",
+        ".ohep-overview-card .badge.status-standard{background:#CBD5E1;color:#334155;}",
+        ".ohep-overview-card .badge.status-above{background:#CFFAFE;color:#0E7490;}",
+        ".ohep-overview-card .badge.status-leader{background:#475569;color:#FFFFFF;}",
+        ".ohep-overview-card .metric-label{font-size:12px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}",
+        ".ohep-overview-card .pct-row{display:flex;align-items:baseline;gap:12px;margin-bottom:10px;}",
+        ".ohep-overview-card .pct-val{font-size:48px;font-weight:900;line-height:1;color:#0F172A;letter-spacing:-1px;}",
+        ".ohep-overview-card .pct-sfx{font-size:24px;}",
+        ".ohep-overview-card .trend{display:flex;align-items:center;gap:6px;}",
+        ".ohep-overview-card .trend-arrow{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;}",
+        ".ohep-overview-card .trend.up .trend-arrow{border-bottom:10px solid #16A34A;}",
+        ".ohep-overview-card .trend.down .trend-arrow{border-top:10px solid #DC2626;}",
+        ".ohep-overview-card .trend.flat .trend-arrow{width:10px;height:10px;border:none;background:#64748B;border-radius:50%;}",
+        ".ohep-overview-card .trend-pts{font-size:14px;font-weight:800;line-height:1.1;}",
+        ".ohep-overview-card .trend.up .trend-pts{color:#16A34A;}",
+        ".ohep-overview-card .trend.down .trend-pts{color:#DC2626;}",
+        ".ohep-overview-card .trend.flat .trend-pts{color:#64748B;}",
+        ".ohep-overview-card .trend-vs{font-size:10px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.5px;line-height:1.2;}",
+        ".ohep-overview-card .score{font-size:14px;font-weight:700;color:#334155;margin-bottom:26px;}",
+        ".ohep-overview-card .score strong{color:#0F172A;}",
+        ".ohep-overview-card .score .pos{color:#16A34A;font-weight:800;}",
+        ".ohep-overview-card .score .neg{color:#DC2626;font-weight:800;}",
+        ".ohep-overview-card .score .neu{color:#64748B;font-weight:800;}",
+        ".ohep-overview-card .ticks{position:relative;height:16px;margin:0 0 4px 0;}",
+        ".ohep-overview-card .tick{position:absolute;transform:translateX(-50%);font-size:11px;font-weight:800;color:#334155;}",
+        ".ohep-overview-card .tick.mid{color:#0F172A;font-size:12px;}",
+        ".ohep-overview-card .bar{display:flex;width:100%;height:20px;border-radius:999px;overflow:hidden;position:relative;margin-bottom:8px;}",
+        ".ohep-overview-card .seg1{width:35%;background:#FCD34D;}",
+        ".ohep-overview-card .seg2{width:30%;background:#CBD5E1;border-left:1px solid #FFF;border-right:1px solid #FFF;}",
+        ".ohep-overview-card .seg3{width:25%;background:#4A8C98;border-right:1px solid #FFF;}",
+        ".ohep-overview-card .seg4{width:10%;background:#475569;}",
+        ".ohep-overview-card .line{position:absolute;top:-4px;bottom:-4px;width:3px;background:#0F172A;border-radius:2px;z-index:2;}",
+        ".ohep-overview-card .lbls{display:flex;width:100%;}",
+        ".ohep-overview-card .lbl{font-size:11px;font-weight:700;color:#64748B;text-align:center;}",
+        ".ohep-overview-card .l1{width:35%;}.ohep-overview-card .l2{width:30%;}.ohep-overview-card .l3{width:25%;}.ohep-overview-card .l4{width:10%;}",
+        "@media (max-width:1100px){.ohep-overview-grid{grid-template-columns:1fr;}}",
+        "</style>",
+        "<div class='ohep-overview-grid'>",
+        render_overview_card("Drivers Overview", drivers_overview),
+        render_overview_card("Outcomes Overview", outcomes_overview),
+        "</div>"
+      )
       return(widget_shell_doc(model_page(
         model_data = md,
         color_overrides = list(
@@ -2729,7 +3338,7 @@ render_slide <- function(slide_id, fr) {
           model_point_as = "#059669",
           model_point_il = "#0D9488"
         )
-      ), title = "OHEP Results", eyebrow = "OHEP Summary", description = NULL))
+      ), title = "OHEP Results", eyebrow = "OHEP Summary", description = NULL, pre_widget_html = ohep_snapshot_html))
     }
     if (slide_id == "survey_overview") {
       prior_n <- if (is.finite(prior_year)) sum(rows_sub$year == prior_year) else 0L
@@ -2756,6 +3365,7 @@ render_slide <- function(slide_id, fr) {
         "<option value='engagement'>Engagement</option>",
         "<option value='burnout'>Burnout</option>",
         "<option value='work_satisfaction'>Work Satisfaction</option>",
+        "<option value='turnover_intent'>Turnover Intent</option>",
         "<option value='enps'>eNPS</option>",
         "</select>",
         "</div>"
@@ -2774,8 +3384,18 @@ render_slide <- function(slide_id, fr) {
       dd <- outcome_to_dashboard_data(ov)
       return(render_html_obj(render_fundamental_page(dashboard_data = dd), "Overall"))
     }
-    if (slide_id %in% c("engagement_deep_dive", "burnout_deep_dive", "work_satisfaction_deep_dive")) {
-      lookup <- c(engagement_deep_dive = "Engagement", burnout_deep_dive = "Burnout", work_satisfaction_deep_dive = "Work satisfaction")
+    if (slide_id == "drivers_overview") {
+      dd <- build_drivers_overview_data(fid)
+      if (is.null(dd)) return(no_data_slide())
+      return(render_html_obj(render_fundamental_page(dashboard_data = dd), "Overall"))
+    }
+    if (slide_id %in% c("engagement_deep_dive", "burnout_deep_dive", "work_satisfaction_deep_dive", "turnover_intent_deep_dive")) {
+      lookup <- c(
+        engagement_deep_dive = "Engagement",
+        burnout_deep_dive = "Burnout",
+        work_satisfaction_deep_dive = "Work Satisfaction",
+        turnover_intent_deep_dive = "Turnover Intent"
+      )
       out_label <- lookup[[slide_id]]
       od <- build_outcome_data(out_label, rows_sub, fid)
       if (is.null(od)) return(no_data_slide())
@@ -2793,6 +3413,7 @@ render_slide <- function(slide_id, fr) {
       prior_score <- if (length(en_prior) > 0L) round(100 * (sum(en_prior >= 9) - sum(en_prior <= 6)) / length(en_prior)) else 0
       drv <- marts$predictive_edges
       drv <- drv[tolower(drv$outcome) == "enps" & tolower(drv$subset) == "all", , drop = FALSE]
+      drv <- drv[tolower(trimws(as.character(drv$fundamental))) != "ohep", , drop = FALSE]
       if (nrow(drv) < 1L) {
         drv <- data.frame(
           fundamental = c("Purpose", "Leadership", "Performance development"),
@@ -2838,7 +3459,7 @@ render_slide <- function(slide_id, fr) {
       dd$fundamental$score_delta <- if (is.finite(prev_score)) round(cur_score - prev_score, 2) else 0
       dd$fundamental$delta_label <- paste0("vs. ", if (is.finite(prior_year)) prior_year else (report_year - 1L))
       obj <- render_fundamental_page(dashboard_data = dd)
-      return(render_html_obj(obj, paste("Fundamental", f)))
+      return(render_html_obj(obj, paste("Driver", f)))
     }
     if (slide_id == "segment_heatmap") {
       hm <- build_heatmap(fr)
@@ -2865,7 +3486,7 @@ render_slide <- function(slide_id, fr) {
       )
       return(widget_shell_doc(
         heatmap_page(heatmap_data = hm, show_compare_control = FALSE),
-        title = "Segment Analysis",
+        title = "Heat Map",
         eyebrow = "OHEP Summary",
         description = NULL,
         controls_html = segment_controls

@@ -125,7 +125,7 @@ body {
   font-family: inherit;
   text-align: left;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 800;
   color: var(--text-primary);
   padding: 8px 10px;
   border-radius: 6px;
@@ -212,11 +212,16 @@ body {
 }
 
 .sidebar-nav .nav-section-link {
-  font-weight: 600;
+  font-weight: 800;
   color: var(--text-primary);
   border-left: none;
   border-radius: 6px;
   padding-left: 10px;
+}
+
+.sidebar-nav .nav-item.nav-lite-section,
+.sidebar-nav .nav-section-link.nav-lite-section {
+  font-weight: 500;
 }
 
 .sidebar-nav button.nav-item.active,
@@ -227,9 +232,14 @@ body {
   border-left: 2px solid #0d9488;
 }
 
+.sidebar-nav .nav-item.nav-lite-section.active,
+.sidebar-nav .nav-section-link.nav-lite-section.active {
+  font-weight: 500;
+}
+
 .sidebar-nav button.level-1 {
   padding-left: 24px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .sidebar-nav .sidebar-divider {

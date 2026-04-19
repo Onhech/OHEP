@@ -1224,6 +1224,13 @@ ohepRDisplayr <- function() {
   }
 
   env$build_hero_card <- function(fundamental_row) {
+    driver_label <- if ("fundamental_label" %in% names(fundamental_row)) {
+      env$escape_text(fundamental_row$fundamental_label[[1]])
+    } else if ("fundamental" %in% names(fundamental_row)) {
+      env$escape_text(fundamental_row$fundamental[[1]])
+    } else {
+      "Driver"
+    }
     percentile <- as.numeric(fundamental_row$percentile[[1]])
     percentile_delta <- as.numeric(fundamental_row$percentile_delta[[1]])
     score <- as.numeric(fundamental_row$score[[1]])
@@ -1248,7 +1255,7 @@ ohepRDisplayr <- function() {
     glue::glue(
       "<div class=\"card fundamental-card\">
         <div class=\"title-bar\">
-          <h2 class=\"card-title\">Purpose</h2>
+          <h2 class=\"card-title\">{driver_label}</h2>
           <span class=\"{env$get_status_pill_class(percentile)}\">{env$get_status_text(percentile)}</span>
         </div>
         <div class=\"metrics-container\">
@@ -1443,8 +1450,9 @@ ohepRDisplayr <- function() {
     glue::glue("<div class=\"item-column\">{glue::glue_collapse(out, sep = '')}</div>")
   }
 
-  env$build_outcomes_table <- function(outcomes_df) {
+  env$build_outcomes_table <- function(outcomes_df, driver_label = "Driver") {
     outcomes_df <- outcomes_df[order(outcomes_df$rank), , drop = FALSE]
+    driver_label <- env$escape_text(driver_label)
     rows <- vapply(seq_len(nrow(outcomes_df)), function(i) {
       env$build_outcome_row(outcomes_df[i, , drop = FALSE])
     }, character(1))
@@ -1452,7 +1460,7 @@ ohepRDisplayr <- function() {
     glue::glue(
       "<div class=\"card outcomes-card\">
         <div class=\"title-bar\">
-          <h2 class=\"card-title\">Purpose drives</h2>
+          <h2 class=\"card-title\">{driver_label} drives</h2>
         </div>
         <table class=\"table-outcomes\">
           <thead>
@@ -2357,11 +2365,14 @@ ohepRDisplayr <- function() {
 {scope} .delta-pill {{ display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:6px; font-size:13px; font-weight:800; background:var(--enps-delta-bg); color:var(--enps-delta-text); }}
 {scope} .tug-container {{ margin-top:auto; padding-bottom: 6px; }}
 {scope} .tug-axis {{ position:relative; height:42px; display:flex; align-items:center; margin-bottom: 18px; }}
-{scope} .tug-mid {{ position:absolute; left:50%; height:56px; width:2px; background:var(--enps-axis-baseline); z-index:2; transform:translateX(-50%); }}
+{scope} .tug-mid {{ position:absolute; left:50%; height:56px; width:2px; background:var(--enps-axis-baseline); z-index:6; transform:translateX(-50%); }}
 {scope} .tug-mid-lbl {{ position:absolute; left:50%; top:-20px; transform:translateX(-50%); font-size:11px; font-weight:800; color:var(--enps-axis-baseline-label); text-transform:uppercase; }}
-{scope} .tug-left, {scope} .tug-right {{ position:absolute; height:100%; display:flex; align-items:center; font-size:14px; font-weight:800; color:var(--enps-tug-text-on); }}
+{scope} .tug-left, {scope} .tug-right {{ position:absolute; height:100%; display:flex; align-items:center; font-size:14px; font-weight:800; color:var(--enps-tug-text-on); z-index:2; overflow:visible; }}
 {scope} .tug-left {{ right:50%; justify-content:flex-end; padding-right:12px; border-radius:6px 0 0 6px; background:var(--enps-tug-detractor-bg); }}
 {scope} .tug-right {{ left:50%; justify-content:flex-start; padding-left:12px; border-radius:0 6px 6px 0; background:var(--enps-tug-promoter-bg); }}
+{scope} .tug-seg-label {{ white-space: nowrap; }}
+{scope} .tug-left.label-outside .tug-seg-label {{ position:absolute; right:calc(100% + 8px); color:#0F172A; font-weight:800; }}
+{scope} .tug-right.label-outside .tug-seg-label {{ position:absolute; left:calc(100% + 8px); color:#0F172A; font-weight:800; }}
 {scope} .tug-labels {{ display:flex; justify-content:space-between; align-items:center; }}
 {scope} .t-leg-group {{ display:flex; flex-direction:column; gap:2px; }}
 {scope} .t-leg-group.left {{ align-items:flex-start; }}
@@ -2482,6 +2493,9 @@ ohepRDisplayr <- function() {
       )
     }, character(1)), collapse = "")
 
+    tug_left_str <- sprintf('%.1f', tug_left)
+    tug_right_str <- sprintf('%.1f', tug_right)
+
     body_html <- glue::glue(
       "<div id=\"{env$escape_text(id)}\" class=\"ohep-enps-root\">
         <div class=\"top-row\">
@@ -2502,8 +2516,8 @@ ohepRDisplayr <- function() {
             <div class=\"tug-container\">
               <div class=\"tug-axis\">
                 <div class=\"tug-mid\"><span class=\"tug-mid-lbl\">Baseline</span></div>
-                <div class=\"tug-left\" style=\"width:{sprintf('%.1f', tug_left)}%;\">{sprintf('%.0f%%', dat$detractors_pct)}</div>
-                <div class=\"tug-right\" style=\"width:{sprintf('%.1f', tug_right)}%;\">{sprintf('%.0f%%', dat$promoters_pct)}</div>
+                <div class=\"tug-left\" data-side=\"left\" data-width=\"{tug_left_str}\" style=\"width:{tug_left_str}%;\"><span class=\"tug-seg-label\">{sprintf('%.0f%%', dat$detractors_pct)}</span></div>
+                <div class=\"tug-right\" data-side=\"right\" data-width=\"{tug_right_str}\" style=\"width:{tug_right_str}%;\"><span class=\"tug-seg-label\">{sprintf('%.0f%%', dat$promoters_pct)}</span></div>
               </div>
               <div class=\"tug-labels\">
                 <div class=\"t-leg-group left\">
@@ -2519,10 +2533,10 @@ ohepRDisplayr <- function() {
           </div>
           <div class=\"card drivers-card\">
             <div class=\"title-bar\" style=\"margin-bottom:0;\"><h2 class=\"card-title\">Key Drivers</h2></div>
-            <p class=\"card-sub\">The fundamentals driving <strong>eNPS</strong> most.</p>
+            <p class=\"card-sub\">The drivers influencing <strong>eNPS</strong> most.</p>
             <table class=\"table-outcomes\">
               <thead>
-                <tr><th>Fundamental</th><th class=\"right-align\">Your Company</th></tr>
+                <tr><th>Driver</th><th class=\"right-align\">Your Company</th></tr>
               </thead>
               <tbody>{driver_rows}</tbody>
             </table>
@@ -2551,7 +2565,20 @@ ohepRDisplayr <- function() {
             </div>
           </div>
         </div>
-      </div>"
+      </div>
+      <script>
+        (function() {{
+          var root = document.getElementById('{env$escape_text(id)}');
+          if (!root) return;
+          var THRESHOLD = 12;
+          var segs = root.querySelectorAll('.tug-left, .tug-right');
+          segs.forEach(function(seg) {{
+            var w = parseFloat(seg.getAttribute('data-width') || '0');
+            if (isFinite(w) && w < THRESHOLD) seg.classList.add('label-outside');
+            else seg.classList.remove('label-outside');
+          }});
+        }})();
+      </script>"
     )
 
     css <- env$enps_page_css(id, colors = colors)
@@ -2784,7 +2811,7 @@ ohepRDisplayr <- function() {
   width: 100%;
   min-width: 900px;
   border-collapse: separate;
-  border-spacing: 4px;
+  border-spacing: 2px;
   table-layout: fixed;
   background: #FFFFFF;
 }}
@@ -2993,42 +3020,46 @@ ohepRDisplayr <- function() {
             }}
             function applyHeatmapGradient() {{
               if (!host) return;
-              var cells = host.querySelectorAll('td.hm-value[data-value]');
-              if (!cells || !cells.length) return;
-              var vals = [];
-              cells.forEach(function(td) {{
-                var v = parseFloat(td.getAttribute('data-value'));
-                if (Number.isFinite(v)) vals.push(v);
-              }});
-              if (!vals.length) return;
-              vals.sort(function(a, b) {{ return a - b; }});
-              var min = vals[0];
-              var max = vals[vals.length - 1];
-              var mid = vals[Math.floor(vals.length / 2)];
-              if (!Number.isFinite(mid)) mid = (min + max) / 2;
-              if (!(mid > min && mid < max)) mid = (min + max) / 2;
               var low = hexToRgb('#EF4444');
               var med = hexToRgb('#FDE047');
               var high = hexToRgb('#16A34A');
-              cells.forEach(function(td) {{
-                var v = parseFloat(td.getAttribute('data-value'));
-                if (!Number.isFinite(v)) return;
-                var rgb;
-                if (max <= min) {{
-                  rgb = med;
-                }} else if (v <= mid) {{
-                  var denomL = (mid - min);
-                  var tL = denomL <= 0 ? 0.5 : (v - min) / denomL;
-                  tL = Math.max(0, Math.min(1, tL));
-                  rgb = mix(low, med, tL);
-                }} else {{
-                  var denomH = (max - mid);
-                  var tH = denomH <= 0 ? 0.5 : (v - mid) / denomH;
-                  tH = Math.max(0, Math.min(1, tH));
-                  rgb = mix(med, high, tH);
-                }}
-                td.style.backgroundColor = rgbToHex(rgb);
-                td.classList.toggle('text-white', luminance(rgb) < 150);
+              var rows = host.querySelectorAll('tbody tr');
+              if (!rows || !rows.length) return;
+              rows.forEach(function(tr) {{
+                var cells = tr.querySelectorAll('td.hm-value[data-value]');
+                if (!cells || !cells.length) return;
+                var vals = [];
+                cells.forEach(function(td) {{
+                  var v = parseFloat(td.getAttribute('data-value'));
+                  if (Number.isFinite(v)) vals.push(v);
+                }});
+                if (!vals.length) return;
+                vals.sort(function(a, b) {{ return a - b; }});
+                var min = vals[0];
+                var max = vals[vals.length - 1];
+                var mid = vals[Math.floor(vals.length / 2)];
+                if (!Number.isFinite(mid)) mid = (min + max) / 2;
+                if (!(mid > min && mid < max)) mid = (min + max) / 2;
+                cells.forEach(function(td) {{
+                  var v = parseFloat(td.getAttribute('data-value'));
+                  if (!Number.isFinite(v)) return;
+                  var rgb;
+                  if (max <= min) {{
+                    rgb = med;
+                  }} else if (v <= mid) {{
+                    var denomL = (mid - min);
+                    var tL = denomL <= 0 ? 0.5 : (v - min) / denomL;
+                    tL = Math.max(0, Math.min(1, tL));
+                    rgb = mix(low, med, tL);
+                  }} else {{
+                    var denomH = (max - mid);
+                    var tH = denomH <= 0 ? 0.5 : (v - mid) / denomH;
+                    tH = Math.max(0, Math.min(1, tH));
+                    rgb = mix(med, high, tH);
+                  }}
+                  td.style.backgroundColor = rgbToHex(rgb);
+                  td.classList.toggle('text-white', luminance(rgb) < 150);
+                }});
               }});
             }}
             function renderTable(key) {{
@@ -3419,6 +3450,14 @@ ohepRDisplayr <- function() {
   box-shadow: none;
   padding: 4px 0 0;
 }}
+{scope} .model-panels {{ display: flex; flex-direction: column; gap: 18px; margin-top: 6px; }}
+{scope} .model-panel {{
+  border: 1px solid var(--model-card-border);
+  background: var(--model-card-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(15,23,42,0.04);
+  padding: 16px 16px 14px 16px;
+}}
 {scope} .model-header {{ margin-bottom: 12px; border-left: 4px solid var(--model-header-accent); padding-left: 16px; }}
 {scope} .model-title {{ margin: 0 0 6px; font-size: 26px; font-weight: 800; color: var(--model-title); }}
 {scope} .model-subtitle {{ margin: 0; font-size: 14px; color: var(--model-subtitle); }}
@@ -3452,6 +3491,9 @@ ohepRDisplayr <- function() {
 {scope} .model-point-diamond {{ width: 14px; height: 14px; transform: translate(-50%, -50%) rotate(45deg); border: 2px solid var(--model-point-border); }}
 {scope} .model-point-ghost-circle {{ width: 12px; height: 12px; border-radius: 50%; background: var(--model-point-ghost-bg); border: 2px solid var(--model-point-ghost-border); box-shadow: none; z-index: 3; }}
 {scope} .model-point-ghost-diamond {{ width: 10px; height: 10px; transform: translate(-50%, -50%) rotate(45deg); background: var(--model-point-ghost-bg); border: 2px solid var(--model-point-ghost-border); box-shadow: none; z-index: 3; }}
+{scope} .model-point-trend-pos {{ background: var(--model-delta-pos); }}
+{scope} .model-point-trend-neg {{ background: var(--model-delta-neg); }}
+{scope} .model-point-trend-neu {{ background: var(--model-delta-neu); }}
 {scope} .model-zone-bg-ni {{ background: var(--model-point-ni); }}
 {scope} .model-zone-bg-is {{ background: var(--model-point-is); }}
 {scope} .model-zone-bg-as {{ background: var(--model-point-as); }}
@@ -3505,13 +3547,14 @@ ohepRDisplayr <- function() {
       if (percentile < 35) "ni" else if (percentile < 65) "is" else if (percentile < 90) "as" else "il"
     }
     pct_pos <- function(x) sprintf("%.1f%%", max(0, min(100, as.numeric(x))))
+    neutral_band <- 0.05
     delta_text <- function(val) {
       if (!is.finite(val)) return("-")
-      if (val == 0) return("0.00")
+      if (abs(val) <= neutral_band) return("0.00")
       sprintf("%+.2f", val)
     }
     delta_class <- function(val) {
-      if (!is.finite(val) || val == 0) "model-delta-neu" else if (val > 0) "model-delta-pos" else "model-delta-neg"
+      if (!is.finite(val) || abs(val) <= neutral_band) "model-delta-neu" else if (val > 0) "model-delta-pos" else "model-delta-neg"
     }
 
     render_rows <- function(df, is_outcomes = FALSE) {
@@ -3536,6 +3579,13 @@ ohepRDisplayr <- function() {
         raw_txt <- if (is.finite(row$raw_avg[[1]])) sprintf("%.2f", row$raw_avg[[1]]) else "-"
         d_txt <- delta_text(row$delta[[1]])
         d_class <- delta_class(row$delta[[1]])
+        point_trend_class <- if (d_class == "model-delta-pos") {
+          "model-point-trend-pos"
+        } else if (d_class == "model-delta-neg") {
+          "model-point-trend-neg"
+        } else {
+          "model-point-trend-neu"
+        }
 
         glue::glue(
           "<div class=\"model-row\">
@@ -3544,7 +3594,7 @@ ohepRDisplayr <- function() {
               <div class=\"model-track\"></div>
               {stem_html}
               {ghost_html}
-              <div class=\"model-point {point_class} model-zone-bg-{zone}\" style=\"left:{pct_pos(current)};\"></div>
+              <div class=\"model-point {point_class} {point_trend_class}\" style=\"left:{pct_pos(current)};\"></div>
             </div>
             <div class=\"model-metrics\">
               <div class=\"model-metric-raw\">{raw_txt}</div>
@@ -3586,6 +3636,16 @@ ohepRDisplayr <- function() {
         </div>"
       )
     }
+    render_legend <- function() {
+      paste0(
+        "<div class=\"model-legend\">",
+        "<div class=\"model-legend-card model-legend-ni\">Needs Improvement</div>",
+        "<div class=\"model-legend-card model-legend-is\">Industry Standard</div>",
+        "<div class=\"model-legend-card model-legend-as\">Above Standard</div>",
+        "<div class=\"model-legend-card model-legend-il\">Industry Leader</div>",
+        "</div>"
+      )
+    }
 
     f_rows <- render_rows(dat$fundamentals, is_outcomes = FALSE)
     o_rows <- render_rows(dat$outcomes, is_outcomes = TRUE)
@@ -3605,13 +3665,15 @@ ohepRDisplayr <- function() {
       "<div id=\"{env$escape_text(id)}\" class=\"ohep-model-root\">
         <div class=\"model-card\">
           {model_header_html}
-          {render_block(dat$fundamentals_label, f_rows, show_metrics = TRUE)}
-          {render_block(dat$outcomes_label, o_rows, show_metrics = FALSE)}
-          <div class=\"model-legend\">
-            <div class=\"model-legend-card model-legend-ni\">Needs Improvement</div>
-            <div class=\"model-legend-card model-legend-is\">Industry Standard</div>
-            <div class=\"model-legend-card model-legend-as\">Above Standard</div>
-            <div class=\"model-legend-card model-legend-il\">Industry Leader</div>
+          <div class=\"model-panels\">
+            <div class=\"model-panel\">
+              {render_block(dat$fundamentals_label, f_rows, show_metrics = TRUE)}
+              {render_legend()}
+            </div>
+            <div class=\"model-panel\">
+              {render_block(dat$outcomes_label, o_rows, show_metrics = FALSE)}
+              {render_legend()}
+            </div>
           </div>
         </div>
       </div>"
@@ -4326,6 +4388,11 @@ ohepRDisplayr <- function() {
       p$impact <- suppressWarnings(as.numeric(p$impact_work_satisfaction))
       matrix_variants$work_satisfaction <- p
     }
+    if ("impact_turnover_intent" %in% names(points)) {
+      p <- points
+      p$impact <- suppressWarnings(as.numeric(p$impact_turnover_intent))
+      matrix_variants$turnover_intent <- p
+    }
     if ("impact_enps" %in% names(points)) {
       p <- points
       p$impact <- suppressWarnings(as.numeric(p$impact_enps))
@@ -4364,6 +4431,7 @@ ohepRDisplayr <- function() {
       engagement = "Engagement",
       burnout = "Burnout",
       work_satisfaction = "Work Satisfaction",
+      turnover_intent = "Turnover Intent",
       enps = "eNPS"
     )
     axis_options <- axis_options[names(axis_options) %in% names(matrix_variants)]
@@ -4482,7 +4550,12 @@ ohepRDisplayr <- function() {
     )
 
     hero <- env$build_hero_card(fundamental)
-    outcomes_table <- env$build_outcomes_table(outcomes)
+    driver_label <- if ("fundamental_label" %in% names(fundamental)) {
+      as.character(fundamental$fundamental_label[[1]])
+    } else {
+      "Driver"
+    }
+    outcomes_table <- env$build_outcomes_table(outcomes, driver_label = driver_label)
     left_col <- env$build_item_column(items, "left", active_benchmarks = active_benchmarks)
     right_col <- env$build_item_column(items, "right", active_benchmarks = active_benchmarks)
     count_rows <- function(col_name) {

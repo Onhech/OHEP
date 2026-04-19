@@ -30,12 +30,13 @@
   const filterEls = {};
   const sectionLabelMap = {
     Insights: "Themes",
+    "Action Plan": "Action Plans",
     Comments: "Comment Explorer"
   };
   const slideLabelMap = {
-    "Segment Heatmap": "Segment Analysis",
+    "Segment Heatmap": "Heat Map",
+    "Heat Map": "Heat Map",
     "Themes Overview": "Overview",
-    "Three Key Takeaways": "Key Takeaways",
     Comments: "Comment Explorer"
   };
   const sectionIconMap = {
@@ -47,6 +48,7 @@
     action_plan: "nav-icon-action",
     comments: "nav-icon-comment"
   };
+  const liteSectionIds = new Set(["action_plan", "comments"]);
 
   const defaults = {
     slideId: slideOrder[0]
@@ -139,7 +141,19 @@
     try {
       const frameDoc = frameEl.contentDocument;
       if (!frameDoc) return;
-      frameDoc.addEventListener("click", function () {
+      frameDoc.addEventListener("click", function (event) {
+        const navTargetEl = event.target && event.target.closest ? event.target.closest("[data-slide-target]") : null;
+        if (navTargetEl) {
+          const nextSlideId = navTargetEl.getAttribute("data-slide-target");
+          if (nextSlideId && slidesById[nextSlideId]) {
+            event.preventDefault();
+            state.slideId = nextSlideId;
+            renderSidebar();
+            renderShell();
+            persistState();
+            return;
+          }
+        }
         if (!filterPopover.hidden) {
           filterPopover.hidden = true;
           filterToggle.classList.remove("active");
@@ -228,6 +242,7 @@
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "nav-item nav-section-link";
+        if (liteSectionIds.has(section.section_id)) btn.classList.add("nav-lite-section");
         if (sectionSlides[0].slide_id === state.slideId) btn.classList.add("active");
         if (isOpen) btn.classList.add("open");
         btn.appendChild(buildNavLabel(iconId, displaySectionLabel(section.section_label)));
@@ -247,6 +262,7 @@
 
       const summary = document.createElement("summary");
       summary.className = "nav-item";
+      if (liteSectionIds.has(section.section_id)) summary.classList.add("nav-lite-section");
       if (isOpen) summary.classList.add("open");
       summary.appendChild(buildNavLabel(iconId, displaySectionLabel(section.section_label)));
       summary.appendChild(buildIconUse("nav-icon-caret", "caret"));
