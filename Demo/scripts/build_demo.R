@@ -967,6 +967,110 @@ outcome_history <- if (length(outcome_history_rows) > 0L) do.call(rbind, outcome
 turnover_augmented <- append_turnover_intent_rows(kpi_scores_history, outcome_history)
 kpi_scores_history <- turnover_augmented$kpi
 outcome_history <- turnover_augmented$outcome
+
+apply_demo_story_tuning <- function(kpi_hist, overall_filter_id, current_year, prior_year) {
+  if (!is.data.frame(kpi_hist) || nrow(kpi_hist) < 1L) return(kpi_hist)
+  if (!is.character(overall_filter_id) || !nzchar(overall_filter_id)) return(kpi_hist)
+
+  set_metric <- function(df, year_val, group_val, metric_val, score_val) {
+    if (!is.finite(score_val)) return(df)
+    idx <- which(
+      as.character(df$filter_id) == overall_filter_id &
+        suppressWarnings(as.integer(df$year)) == as.integer(year_val) &
+        as.character(df$metric_group) == as.character(group_val) &
+        tolower(trimws(as.character(df$metric_id))) == tolower(trimws(as.character(metric_val)))
+    )
+    if (length(idx) < 1L) return(df)
+
+    pct <- if (tolower(trimws(as.character(metric_val))) == "enps") {
+      pmax(1, pmin(99, round(50 + as.numeric(score_val) / 2)))
+    } else {
+      pmax(1, pmin(99, round((as.numeric(score_val) / 5) * 100)))
+    }
+    df$score[idx] <- as.numeric(score_val)
+    df$percentile[idx] <- as.numeric(pct)
+    df
+  }
+
+  current_targets <- list(
+    fundamental = c(
+      "Purpose" = 3.19,
+      "Strategy" = 3.42,
+      "Leadership" = 3.18,
+      "Communication" = 3.21,
+      "Learning & innovation" = 3.40,
+      "Respect, care, and trust" = 3.29,
+      "Performance development" = 3.14,
+      "Safety" = 4.35
+    ),
+    outcome = c(
+      "Engagement" = 3.62,
+      "Burnout" = 3.61,
+      "Work Satisfaction" = 3.28,
+      "Turnover Intent" = 3.22,
+      "eNPS" = 63
+    )
+  )
+
+  prior_targets <- list(
+    fundamental = c(
+      "Purpose" = 3.24,
+      "Strategy" = 3.40,
+      "Leadership" = 3.18,
+      "Communication" = 3.26,
+      "Learning & innovation" = 3.45,
+      "Respect, care, and trust" = 3.22,
+      "Performance development" = 3.10,
+      "Safety" = 4.32
+    ),
+    outcome = c(
+      "Engagement" = 3.58,
+      "Burnout" = 3.58,
+      "Work Satisfaction" = 3.35,
+      "Turnover Intent" = 3.28,
+      "eNPS" = 62
+    )
+  )
+
+  for (nm in names(current_targets$fundamental)) {
+    kpi_hist <- set_metric(kpi_hist, current_year, "fundamental", nm, current_targets$fundamental[[nm]])
+  }
+  for (nm in names(current_targets$outcome)) {
+    kpi_hist <- set_metric(kpi_hist, current_year, "outcome", nm, current_targets$outcome[[nm]])
+  }
+
+  if (is.finite(prior_year)) {
+    for (nm in names(prior_targets$fundamental)) {
+      kpi_hist <- set_metric(kpi_hist, prior_year, "fundamental", nm, prior_targets$fundamental[[nm]])
+    }
+    for (nm in names(prior_targets$outcome)) {
+      kpi_hist <- set_metric(kpi_hist, prior_year, "outcome", nm, prior_targets$outcome[[nm]])
+    }
+  }
+
+  kpi_hist
+}
+
+overall_filter_row <- filter_grid[
+  filter_grid$company == "All" &
+    filter_grid$department == "All" &
+    filter_grid$identity == "All" &
+    filter_grid$location == "All" &
+    filter_grid$employee_type == "All" &
+    filter_grid$tenure == "All" &
+    filter_grid$work_arrangement == "All",
+  ,
+  drop = FALSE
+]
+overall_filter_id_for_tuning <- if (nrow(overall_filter_row) > 0L) as.character(overall_filter_row$filter_id[[1]]) else NA_character_
+kpi_scores_history <- apply_demo_story_tuning(kpi_scores_history, overall_filter_id_for_tuning, report_year, prior_year)
+
+fundamental_history <- kpi_scores_history[kpi_scores_history$metric_group == "fundamental", c("filter_id", "year", "metric_id", "metric_label", "score", "percentile", "n"), drop = FALSE]
+names(fundamental_history) <- c("filter_id", "year", "fundamental_id", "fundamental_label", "score", "percentile", "n")
+
+outcome_history <- kpi_scores_history[kpi_scores_history$metric_group == "outcome", c("filter_id", "year", "metric_id", "metric_label", "score", "percentile", "n"), drop = FALSE]
+names(outcome_history) <- c("filter_id", "year", "outcome_id", "outcome_label", "score", "percentile", "n")
+
 kpi_scores <- kpi_scores_history[kpi_scores_history$year == report_year, , drop = FALSE]
 item_scores <- if (length(item_rows_out) > 0L) do.call(rbind, item_rows_out) else data.frame()
 demographics_panels <- if (length(demo_panel_rows) > 0L) do.call(rbind, demo_panel_rows) else data.frame()

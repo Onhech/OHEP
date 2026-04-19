@@ -1,16 +1,16 @@
 "filter_id","company","year","metric_group","metric_id","metric_label","score","percentile","n"
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","eNPS","eNPS",63.4796238244514,82,638
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","Burnout","Burnout",2.21799485861182,44,1945
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","Engagement","Engagement",4.21591774562072,84,2626
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","Work Satisfaction","Work Satisfaction",4.36941056910569,87,1968
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Purpose","Purpose",4.38,50,715
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Strategy","Strategy",4.12,50,715
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Leadership","Leadership",4.3,50,715
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Communication","Communication",4.18,50,715
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",4.05,50,715
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.27,50,715
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Performance development","Performance development",4.08,50,715
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Safety","Safety",4.51,50,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","eNPS","eNPS",63,82,638
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","Burnout","Burnout",3.61,72,1945
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","Engagement","Engagement",3.62,72,2626
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","Work Satisfaction","Work Satisfaction",3.28,66,1968
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Purpose","Purpose",3.19,64,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Strategy","Strategy",3.42,68,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Leadership","Leadership",3.18,64,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Communication","Communication",3.21,64,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Learning & innovation","Learning & innovation",3.4,68,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",3.29,66,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Performance development","Performance development",3.14,63,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"fundamental","Safety","Safety",4.35,87,715
 "company=federal|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","eNPS","eNPS",57.6923076923077,79,26
 "company=federal|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","Burnout","Burnout",2.34567901234568,47,81
 "company=federal|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","Engagement","Engagement",4.35514018691589,87,107
@@ -7089,7 +7089,7 @@
 "company=petro_star|department=supply_chain_logistics|identity=white|location=north_slope_prudhoe_bay_kuparuk|employee_type=corporate_office|tenure=6_10_years|work_arrangement=hybrid","Company A",2025,"fundamental","Respect, care, and trust","Respect, care, and trust",4.26,50,2
 "company=petro_star|department=supply_chain_logistics|identity=white|location=north_slope_prudhoe_bay_kuparuk|employee_type=corporate_office|tenure=6_10_years|work_arrangement=hybrid","Company A",2025,"fundamental","Performance development","Performance development",4.08,50,2
 "company=petro_star|department=supply_chain_logistics|identity=white|location=north_slope_prudhoe_bay_kuparuk|employee_type=corporate_office|tenure=6_10_years|work_arrangement=hybrid","Company A",2025,"fundamental","Safety","Safety",4.51,50,2
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","Turnover Intent","Turnover Intent",3.29,66,1945
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","Turnover Intent","Turnover Intent",3.22,64,1945
 "company=federal|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","Turnover Intent","Turnover Intent",3.41,68,81
 "company=industrial_services|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","Turnover Intent","Turnover Intent",3.35,67,318
 "company=financial_solutions|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all","Company A",2025,"outcome","Turnover Intent","Turnover Intent",3.26,65,217

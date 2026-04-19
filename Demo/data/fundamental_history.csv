@@ -1,20 +1,20 @@
 "filter_id","year","fundamental_id","fundamental_label","score","percentile","n"
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Purpose","Purpose",4.33,50,675
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Strategy","Strategy",4.08,50,675
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Leadership","Leadership",4.24,50,675
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Communication","Communication",4.15,50,675
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Learning & innovation","Learning & innovation",4.01,50,675
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Respect, care, and trust","Respect, care, and trust",4.2,50,675
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Performance development","Performance development",4.03,50,675
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Safety","Safety",4.49,50,675
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Purpose","Purpose",4.38,50,715
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Strategy","Strategy",4.12,50,715
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Leadership","Leadership",4.3,50,715
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Communication","Communication",4.18,50,715
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Learning & innovation","Learning & innovation",4.05,50,715
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Respect, care, and trust","Respect, care, and trust",4.27,50,715
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Performance development","Performance development",4.08,50,715
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Safety","Safety",4.51,50,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Purpose","Purpose",3.24,65,675
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Strategy","Strategy",3.4,68,675
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Leadership","Leadership",3.18,64,675
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Communication","Communication",3.26,65,675
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Learning & innovation","Learning & innovation",3.45,69,675
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Respect, care, and trust","Respect, care, and trust",3.22,64,675
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Performance development","Performance development",3.1,62,675
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Safety","Safety",4.32,86,675
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Purpose","Purpose",3.19,64,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Strategy","Strategy",3.42,68,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Leadership","Leadership",3.18,64,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Communication","Communication",3.21,64,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Learning & innovation","Learning & innovation",3.4,68,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Respect, care, and trust","Respect, care, and trust",3.29,66,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Performance development","Performance development",3.14,63,715
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Safety","Safety",4.35,87,715
 "company=federal|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Purpose","Purpose",4.49,78.9043972027823,65
 "company=federal|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Strategy","Strategy",4.3,92.747793281219,65
 "company=federal|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Leadership","Leadership",4.4,84.0681949259567,65
