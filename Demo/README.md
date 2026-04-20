@@ -9,3 +9,5 @@ If you need to regenerate the compiled demo bundle, run:
 ```sh
 Rscript Demo/scripts/build_demo.R
 ```
+
+The build script depends on the sibling `ohepR/` package in this repository and is not fully standalone outside the repo.
