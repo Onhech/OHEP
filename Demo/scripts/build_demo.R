@@ -1925,37 +1925,47 @@ build_participation_profile_page <- function(rows_sub) {
   rows_curr <- rows_sub[rows_sub$year == report_year, , drop = FALSE]
   if (nrow(rows_curr) < 1L) return(no_data_slide("Insufficient data for participation."))
 
-  company_cols <- setdiff(dim_company, "All")
-  if (length(company_cols) < 1L) company_cols <- c("Company")
-
-  classify_pct <- function(p) {
-    if (!is.finite(p)) return("bg-mid")
-    if (p < 50) return("bg-low-strong")
-    if (p < 65) return("bg-low-light")
-    if (p < 75) return("bg-mid")
-    if (p < 85) return("bg-high-light")
-    "bg-high-strong"
-  }
+  dimension_defs <- list(
+    list(id = "company", label = "Company", values = dim_company),
+    list(id = "department", label = "Department", values = dim_department),
+    list(id = "identity", label = "Identity", values = dim_identity),
+    list(id = "location", label = "Location", values = dim_location),
+    list(id = "employee_type", label = "Employee Type", values = dim_employee_type),
+    list(id = "tenure", label = "Tenure", values = dim_tenure),
+    list(id = "work_arrangement", label = "Work Arrangement", values = dim_work_arrangement)
+  )
+  dim_ids <- vapply(dimension_defs, function(dd) dd$id, character(1))
+  dim_labels <- setNames(vapply(dimension_defs, function(dd) dd$label, character(1)), dim_ids)
+  dim_values <- setNames(lapply(dimension_defs, function(dd) dd$values), dim_ids)
+  dim_columns <- setNames(paste0("demo_", dim_ids), dim_ids)
 
   hash_jitter <- function(seed, scale = 7) {
     h <- sum(utf8ToInt(seed))
     ((h %% 21L) - 10L) / 10 * scale
   }
 
-  build_matrix <- function(row_col, row_levels) {
+  build_matrix <- function(row_dim, col_dim) {
+    row_col <- dim_columns[[row_dim]]
+    col_col <- dim_columns[[col_dim]]
+    row_levels <- setdiff(as.character(dim_values[[row_dim]]), "All")
+    col_levels <- setdiff(as.character(dim_values[[col_dim]]), "All")
     rows <- row_levels[row_levels %in% unique(as.character(rows_curr[[row_col]]))]
     if (length(rows) < 1L) rows <- unique(as.character(rows_curr[[row_col]]))
     rows <- rows[nzchar(rows)]
     if (length(rows) < 1L) rows <- c("Unspecified")
+    cols <- col_levels[col_levels %in% unique(as.character(rows_curr[[col_col]]))]
+    if (length(cols) < 1L) cols <- unique(as.character(rows_curr[[col_col]]))
+    cols <- cols[nzchar(cols)]
+    if (length(cols) < 1L) cols <- c("Unspecified")
 
     counts <- lapply(rows, function(rv) {
-      sapply(company_cols, function(cv) {
-        sum(rows_curr[[row_col]] == rv & rows_curr$demo_company == cv, na.rm = TRUE)
+      sapply(cols, function(cv) {
+        sum(rows_curr[[row_col]] == rv & rows_curr[[col_col]] == cv, na.rm = TRUE)
       })
     })
     counts <- do.call(rbind, counts)
     rownames(counts) <- rows
-    colnames(counts) <- company_cols
+    colnames(counts) <- cols
 
     pct <- matrix(NA_real_, nrow = nrow(counts), ncol = ncol(counts), dimnames = dimnames(counts))
     for (i in seq_len(nrow(counts))) {
@@ -1974,7 +1984,7 @@ build_participation_profile_page <- function(rows_sub) {
   }
 
   render_table <- function(table_id, row_label, pct_mat, active = FALSE) {
-    hdr <- paste0("<th>", html_escape(row_label), "</th>", paste0(vapply(colnames(pct_mat), function(x) paste0("<th>", html_escape(x), "</th>"), character(1)), collapse = ""))
+    hdr <- paste0("<th>", html_escape(row_label), "</th>", paste0(vapply(colnames(pct_mat), function(x) paste0("<th>", html_escape(short_label(x)), "</th>"), character(1)), collapse = ""))
     body <- paste0(vapply(seq_len(nrow(pct_mat)), function(i) {
       row_name <- rownames(pct_mat)[[i]]
       cells <- paste0(vapply(seq_len(ncol(pct_mat)), function(j) {
@@ -1994,22 +2004,43 @@ build_participation_profile_page <- function(rows_sub) {
     )
   }
 
-  dept_mat <- build_matrix("demo_department", setdiff(dim_department, "All"))
-  loc_mat <- build_matrix("demo_location", setdiff(dim_location, "All"))
-  ten_mat <- build_matrix("demo_tenure", setdiff(dim_tenure, "All"))
+  row_default <- "department"
+  col_default <- "company"
+  pair_keys <- unlist(lapply(dim_ids, function(rid) {
+    vapply(dim_ids, function(cid) paste(rid, cid, sep = "__"), character(1))
+  }), use.names = FALSE)
+  pair_keys <- pair_keys[vapply(strsplit(pair_keys, "__", fixed = TRUE), function(x) x[[1]] != x[[2]], logical(1))]
+
+  table_map <- lapply(pair_keys, function(key) {
+    parts <- strsplit(key, "__", fixed = TRUE)[[1]]
+    row_dim <- parts[[1]]
+    col_dim <- parts[[2]]
+    render_table(
+      table_id = paste0("table-", key),
+      row_label = dim_labels[[row_dim]],
+      pct_mat = build_matrix(row_dim, col_dim),
+      active = identical(row_dim, row_default) && identical(col_dim, col_default)
+    )
+  })
+  names(table_map) <- pair_keys
+
+  row_opts <- paste0(vapply(dim_ids, function(id) {
+    paste0("<option value='", id, "'", if (identical(id, row_default)) " selected" else "", ">", html_escape(dim_labels[[id]]), "</option>")
+  }, character(1)), collapse = "")
+  col_opts <- paste0(vapply(dim_ids, function(id) {
+    paste0("<option value='", id, "'", if (identical(id, col_default)) " selected" else "", ">", html_escape(dim_labels[[id]]), "</option>")
+  }, character(1)), collapse = "")
 
   participation_controls <- paste0(
     "<div class='page-control-group'>",
     "<label for='participation-rows' class='page-control-label'>Rows:</label>",
     "<select id='participation-rows' class='page-control-select'>",
-    "<option value='table-dept' selected>Department</option>",
-    "<option value='table-location'>Location</option>",
-    "<option value='table-tenure'>Tenure</option>",
+    row_opts,
     "</select>",
     "</div>",
     "<div class='page-control-group'>",
     "<label for='participation-cols' class='page-control-label'>Columns:</label>",
-    "<select id='participation-cols' class='page-control-select'><option selected>Company</option></select>",
+    "<select id='participation-cols' class='page-control-select'>", col_opts, "</select>",
     "</div>"
   )
 
@@ -2022,9 +2053,7 @@ build_participation_profile_page <- function(rows_sub) {
         "<div class='participation-legend-gradient'></div>",
         "<span class='participation-legend-label'>High Participation (85%+)</span>",
         "</div>",
-        render_table("table-dept", "Department", dept_mat, active = TRUE),
-        render_table("table-location", "Location", loc_mat, active = FALSE),
-        render_table("table-tenure", "Tenure", ten_mat, active = FALSE),
+        paste0(unlist(table_map, use.names = FALSE), collapse = ""),
         "<style>",
         ".participation-page{width:100%;}",
         ".participation-page .participation-legend{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-bottom:16px;}",
@@ -2052,7 +2081,10 @@ build_participation_profile_page <- function(rows_sub) {
         "function luminance(rgb){return (0.299*rgb.r)+(0.587*rgb.g)+(0.114*rgb.b);} ",
         "function applyGradient(scope){if(!scope) return;var low=hexToRgb('#EF4444');var med=hexToRgb('#FDE047');var high=hexToRgb('#16A34A');var rows=scope.querySelectorAll('tbody tr');rows.forEach(function(tr){var cells=tr.querySelectorAll('td.hm-value[data-value]');if(!cells.length) return;var vals=[];cells.forEach(function(td){var v=parseFloat(td.getAttribute('data-value'));if(Number.isFinite(v)) vals.push(v);});if(!vals.length) return;vals.sort(function(a,b){return a-b;});var min=vals[0],max=vals[vals.length-1],mid=vals[Math.floor(vals.length/2)];if(!(mid>min&&mid<max)) mid=(min+max)/2;cells.forEach(function(td){var v=parseFloat(td.getAttribute('data-value'));if(!Number.isFinite(v)) return;var rgb;if(max<=min){rgb=med;}else if(v<=mid){var denomL=(mid-min);var tL=denomL<=0?0.5:(v-min)/denomL;tL=Math.max(0,Math.min(1,tL));rgb=mix(low,med,tL);}else{var denomH=(max-mid);var tH=denomH<=0?0.5:(v-mid)/denomH;tH=Math.max(0,Math.min(1,tH));rgb=mix(med,high,tH);}td.style.backgroundColor=rgbToHex(rgb);td.classList.toggle('text-white',luminance(rgb)<150);});});}",
         "function show(id){tabs.forEach(function(t){var active=t.id===id;t.classList.toggle('active',active);if(active) applyGradient(t);});}",
-        "if(sel){sel.addEventListener('change',function(){show(sel.value);});show(sel.value);} else if(tabs.length){applyGradient(tabs[0]);}",
+        "var colSel=root.querySelector('#participation-cols');",
+        "function normalizePair(rowVal,colVal){if(rowVal===colVal){colVal=(rowVal!=='company')?'company':'department';if(rowVal===colVal) colVal='location';if(colSel) colSel.value=colVal;}return 'table-'+rowVal+'__'+colVal;}",
+        "function refresh(){var rowVal=sel?sel.value:'department';var colVal=colSel?colSel.value:'company';show(normalizePair(rowVal,colVal));}",
+        "if(sel){sel.addEventListener('change',refresh);} if(colSel){colSel.addEventListener('change',refresh);} if(tabs.length){refresh();}",
         "})();</script>",
         "</div>"
       )
@@ -2302,6 +2334,10 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
   hist_pair <- metric_history_pair(outcome_history, fid, "outcome_id", hist_key)
   score_prior <- suppressWarnings(as.numeric(first_or(hist_pair$prior$score, NA_real_)))
   score_delta <- if (is.finite(score_prior)) score_now - score_prior else 0
+  percentile_now <- suppressWarnings(as.numeric(first_or(hist_pair$current$percentile, NA_real_)))
+  percentile_prior <- suppressWarnings(as.numeric(first_or(hist_pair$prior$percentile, NA_real_)))
+  if (!is.finite(percentile_now)) percentile_now <- round((score_now / 5) * 100)
+  if (!is.finite(percentile_prior)) percentile_prior <- percentile_now
 
   pe <- marts$predictive_edges
   d <- pe[normalize_outcome_label(pe$outcome) == outcome_name & tolower(pe$subset) == "all", , drop = FALSE]
@@ -2330,13 +2366,13 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
     stringsAsFactors = FALSE
   )
 
-  status_label <- if (score_now < 3.2) "Area for Growth" else if (score_now < 3.8) "Industry Standard" else "Above Standard"
+  status_label <- if (percentile_now < 35) "Area for Growth" else if (percentile_now < 65) "Industry Standard" else if (percentile_now < 90) "Above Standard" else "Industry Leader"
   list(
     summary = data.frame(
       outcome = outcome_name,
       status_label = status_label,
-      percentile = round((score_now / 5) * 100),
-      percentile_delta = if (is.finite(score_prior)) round((score_now - score_prior) * 20) else 0,
+      percentile = pmax(1, pmin(99, round(percentile_now))),
+      percentile_delta = as.integer(round(percentile_now - percentile_prior)),
       delta_label = paste0("vs. ", report_year),
       score = score_now,
       score_delta = score_delta,
@@ -2356,9 +2392,12 @@ build_outcomes_overview_data <- function(rows_sub, fid) {
 
   scores <- vapply(detail, function(x) as.numeric(x$summary$score[[1]]), numeric(1))
   deltas <- vapply(detail, function(x) as.numeric(x$summary$score_delta[[1]]), numeric(1))
+  percentiles <- vapply(detail, function(x) as.numeric(x$summary$percentile[[1]]), numeric(1))
+  percentile_deltas <- vapply(detail, function(x) as.numeric(x$summary$percentile_delta[[1]]), numeric(1))
   score_now <- mean(scores, na.rm = TRUE)
   score_delta <- mean(deltas, na.rm = TRUE)
-  percentile <- round((score_now / 5) * 100)
+  percentile <- round(mean(percentiles, na.rm = TRUE))
+  percentile_delta <- round(mean(percentile_deltas, na.rm = TRUE))
 
   pe <- marts$predictive_edges
   pe <- pe[tolower(pe$subset) == "all" & normalize_outcome_label(pe$outcome) %in% normalize_outcome_label(outcome_names), , drop = FALSE]
@@ -2369,9 +2408,19 @@ build_outcomes_overview_data <- function(rows_sub, fid) {
     names(drv)[2] <- "driver_strength"
     drv <- drv[order(-drv$driver_strength), , drop = FALSE]
     drv <- utils::head(drv, 5L)
+    driver_pct_lookup <- setNames(
+      suppressWarnings(as.numeric(kpi_scores$percentile[kpi_scores$filter_id == fid & kpi_scores$metric_group == "fundamental"])),
+      as.character(kpi_scores$metric_id[kpi_scores$filter_id == fid & kpi_scores$metric_group == "fundamental"])
+    )
     drivers <- data.frame(
       rank = seq_len(nrow(drv)),
       fundamental = as.character(drv$fundamental),
+      percentile = vapply(as.character(drv$fundamental), function(lbl) {
+        pct <- if (lbl %in% names(driver_pct_lookup)) suppressWarnings(as.numeric(driver_pct_lookup[[lbl]])) else NA_real_
+        strength_idx <- match(lbl, as.character(drv$fundamental))
+        strength_val <- if (is.finite(strength_idx)) suppressWarnings(as.numeric(drv$driver_strength[[strength_idx]])) else NA_real_
+        if (is.finite(pct)) pmax(1, pmin(99, round(pct))) else pmax(1, pmin(99, round(abs(strength_val) * 100)))
+      }, numeric(1)),
       driver_strength = as.numeric(drv$driver_strength),
       status_label = ifelse(drv$driver_strength >= 0.45, "High", ifelse(drv$driver_strength >= 0.3, "Medium", "Low")),
       stringsAsFactors = FALSE
@@ -2380,6 +2429,7 @@ build_outcomes_overview_data <- function(rows_sub, fid) {
     drivers <- data.frame(
       rank = 1:3,
       fundamental = c("Leadership", "Communication", "Purpose"),
+      percentile = c(54, 47, 58),
       driver_strength = c(0.42, 0.35, 0.31),
       status_label = c("High", "Medium", "Medium"),
       stringsAsFactors = FALSE
@@ -2460,7 +2510,7 @@ build_outcomes_overview_data <- function(rows_sub, fid) {
       drivers_table_title = "Top Related Drivers",
       status_label = if (percentile < 35) "Area for Growth" else if (percentile < 65) "Industry Standard" else if (percentile < 90) "Above Standard" else "Industry Leader",
       percentile = percentile,
-      percentile_delta = round(score_delta * 20),
+      percentile_delta = percentile_delta,
       delta_label = paste0("vs. ", report_year),
       score = score_now,
       score_delta = score_delta,
@@ -3765,7 +3815,7 @@ render_slide <- function(slide_id, fr) {
         "<symbol id='ap-icon-check' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 11 12 14 22 4'></polyline><path d='M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'></path></symbol>",
         "<symbol id='ap-icon-trend' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'></polyline><polyline points='17 6 23 6 23 12'></polyline></symbol>",
         "</svg>",
-        "<header><div class='eyebrow'>Action Plan</div><h1 class='title'>Targeted Focus Areas &amp; Recommended Actions</h1><p class='page-intro'>This page translates the current themes into practical organizational actions and shows how progress should appear in the data over time.</p><div class='divider'></div></header>",
+        "<header><div class='eyebrow'>Action Plan</div><h1 class='title'>Targeted Focus Areas &amp; Recommended Actions</h1><div class='divider'></div></header>",
         "<div class='action-stack'>", cards_html, "</div>",
         "</div></div>",
         "<style>",
@@ -3974,8 +4024,8 @@ render_slide <- function(slide_id, fr) {
           "<div class='layout-split'>",
           "<div class='text-content'>",
           "<h2>Why Organizational Health?</h2>",
-          "<p>Organizational health is the ultimate forward-looking driver of sustained performance. Traditional financial statements tell you where you've been; engagement metrics tell you where you are going.</p>",
-          "<p>Our scientifically validated framework is built to shift leadership from reactive to proactive. We isolate the daily operational inputs (Drivers) that directly correlate to critical business outputs (Outcomes).</p>",
+          "<p>Organizational health gives leadership a forward-looking view of workforce performance. This dashboard combines quantitative signals with curated qualitative themes so leaders can move from signal to decision-ready action.</p>",
+          "<p>The OHEP framework is designed to shift the conversation from reactive reporting to practical execution. It isolates the daily operational inputs (Drivers) that shape the business outputs (Outcomes) leaders care about most.</p>",
           "</div>",
           "<div class='image-content'><img src='./images/ohepModel.png' alt='OHEP Drivers and Outcomes Framework' class='framework-asset'/></div>",
           "</div>",
@@ -3983,7 +4033,7 @@ render_slide <- function(slide_id, fr) {
           "<div class='content-split'>",
           "<div class='terms-section'>",
           "<h2 class='section-title'>Defining Terminology</h2>",
-          "<div class='term-item'><div class='term-name'>OHEP Index</div><div class='term-desc'>Driver scores are benchmarked to organizations in energy and investment industries, adjusted for organizational size so no single company skews the index. This provides contextual interpretation beyond raw scores.</div></div>",
+          "<div class='term-item'><div class='term-name'>OHEP Index</div><div class='term-desc'>Driver scores are benchmarked to relevant organizations in the index so leadership can interpret current results in context, not just as standalone raw averages.</div></div>",
           "<div class='term-item'><div class='term-name'>Percentile Rank (Z-Score Based)</div><div class='term-desc'>Percentile rank is calculated using the standard Z-score formula (Z = (X - \u03bc) / \u03c3), where X is your current score, \u03bc is the historical index mean, and \u03c3 is the historical index standard deviation. The Z value is then mapped through the normal CDF to produce the displayed 1-99 percentile rank.</div></div>",
           "<div class='term-item'><div class='term-name'>Percentage Agreement</div><div class='term-desc'>Item-level agreement and disagreement percentages complement mean scores and improve interpretability at the question level, showing the full distribution of sentiment.</div></div>",
           "<div class='term-item'><div class='term-name'>Anonymity</div><div class='term-desc'>Responses are confidential and presented in aggregate. Monark does not release raw respondent-level data to client management or directors.</div></div>",
@@ -3992,7 +4042,7 @@ render_slide <- function(slide_id, fr) {
           "<div class='guidance-card'>",
           "<svg class='guidance-icon' fill='none' viewBox='0 0 24 24' stroke='currentColor' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>",
           "<h3>Interpretation Guidance</h3>",
-          "<p>Use Your Profile, drivers, outcomes, and comments together. Summary pages show <strong>where</strong> to focus; driver and outcome pages show <strong>what</strong> is moving performance; qualitative pages provide <strong>operational context</strong> behind the scores.</p>",
+          "<p>Use Introduction and Your Profile for the overall story, then move into Themes, Drivers, Outcomes, Participation, Heat Map, and Comments to understand where patterns concentrate and what they imply operationally.</p>",
           "</div>",
           "<div class='guidance-card' style='background:#F8FAFC;border-color:#E2E8F0;'>",
           "<h3 style='color:#0F172A;'>The Objective</h3>",
@@ -4185,11 +4235,15 @@ render_slide <- function(slide_id, fr) {
       }
       drv <- drv[order(-abs(as.numeric(drv$strength))), , drop = FALSE]
       drv <- utils::head(drv, 3L)
-      fund_now <- k_now[k_now$metric_group == "fundamental", c("metric_id", "score"), drop = FALSE]
+      fund_now <- k_now[k_now$metric_group == "fundamental", c("metric_id", "score", "percentile"), drop = FALSE]
+      fund_pct_lookup <- setNames(suppressWarnings(as.numeric(fund_now$percentile)), as.character(fund_now$metric_id))
       drivers <- lapply(seq_len(nrow(drv)), function(i) {
         f <- as.character(drv$fundamental[[i]])
-        sc <- as.numeric(first_or(fund_now$score[match(f, fund_now$metric_id)], NA_real_))
-        pct <- if (is.finite(sc)) round((sc / 5) * 100) else NA_real_
+        pct <- suppressWarnings(as.numeric(first_or(fund_pct_lookup[[f]], NA_real_)))
+        if (!is.finite(pct)) {
+          sc <- as.numeric(first_or(fund_now$score[match(f, fund_now$metric_id)], NA_real_))
+          pct <- if (is.finite(sc)) round((sc / 5) * 100) else NA_real_
+        }
         status <- if (!is.finite(pct)) "Industry Standard" else if (pct < 35) "Area for Growth" else if (pct < 65) "Industry Standard" else if (pct < 90) "Above Standard" else "Industry Leader"
         data.frame(rank = i, fundamental = f, percentile = pct, status_label = status, stringsAsFactors = FALSE)
       })
@@ -4228,8 +4282,10 @@ render_slide <- function(slide_id, fr) {
         }, numeric(1))
       }
       dd$fundamental$fundamental_label <- f
-      dd$fundamental$percentile <- pmax(1, pmin(99, round((cur_score / 5) * 100)))
-      dd$fundamental$percentile_delta <- if (is.finite(prev_score)) round((cur_score - prev_score) * 20) else 0
+      cur_pct <- suppressWarnings(as.numeric(first_or(hist$current$percentile, dd$fundamental$percentile[[1]])))
+      prev_pct <- suppressWarnings(as.numeric(first_or(hist$prior$percentile, NA_real_)))
+      dd$fundamental$percentile <- pmax(1, pmin(99, round(if (is.finite(cur_pct)) cur_pct else ((cur_score / 5) * 100))))
+      dd$fundamental$percentile_delta <- if (is.finite(prev_pct)) round(dd$fundamental$percentile[[1]] - prev_pct) else 0
       dd$fundamental$score_delta <- if (is.finite(prev_score)) round(cur_score - prev_score, 2) else 0
       dd$fundamental$delta_label <- paste0("vs. ", report_year)
       obj <- render_fundamental_page(dashboard_data = dd)
