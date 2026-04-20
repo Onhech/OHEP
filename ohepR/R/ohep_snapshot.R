@@ -244,8 +244,6 @@ prep_ohep_snapshot <- function(
   company_item_year <- calc_prior_deltas(company_item_year, "percentile", "item_id")
   company_item_year$vs_prior_raw <- company_item_year$vs_prior_mean
   company_item_year$vs_prior_pctile <- company_item_year$vs_prior_percentile
-  company_item_year$vs_prior_raw[is.na(company_item_year$vs_prior_raw)] <- 0
-  company_item_year$vs_prior_pctile[is.na(company_item_year$vs_prior_pctile)] <- 0
   company_item_year <- company_item_year[, !names(company_item_year) %in% c(
     "prior_value", "vs_prior_mean", "vs_prior_percentile", "company_year_mean"
   ), drop = FALSE]
@@ -330,8 +328,6 @@ prep_ohep_snapshot <- function(
     out$prior_pct <- stats::ave(out$percentile, key, FUN = function(v) c(NA, v[-length(v)]))
     out$vs_prior_raw <- out$mean - out$prior_mean
     out$vs_prior_pctile <- out$percentile - out$prior_pct
-    out$vs_prior_raw[is.na(out$vs_prior_raw)] <- 0
-    out$vs_prior_pctile[is.na(out$vs_prior_pctile)] <- 0
     out <- out[, !names(out) %in% c("prior_mean", "prior_pct"), drop = FALSE]
     out <- out[, c(
       "company", "year", by_col, "mean", "n",
@@ -348,10 +344,10 @@ prep_ohep_snapshot <- function(
     by_col = "fundamental_id"
   )
   company_fundamental_year$status_label <- ifelse(
-    company_fundamental_year$percentile < 40, "Area for Growth",
+    company_fundamental_year$percentile < 35, "Area for Growth",
     ifelse(
-      company_fundamental_year$percentile < 60, "Industry Standard",
-      ifelse(company_fundamental_year$percentile < 85, "Above Standard", "Industry Leader")
+      company_fundamental_year$percentile < 65, "Industry Standard",
+      ifelse(company_fundamental_year$percentile < 90, "Above Standard", "Industry Leader")
     )
   )
 
@@ -361,10 +357,10 @@ prep_ohep_snapshot <- function(
     by_col = "facet_id"
   )
   company_facet_year$status_label <- ifelse(
-    company_facet_year$percentile < 40, "Area for Growth",
+    company_facet_year$percentile < 35, "Area for Growth",
     ifelse(
-      company_facet_year$percentile < 60, "Industry Standard",
-      ifelse(company_facet_year$percentile < 85, "Above Standard", "Industry Leader")
+      company_facet_year$percentile < 65, "Industry Standard",
+      ifelse(company_facet_year$percentile < 90, "Above Standard", "Industry Leader")
     )
   )
 
@@ -499,6 +495,64 @@ load_ohep_snapshot <- function(path_or_tables) {
   out
 }
 
+layout_snapshot_items <- function(item_rows, default_section) {
+  if (!is.data.frame(item_rows) || nrow(item_rows) < 1L) {
+    return(item_rows)
+  }
+
+  item_rows$facet_label <- trimws(ifelse(
+    is.na(item_rows$facet_id) | item_rows$facet_id == "",
+    as.character(default_section),
+    as.character(item_rows$facet_id)
+  ))
+  facet_order <- suppressWarnings(as.numeric(item_rows$facet_order))
+  facet_order[!is.finite(facet_order)] <- seq_len(sum(!is.finite(facet_order)))
+  row_order <- seq_len(nrow(item_rows))
+  item_rows <- item_rows[order(facet_order, item_rows$item_order, row_order), , drop = FALSE]
+
+  facet_levels <- unique(item_rows$facet_label)
+  facet_count <- length(facet_levels)
+  item_rows$show_section_header <- facet_count > 1L
+
+  if (facet_count <= 1L) {
+    left_n <- ceiling(nrow(item_rows) / 2)
+    item_rows$column <- c(rep("left", left_n), rep("right", nrow(item_rows) - left_n))
+    item_rows$section <- as.character(default_section)
+    item_rows$section_order <- 1L
+  } else if (facet_count == 2L) {
+    item_rows$column <- ifelse(item_rows$facet_label == facet_levels[[1]], "left", "right")
+    item_rows$section <- item_rows$facet_label
+    item_rows$section_order <- match(item_rows$facet_label, facet_levels)
+  } else {
+    facet_sizes <- vapply(facet_levels, function(facet) {
+      sum(item_rows$facet_label == facet)
+    }, numeric(1))
+    facet_columns <- setNames(character(length(facet_levels)), facet_levels)
+    left_total <- 0
+    right_total <- 0
+    for (i in seq_along(facet_levels)) {
+      facet <- facet_levels[[i]]
+      if (left_total <= right_total) {
+        facet_columns[[facet]] <- "left"
+        left_total <- left_total + facet_sizes[[i]]
+      } else {
+        facet_columns[[facet]] <- "right"
+        right_total <- right_total + facet_sizes[[i]]
+      }
+    }
+    item_rows$column <- unname(facet_columns[item_rows$facet_label])
+    item_rows$section <- item_rows$facet_label
+    item_rows$section_order <- match(item_rows$facet_label, facet_levels)
+  }
+
+  item_rows$row_sort <- seq_len(nrow(item_rows))
+  item_rows <- item_rows[order(item_rows$column, item_rows$section_order, item_rows$row_sort), , drop = FALSE]
+  item_rows$item_order <- stats::ave(item_rows$row_sort, item_rows$column, FUN = seq_along)
+  item_rows$row_sort <- NULL
+  item_rows$facet_label <- NULL
+  item_rows
+}
+
 build_dashboard_data_from_marts <- function(company, year, fundamental, marts) {
   needed <- c("company_item_year", "company_fundamental_year", "metadata_lookup")
   missing_needed <- setdiff(needed, names(marts))
@@ -521,7 +575,7 @@ build_dashboard_data_from_marts <- function(company, year, fundamental, marts) {
     stop("Expected exactly one row in `company_fundamental_year` for company/year/fundamental.", call. = FALSE)
   }
 
-  delta_label <- paste0("vs. ", as.integer(year) - 1L)
+  delta_label <- paste0("vs. ", as.integer(year))
   fundamental_df <- data.frame(
     percentile = as.numeric(row_f$percentile[1]),
     percentile_delta = as.numeric(round(row_f$vs_prior_pctile[1])),
@@ -532,6 +586,40 @@ build_dashboard_data_from_marts <- function(company, year, fundamental, marts) {
   )
 
   pred <- marts$predictive_edges
+  normalize_outcome_name <- function(x) {
+    out <- trimws(as.character(x))
+    low <- tolower(out)
+    out[low %in% c("work satisfaction", "work satisfaction.", "work satisfaction score", "satisfaction", "work satisfaction index")] <- "Work Satisfaction"
+    out[low %in% c("turnover intention", "turnover intentions", "turnover intent", "turnover", "intent to leave")] <- "Turnover Intent"
+    out[low %in% c("enps", "e nps")] <- "eNPS"
+    out[low %in% c("engagement")] <- "Engagement"
+    out[low %in% c("burnout")] <- "Burnout"
+    out[out %in% c("Turnover Intention", "Turnover Intentions")] <- "Turnover Intent"
+    out
+  }
+  calc_outcome_percentile <- function(outcome_name) {
+    outcome_name <- normalize_outcome_name(outcome_name)
+    outcome_meta <- lookup[
+      normalize_outcome_name(lookup$fundamental_id) == as.character(outcome_name) &
+        as.character(lookup$item_id) %in% names(filtered_user_data),
+      ,
+      drop = FALSE
+    ]
+    if (nrow(outcome_meta) < 1L) return(NA_real_)
+    outcome_vals <- lapply(seq_len(nrow(outcome_meta)), function(i) {
+      item_id <- as.character(outcome_meta$item_id[[i]])
+      min_scale <- suppressWarnings(as.numeric(outcome_meta$response_scale_min[[i]]))
+      max_scale <- suppressWarnings(as.numeric(outcome_meta$response_scale_max[[i]]))
+      reverse <- as.logical(outcome_meta$is_reverse_scored[[i]])
+      vals <- vapply(rows_current[[item_id]], score_value, numeric(1), min_scale = min_scale, max_scale = max_scale, reverse = reverse)
+      vals <- vals[!is.na(vals)]
+      if (length(vals) < 1L) return(NA_real_)
+      mean(vals, na.rm = TRUE)
+    })
+    outcome_score <- mean(unlist(outcome_vals), na.rm = TRUE)
+    if (!is.finite(outcome_score)) return(NA_real_)
+    pmax(1, pmin(99, round((outcome_score / 5) * 100)))
+  }
   outcome_df <- data.frame(rank = integer(0), outcome = character(0), percentile = numeric(0), stringsAsFactors = FALSE)
   if (is.data.frame(pred) && nrow(pred) > 0L && all(c("fundamental", "outcome", "strength") %in% names(pred))) {
     p <- pred[as.character(pred$fundamental) == as.character(fundamental), , drop = FALSE]
@@ -546,12 +634,19 @@ build_dashboard_data_from_marts <- function(company, year, fundamental, marts) {
     if (nrow(p) > 0L) {
       p <- p[order(abs(suppressWarnings(as.numeric(p$strength))), decreasing = TRUE), , drop = FALSE]
       p <- utils::head(p, 3L)
-      out_lbl <- trimws(as.character(p$outcome))
-      out_lbl[out_lbl %in% c("Turnover Intention", "Turnover Intentions")] <- "Turnover Intent"
+      out_lbl <- normalize_outcome_name(p$outcome)
+      out_pct <- vapply(seq_along(out_lbl), function(i) {
+        pct <- calc_outcome_percentile(out_lbl[[i]])
+        if (is.finite(pct)) {
+          pmax(1, pmin(99, round(pct)))
+        } else {
+          pmax(1, pmin(99, round(abs(suppressWarnings(as.numeric(p$strength[[i]]))) * 100)))
+        }
+      }, numeric(1))
       outcome_df <- data.frame(
         rank = seq_len(nrow(p)),
         outcome = out_lbl,
-        percentile = pmax(0, pmin(100, round(abs(suppressWarnings(as.numeric(p$strength))) * 100))),
+        percentile = out_pct,
         stringsAsFactors = FALSE
       )
     }
@@ -584,18 +679,7 @@ build_dashboard_data_from_marts <- function(company, year, fundamental, marts) {
   if (nrow(item_rows) < 1L) {
     stop("No item rows found in marts for selected company/year/fundamental.", call. = FALSE)
   }
-  item_rows <- item_rows[order(item_rows$facet_order, item_rows$item_order), , drop = FALSE]
-  item_rows <- utils::head(item_rows, 8L)
-
-  left_n <- ceiling(nrow(item_rows) / 2)
-  item_rows$column <- c(rep("left", left_n), rep("right", nrow(item_rows) - left_n))
-  item_rows$section <- ifelse(
-    is.na(item_rows$facet_id) | item_rows$facet_id == "",
-    as.character(fundamental),
-    as.character(item_rows$facet_id)
-  )
-  item_rows$section_order <- as.numeric(item_rows$facet_order)
-  item_rows$item_order <- stats::ave(seq_len(nrow(item_rows)), item_rows$column, FUN = seq_along)
+  item_rows <- layout_snapshot_items(item_rows, default_section = fundamental)
   item_rows$label <- as.character(item_rows$item_text)
   item_rows$mean <- as.numeric(round(item_rows$mean, 2))
   item_rows$disagree_pct <- as.numeric(round(item_rows$disagree_pct))
@@ -609,7 +693,7 @@ build_dashboard_data_from_marts <- function(company, year, fundamental, marts) {
     outcomes = outcome_df[, c("rank", "outcome", "percentile"), drop = FALSE],
     items = item_rows[, c(
       "column", "section", "section_order", "item_order", "label", "mean",
-      "disagree_pct", "neutral_pct", "agree_pct", "vs_industry", "vs_prior"
+      "disagree_pct", "neutral_pct", "agree_pct", "vs_industry", "vs_prior", "show_section_header"
     ), drop = FALSE]
   )
 }
@@ -649,7 +733,6 @@ build_dashboard_data_from_filtered_user_data <- function(
     stop("No matching item columns found in `filtered_user_data` for selected fundamental.", call. = FALSE)
   }
   item_meta <- item_meta[order(item_meta$facet_order, item_meta$item_order), , drop = FALSE]
-  item_meta <- utils::head(item_meta, 8L)
   company_item_baseline <- ciy[
     as.character(ciy$company) == as.character(company) &
       suppressWarnings(as.integer(ciy$year)) == as.integer(year) &
@@ -789,6 +872,7 @@ build_dashboard_data_from_filtered_user_data <- function(
       benchmark_sd = bm_sd,
       percentile = current_pctile,
       vs_prior_pctile = current_pctile - prior_pctile,
+      prior_mean = prior_mean,
       item_n = as.integer(current_n),
       prior_n = as.integer(prior_n),
       suppress_row = as.logical(current_n < as.integer(min_n)),
@@ -845,7 +929,7 @@ build_dashboard_data_from_filtered_user_data <- function(
   fundamental_df <- data.frame(
     percentile = as.numeric(fundamental_pctile),
     percentile_delta = as.numeric(round(fundamental_pctile - prior_pctile)),
-    delta_label = paste0("vs. ", ifelse(has_prior, as.integer(prior_year), as.integer(year) - 1L)),
+    delta_label = paste0("vs. ", as.integer(year)),
     score = as.numeric(round(current_score, 2)),
     score_delta = as.numeric(round(ifelse(is.na(prior_score), 0, current_score - prior_score), 2)),
     stringsAsFactors = FALSE
@@ -890,20 +974,18 @@ build_dashboard_data_from_filtered_user_data <- function(
     all.x = TRUE,
     sort = FALSE
   )
-  item_rows <- item_rows[order(item_rows$facet_order, item_rows$item_order), , drop = FALSE]
-
-  left_n <- ceiling(nrow(item_rows) / 2)
-  item_rows$column <- c(rep("left", left_n), rep("right", nrow(item_rows) - left_n))
-  item_rows$section <- ifelse(
-    is.na(item_rows$facet_id) | item_rows$facet_id == "",
-    as.character(fundamental),
-    as.character(item_rows$facet_id)
-  )
-  item_rows$section_order <- as.numeric(item_rows$facet_order)
-  item_rows$item_order <- stats::ave(seq_len(nrow(item_rows)), item_rows$column, FUN = seq_along)
+  item_rows <- layout_snapshot_items(item_rows, default_section = fundamental)
   item_rows$label <- as.character(item_rows$item_text)
-  item_rows$vs_industry <- as.numeric(round(item_rows$percentile - 50))
-  item_rows$vs_prior <- as.numeric(round(item_rows$vs_prior_pctile))
+  item_rows$vs_industry <- as.numeric(ifelse(
+    is.na(item_rows$mean) | is.na(item_rows$benchmark_mean),
+    NA_real_,
+    round((item_rows$mean - item_rows$benchmark_mean) * 100)
+  ))
+  item_rows$vs_prior <- as.numeric(ifelse(
+    is.na(item_rows$mean) | is.na(item_rows$prior_mean),
+    NA_real_,
+    round((item_rows$mean - item_rows$prior_mean) * 100)
+  ))
 
   out <- list(
     fundamental = fundamental_df,
@@ -911,7 +993,8 @@ build_dashboard_data_from_filtered_user_data <- function(
     items = item_rows[, c(
       "column", "section", "section_order", "item_order", "label", "mean",
       "disagree_pct", "neutral_pct", "agree_pct", "vs_company", "vs_industry", "vs_prior",
-      "item_n", "prior_n", "suppress_row", "suppress_vs_company", "suppress_vs_industry", "suppress_vs_prior", "min_n"
+      "item_n", "prior_n", "suppress_row", "suppress_vs_company", "suppress_vs_industry", "suppress_vs_prior", "min_n",
+      "show_section_header"
     ), drop = FALSE]
   )
   out$privacy <- list(

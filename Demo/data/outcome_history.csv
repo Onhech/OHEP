@@ -1,11 +1,11 @@
 "filter_id","year","outcome_id","outcome_label","score","percentile","n"
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Burnout","Burnout",3.58,72,1904
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Engagement","Engagement",3.58,72,2566
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Work Satisfaction","Work Satisfaction",3.35,67,1922
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"eNPS","eNPS",63,82,638
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Burnout","Burnout",3.61,72,1945
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Engagement","Engagement",3.62,72,2626
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Work Satisfaction","Work Satisfaction",3.28,66,1968
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Burnout","Burnout",3.58,53,1904
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Engagement","Engagement",3.67,67,2566
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Work Satisfaction","Work Satisfaction",3.28,48,1922
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"eNPS","eNPS",66,83,638
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Burnout","Burnout",3.62,56,1945
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Engagement","Engagement",3.72,69,2626
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Work Satisfaction","Work Satisfaction",3.32,51,1968
 "company=federal|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Burnout","Burnout",2.2741935483871,45,186
 "company=federal|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Engagement","Engagement",4.29365079365079,86,252
 "company=federal|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Work Satisfaction","Work Satisfaction",4.3048128342246,86,187
@@ -2695,8 +2695,8 @@
 "company=petro_star|department=supply_chain_logistics|identity=white|location=north_slope_prudhoe_bay_kuparuk|employee_type=corporate_office|tenure=6_10_years|work_arrangement=hybrid",2025,"Burnout","Burnout",2.33333333333333,47,3
 "company=petro_star|department=supply_chain_logistics|identity=white|location=north_slope_prudhoe_bay_kuparuk|employee_type=corporate_office|tenure=6_10_years|work_arrangement=hybrid",2025,"Engagement","Engagement",5,99,4
 "company=petro_star|department=supply_chain_logistics|identity=white|location=north_slope_prudhoe_bay_kuparuk|employee_type=corporate_office|tenure=6_10_years|work_arrangement=hybrid",2025,"Work Satisfaction","Work Satisfaction",4.66666666666667,93,3
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Turnover Intent","Turnover Intent",3.28,66,1904
-"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Turnover Intent","Turnover Intent",3.22,64,1945
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Turnover Intent","Turnover Intent",3.2,37,1904
+"company=all|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Turnover Intent","Turnover Intent",3.24,39,1945
 "company=federal|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Turnover Intent","Turnover Intent",3.29,66,186
 "company=federal|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2025,"Turnover Intent","Turnover Intent",3.41,68,81
 "company=industrial_services|department=all|identity=all|location=all|employee_type=all|tenure=all|work_arrangement=all",2024,"Turnover Intent","Turnover Intent",3.16,63,143

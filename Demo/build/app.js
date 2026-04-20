@@ -41,7 +41,7 @@
   };
   const sectionIconMap = {
     system_orientation: "nav-icon-start",
-    ohep_summary: "nav-icon-summary",
+    ohep_summary: "nav-icon-profile",
     drivers: "nav-icon-driver",
     outcomes: "nav-icon-outcome",
     insights: "nav-icon-theme",

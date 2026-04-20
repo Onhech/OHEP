@@ -81,9 +81,9 @@ ohepRDisplayr <- function() {
     if (is.na(percentile)) {
       return("color-watch")
     }
-    if (percentile < 40) {
+    if (percentile < 35) {
       "color-risk"
-    } else if (percentile < 60) {
+    } else if (percentile < 65) {
       "color-watch"
     } else {
       "color-good"
@@ -94,11 +94,11 @@ ohepRDisplayr <- function() {
     if (is.na(percentile)) {
       return("Industry Standard")
     }
-    if (percentile < 40) {
+    if (percentile < 35) {
       "Area for Growth"
-    } else if (percentile < 60) {
+    } else if (percentile < 65) {
       "Industry Standard"
-    } else if (percentile < 85) {
+    } else if (percentile < 90) {
       "Above Standard"
     } else {
       "Industry Leader"
@@ -109,11 +109,11 @@ ohepRDisplayr <- function() {
     if (is.na(percentile)) {
       return("status-pill status-watch")
     }
-    if (percentile < 40) {
+    if (percentile < 35) {
       "status-pill status-risk"
-    } else if (percentile < 60) {
+    } else if (percentile < 65) {
       "status-pill status-watch"
-    } else if (percentile < 85) {
+    } else if (percentile < 90) {
       "status-pill status-good"
     } else {
       "status-pill status-leader"
@@ -121,13 +121,13 @@ ohepRDisplayr <- function() {
   }
 
   env$get_prior_benchmark_label <- function(fundamental_row) {
-    "vs '24"
+    "vs <br> 2025"
   }
 
   env$get_active_benchmarks <- function(items, fundamental_row, benchmark_company = TRUE, benchmark_index = TRUE, benchmark_prior = TRUE) {
     candidates <- list(
-      list(name = "company", enabled = isTRUE(benchmark_company), value_col = "vs_company", suppress_col = "suppress_vs_company", css_class = "delta-company", label = "vs Co."),
-      list(name = "index", enabled = isTRUE(benchmark_index), value_col = "vs_industry", suppress_col = "suppress_vs_industry", css_class = "delta-industry", label = "vs Ind."),
+      list(name = "company", enabled = isTRUE(benchmark_company), value_col = "vs_company", suppress_col = "suppress_vs_company", css_class = "delta-company", label = "vs. Company <br> Average"),
+      list(name = "index", enabled = isTRUE(benchmark_index), value_col = "vs_industry", suppress_col = "suppress_vs_industry", css_class = "delta-industry", label = "vs. Index"),
       list(name = "prior", enabled = isTRUE(benchmark_prior), value_col = "vs_prior", suppress_col = "suppress_vs_prior", css_class = "delta-prior", label = env$get_prior_benchmark_label(fundamental_row))
     )
     active <- list()
@@ -170,6 +170,41 @@ ohepRDisplayr <- function() {
 
   env$escape_text <- function(x) {
     htmltools::htmlEscape(as.character(x), attribute = FALSE)
+  }
+
+  env$slugify <- function(x) {
+    y <- tolower(trimws(as.character(x)))
+    y <- gsub("[^a-z0-9]+", "_", y)
+    y <- gsub("_+", "_", y)
+    y <- gsub("^_+|_+$", "", y)
+    y
+  }
+
+  env$get_slide_target_for_outcome <- function(label) {
+    key <- tolower(trimws(as.character(label)))
+    if (key %in% c("engagement")) return("engagement_deep_dive")
+    if (key %in% c("burnout")) return("burnout_deep_dive")
+    if (key %in% c("work satisfaction", "work_satisfaction")) return("work_satisfaction_deep_dive")
+    if (key %in% c("turnover intent", "turnover intention", "turnover intentions")) return("turnover_intent_deep_dive")
+    if (key %in% c("enps", "employee net promoter score")) return("enps")
+    NA_character_
+  }
+
+  env$get_slide_target_for_driver <- function(label) {
+    if (is.na(label) || !nzchar(trimws(as.character(label)))) {
+      return(NA_character_)
+    }
+    paste0("fundamental_", env$slugify(label))
+  }
+
+  env$render_slide_target_label <- function(label, slide_target, class_name = "row-name") {
+    safe_label <- env$escape_text(label)
+    if (!is.character(slide_target) || length(slide_target) != 1L || is.na(slide_target) || !nzchar(slide_target)) {
+      return(glue::glue("<span class=\"{class_name}\">{safe_label}</span>"))
+    }
+    glue::glue(
+      "<button type=\"button\" class=\"{class_name} row-link\" data-slide-target=\"{env$escape_text(slide_target)}\" aria-label=\"Open {safe_label} details\">{safe_label}</button>"
+    )
   }
 
   env$default_brand_colors <- function() {
@@ -592,12 +627,6 @@ ohepRDisplayr <- function() {
       stop("`items$column` must contain only 'left' or 'right'.", call. = FALSE)
     }
 
-    left_n <- sum(items$column == "left")
-    right_n <- sum(items$column == "right")
-    if (left_n > 4L || right_n > 4L) {
-      stop("Each items column can contain at most 4 rows in v1.", call. = FALSE)
-    }
-
     pct_mat <- items[, c("disagree_pct", "neutral_pct", "agree_pct")]
     if (anyNA(pct_mat)) {
       stop("`items` sentiment percentages cannot be NA.", call. = FALSE)
@@ -821,11 +850,11 @@ ohepRDisplayr <- function() {
     percentile <- clamp_pct(100 * (fund_score - min_scale) / (max_scale - min_scale))
     percentile_delta <- round(score_delta * 100)
     delta_label <- if (is.finite(prior_year)) {
-      paste0("vs. ", as.integer(prior_year))
+      paste0("vs. ", as.integer(latest_year))
     } else if (is.finite(prior_col_year)) {
-      paste0("vs. ", as.integer(prior_col_year))
+      paste0("vs. ", as.integer(latest_year))
     } else {
-      "vs. prior"
+      paste0("vs. ", as.integer(latest_year))
     }
 
     key_rows <- nrow(fund_rows)
@@ -1139,21 +1168,21 @@ ohepRDisplayr <- function() {
 {scope} .sub-delta {{ color: var(--delta-pos-text); font-weight: 800; }}
 {scope} .band-wrap {{ position: relative; margin-top: auto; padding-top: 16px; }}
 {scope} .band {{ position: relative; height: 26px; border-radius: 999px; overflow: hidden; display: flex; border: 1px solid var(--border-band); }}
-{scope} .z1 {{ width: 40%; background: var(--percentile-z1-core); }}
-{scope} .z2 {{ width: 20%; background: var(--percentile-z2-core); }}
+{scope} .z1 {{ width: 35%; background: var(--percentile-z1-core); }}
+{scope} .z2 {{ width: 30%; background: var(--percentile-z2-core); }}
 {scope} .z3 {{ width: 25%; background: var(--percentile-z3-core); }}
-{scope} .z4 {{ width: 15%; background: var(--percentile-z4-core); }}
+{scope} .z4 {{ width: 10%; background: var(--percentile-z4-core); }}
 {scope} .tick {{ position: absolute; top: 0; width: 2px; height: 26px; background: var(--band-tick); z-index: 2; transform: translateX(-50%); }}
 {scope} .tick-label {{ position: absolute; top: 12px; transform: translate(-50%, -100%); font-size: 11px; font-weight: 800; color: var(--band-tick-label); }}
 {scope} .midpoint {{ position: absolute; top: 29px; left: 50%; width: 2px; height: 32px; background: var(--band-midpoint); transform: translate(-50%, -50%); z-index: 3; }}
 {scope} .marker {{ position: absolute; top: 29px; width: 4px; height: 38px; background: var(--band-marker); transform: translate(-50%, -50%); border-radius: 4px; z-index: 5; }}
 {scope} .labels {{ display: flex; align-items: center; font-size: 11px; font-weight: 600; color: var(--text-muted); margin-top: 10px; }}
 {scope} .labels span {{ display: flex; justify-content: center; text-align: center; }}
-{scope} .labels span:nth-child(1) {{ width: 40%; }}
-{scope} .labels span:nth-child(2) {{ width: 20%; font-weight: 800; color: var(--percentile-z2-text); }}
+{scope} .labels span:nth-child(1) {{ width: 35%; }}
+{scope} .labels span:nth-child(2) {{ width: 30%; font-weight: 800; color: var(--percentile-z2-text); }}
 {scope} .labels span:nth-child(3) {{ width: 25%; }}
-{scope} .labels span:nth-child(4) {{ width: 15%; }}
-{scope} .table-outcomes {{ width: 100%; border-collapse: collapse; margin-top: auto; }}
+{scope} .labels span:nth-child(4) {{ width: 10%; }}
+{scope} .table-outcomes {{ width: 100%; border-collapse: collapse; margin-top: 0; }}
 {scope} .table-outcomes th {{
   text-align: left; padding-bottom: 10px; font-size: 10px; font-weight: 800; color: var(--text-faint);
   text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--border-default);
@@ -1163,6 +1192,9 @@ ohepRDisplayr <- function() {
 {scope} .table-outcomes tr:last-child td {{ border-bottom: none; padding-bottom: 0; }}
 {scope} .row-rank {{ font-size: 22px; font-weight: 800; color: var(--text-decorative); margin-right: 12px; }}
 {scope} .row-name {{ font-size: 15px; font-weight: 800; color: var(--text-primary); }}
+{scope} .row-link {{ appearance: none; background: transparent; border: 0; padding: 0; margin: 0; color: inherit; font: inherit; cursor: pointer; text-align: left; }}
+{scope} .row-link:hover {{ text-decoration: underline; }}
+{scope} .row-link:focus-visible {{ outline: 2px solid #0D9488; outline-offset: 2px; border-radius: 4px; }}
 {scope} .company-score-stack {{ display: flex; flex-direction: column; align-items: flex-end; }}
 {scope} .row-score-val {{ font-size: 15px; font-weight: 800; line-height: 1; }}
 {scope} .row-status {{ font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 4px; }}
@@ -1280,13 +1312,13 @@ ohepRDisplayr <- function() {
           </div>
         </div>
         <div class=\"band-wrap\">
-          <div class=\"tick-label\" style=\"left:40%;\">40</div>
+          <div class=\"tick-label\" style=\"left:35%;\">35</div>
           <div class=\"tick-label\" style=\"left:50%;\">50</div>
-          <div class=\"tick-label\" style=\"left:60%;\">60</div>
-          <div class=\"tick-label\" style=\"left:85%;\">85</div>
+          <div class=\"tick-label\" style=\"left:65%;\">65</div>
+          <div class=\"tick-label\" style=\"left:90%;\">90</div>
           <div class=\"band\">
             <div class=\"z1\"></div><div class=\"z2\"></div><div class=\"z3\"></div><div class=\"z4\"></div>
-            <div class=\"tick\" style=\"left:40%;\"></div><div class=\"tick\" style=\"left:60%;\"></div><div class=\"tick\" style=\"left:85%;\"></div>
+            <div class=\"tick\" style=\"left:35%;\"></div><div class=\"tick\" style=\"left:65%;\"></div><div class=\"tick\" style=\"left:90%;\"></div>
           </div>
           <div class=\"midpoint\"></div>
           <div class=\"marker\" style=\"left:{max(0, min(100, percentile))}%;\"></div>
@@ -1301,15 +1333,21 @@ ohepRDisplayr <- function() {
     )
   }
 
-  env$build_outcome_row <- function(outcome_row) {
+  env$build_outcome_row <- function(outcome_row, row_type = "outcome") {
     pct <- as.numeric(outcome_row$percentile[[1]])
     color_class <- env$get_outcome_class(pct)
     status_text <- env$get_status_text(pct)
+    label <- as.character(outcome_row$outcome[[1]])
+    slide_target <- if (identical(row_type, "driver")) {
+      env$get_slide_target_for_driver(label)
+    } else {
+      env$get_slide_target_for_outcome(label)
+    }
     glue::glue(
       "<tr>
         <td>
           <span class=\"row-rank\">{as.integer(outcome_row$rank[[1]])}</span>
-          <span class=\"row-name\">{env$escape_text(outcome_row$outcome[[1]])}</span>
+          {env$render_slide_target_label(label, slide_target, class_name = 'row-name')}
         </td>
         <td>
           <div class=\"company-score-stack\">
@@ -1411,6 +1449,9 @@ ohepRDisplayr <- function() {
   env$build_item_column <- function(items_df, column_name, active_benchmarks = list()) {
     col_df <- items_df[items_df$column == column_name, , drop = FALSE]
     col_df <- col_df[order(col_df$section_order, col_df$item_order), , drop = FALSE]
+    all_sections <- unique(as.character(items_df$section))
+    all_sections <- all_sections[!is.na(all_sections) & nzchar(all_sections)]
+    multi_section_layout <- length(all_sections) > 1L
     header_cells <- c(
       "<div class=\"h-lbl\">Survey Item</div>",
       "<div class=\"h-lbl\">Mean</div>",
@@ -1419,7 +1460,11 @@ ohepRDisplayr <- function() {
     if (length(active_benchmarks) > 0L) {
       bench_headers <- vapply(active_benchmarks, function(bm) {
         bench_class <- if (length(active_benchmarks) == 2L) "h-lbl" else "h-lbl h-lbl-benchmark"
-        glue::glue("<div class=\"{bench_class}\">{env$escape_text(bm$label)}</div>")
+        label_html <- env$escape_text(bm$label)
+        label_html <- gsub("&lt;br&gt;", "<br>", label_html, fixed = TRUE)
+        label_html <- gsub("&lt;br/&gt;", "<br>", label_html, fixed = TRUE)
+        label_html <- gsub("&lt;br /&gt;", "<br>", label_html, fixed = TRUE)
+        glue::glue("<div class=\"{bench_class}\">{label_html}</div>")
       }, character(1))
       header_cells <- c(header_cells, bench_headers)
     }
@@ -1442,8 +1487,15 @@ ohepRDisplayr <- function() {
     out <- c(out, header)
     sections <- unique(col_df$section)
     for (section in sections) {
-      out <- c(out, glue::glue("<div class=\"sub-cat\">{env$escape_text(section)}</div>"))
       section_rows <- col_df[col_df$section == section, , drop = FALSE]
+      show_header <- if ("show_section_header" %in% names(section_rows)) {
+        any(as.logical(section_rows$show_section_header), na.rm = TRUE) || multi_section_layout
+      } else {
+        multi_section_layout
+      }
+      if (show_header) {
+        out <- c(out, glue::glue("<div class=\"sub-cat\">{env$escape_text(section)}</div>"))
+      }
       row_html <- vapply(seq_len(nrow(section_rows)), function(i) {
         env$build_item_row(section_rows[i, , drop = FALSE], active_benchmarks = active_benchmarks)
       }, character(1))
@@ -1452,11 +1504,13 @@ ohepRDisplayr <- function() {
     glue::glue("<div class=\"item-column\">{glue::glue_collapse(out, sep = '')}</div>")
   }
 
-  env$build_outcomes_table <- function(outcomes_df, driver_label = "Driver") {
+  env$build_outcomes_table <- function(outcomes_df, driver_label = "Driver", row_label = "Outcome") {
     outcomes_df <- outcomes_df[order(outcomes_df$rank), , drop = FALSE]
     driver_label <- env$escape_text(driver_label)
+    row_label <- env$escape_text(row_label)
+    row_type <- if (tolower(row_label) == "driver") "driver" else "outcome"
     rows <- vapply(seq_len(nrow(outcomes_df)), function(i) {
-      env$build_outcome_row(outcomes_df[i, , drop = FALSE])
+      env$build_outcome_row(outcomes_df[i, , drop = FALSE], row_type = row_type)
     }, character(1))
 
     glue::glue(
@@ -1467,7 +1521,7 @@ ohepRDisplayr <- function() {
         <table class=\"table-outcomes\">
           <thead>
             <tr>
-              <th>Outcome</th>
+              <th>{row_label}</th>
               <th class=\"right-align\">Your Company</th>
             </tr>
           </thead>
@@ -2277,8 +2331,8 @@ ohepRDisplayr <- function() {
       d$rank <- if ("rank" %in% names(d)) suppressWarnings(as.integer(d$rank)) else seq_len(nrow(d))
       d$percentile <- if ("percentile" %in% names(d)) suppressWarnings(as.numeric(d$percentile)) else NA_real_
       d$status_label <- if ("status_label" %in% names(d)) as.character(d$status_label) else ifelse(
-        is.finite(d$percentile) & d$percentile < 40, "Area for Growth",
-        ifelse(is.finite(d$percentile) & d$percentile < 60, "Industry Standard", "Above Standard")
+        is.finite(d$percentile) & d$percentile < 35, "Area for Growth",
+        ifelse(is.finite(d$percentile) & d$percentile < 65, "Industry Standard", ifelse(is.finite(d$percentile) & d$percentile < 90, "Above Standard", "Industry Leader"))
       )
       d <- d[order(d$rank), c("rank", "fundamental", "percentile", "status_label"), drop = FALSE]
       utils::head(d, 5L)
@@ -2383,7 +2437,7 @@ ohepRDisplayr <- function() {
 {scope} .t-title.det {{ color:var(--enps-det-text); }}
 {scope} .t-title.pro {{ color:var(--enps-pro-text); }}
 {scope} .t-math {{ font-size:18px; font-weight:900; color:var(--enps-score-value); }}
-{scope} .table-outcomes {{ width:100%; border-collapse:collapse; margin-top:auto; }}
+{scope} .table-outcomes {{ width:100%; border-collapse:collapse; margin-top:0; }}
 {scope} .table-outcomes th {{ text-align:left; padding-bottom:10px; font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:.05em; border-bottom:2px solid #e2e8f0; }}
 {scope} .table-outcomes th.right-align {{ text-align:right; }}
 {scope} .table-outcomes td {{ padding:12px 0; border-bottom:1px solid #f1f5f9; vertical-align:middle; }}
@@ -2462,15 +2516,16 @@ ohepRDisplayr <- function() {
 
     status_class <- function(p) {
       if (!is.finite(p)) return("color-watch")
-      if (p < 40) return("color-risk")
-      if (p < 60) return("color-watch")
+      if (p < 35) return("color-risk")
+      if (p < 65) return("color-watch")
       "color-good"
     }
     status_text <- function(p) {
       if (!is.finite(p)) return("Industry Standard")
-      if (p < 40) return("Area for Growth")
-      if (p < 60) return("Industry Standard")
-      "Above Standard"
+      if (p < 35) return("Area for Growth")
+      if (p < 65) return("Industry Standard")
+      if (p < 90) return("Above Standard")
+      "Industry Leader"
     }
     driver_rows <- paste(vapply(seq_len(nrow(dat$drivers)), function(i) {
       d <- dat$drivers[i, , drop = FALSE]
@@ -3476,31 +3531,26 @@ ohepRDisplayr <- function() {
 {scope} .model-zone-is {{ background: var(--model-zone-is); }}
 {scope} .model-zone-as {{ background: var(--model-zone-as); }}
 {scope} .model-zone-il {{ background: var(--model-zone-il); }}
-{scope} .model-lines {{ top: 0; bottom: 0; z-index: 1; }}
+{scope} .model-lines {{ top: 0; bottom: 0; z-index: 3; pointer-events: none; }}
 {scope} .model-line {{ position: absolute; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); background: var(--model-line); opacity: .35; }}
-{scope} .model-line-baseline {{ background: var(--model-line-baseline); opacity: 1; z-index: 3; }}
+{scope} .model-line-baseline {{ width: 3px; background: var(--model-line-baseline); opacity: 1; z-index: 4; }}
 {scope} .model-line-label {{ position: absolute; top: 0; transform: translateX(-50%); background: var(--model-card-bg); padding: 0 4px; color: var(--model-line-label); font-size: 11px; font-weight: 800; }}
 {scope} .model-line-baseline .model-line-label {{ color: var(--model-line-baseline); }}
-{scope} .model-row-wrap {{ position: relative; z-index: 2; padding-top: 14px; padding-bottom: 12px; }}
-{scope} .model-row {{ display: flex; align-items: center; margin-bottom: 12px; }}
+{scope} .model-row-wrap {{ position: relative; padding-top: 14px; padding-bottom: 12px; }}
+{scope} .model-row {{ position: relative; display: flex; align-items: center; margin-bottom: 12px; }}
 {scope} .model-row:last-child {{ margin-bottom: 0; }}
-{scope} .model-label {{ width: 25%; text-align: right; padding-right: 30px; color: var(--model-label); font-size: 14px; font-weight: 600; }}
-{scope} .model-track-wrap {{ width: 55%; position: relative; height: 24px; }}
-{scope} .model-track {{ position: absolute; top: 50%; transform: translateY(-50%); width: 100%; height: 4px; border-radius: 2px; background: var(--model-track-bg); }}
-{scope} .model-stem {{ position: absolute; top: 50%; transform: translateY(-50%); height: 4px; border-radius: 2px; background: var(--model-stem); }}
-{scope} .model-point {{ position: absolute; top: 50%; transform: translate(-50%, -50%); z-index: 4; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }}
-{scope} .model-point-circle {{ width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--model-point-border); }}
-{scope} .model-point-diamond {{ width: 14px; height: 14px; transform: translate(-50%, -50%) rotate(45deg); border: 2px solid var(--model-point-border); }}
-{scope} .model-point-ghost-circle {{ width: 12px; height: 12px; border-radius: 50%; background: var(--model-point-ghost-bg); border: 2px solid var(--model-point-ghost-border); box-shadow: none; z-index: 3; }}
-{scope} .model-point-ghost-diamond {{ width: 10px; height: 10px; transform: translate(-50%, -50%) rotate(45deg); background: var(--model-point-ghost-bg); border: 2px solid var(--model-point-ghost-border); box-shadow: none; z-index: 3; }}
-{scope} .model-point-trend-pos {{ background: var(--model-delta-pos); }}
-{scope} .model-point-trend-neg {{ background: var(--model-delta-neg); }}
-{scope} .model-point-trend-neu {{ background: var(--model-delta-neu); }}
+{scope} .model-label {{ position: relative; z-index: 4; width: 25%; text-align: right; padding-right: 30px; color: var(--model-label); font-size: 14px; font-weight: 600; }}
+{scope} .model-track-wrap {{ width: 55%; position: relative; height: 24px; z-index: 1; }}
+{scope} .model-track {{ position: absolute; top: 50%; transform: translateY(-50%); width: 100%; height: 4px; border-radius: 2px; background: var(--model-track-bg); z-index: 1; }}
+{scope} .model-stem {{ position: absolute; top: 50%; transform: translateY(-50%); height: 4px; border-radius: 2px; background: var(--model-stem); z-index: 1; }}
+{scope} .model-point {{ position: absolute; top: 50%; transform: translate(-50%, -50%); z-index: 4; }}
+{scope} .model-point-svg {{ width: 24px; height: 24px; display: block; overflow: visible; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); }}
+{scope} .model-point-ghost-svg {{ width: 18px; height: 18px; display: block; overflow: visible; filter: none; }}
 {scope} .model-zone-bg-ni {{ background: var(--model-point-ni); }}
 {scope} .model-zone-bg-is {{ background: var(--model-point-is); }}
 {scope} .model-zone-bg-as {{ background: var(--model-point-as); }}
 {scope} .model-zone-bg-il {{ background: var(--model-point-il); }}
-{scope} .model-metrics {{ width: 20%; display: flex; justify-content: flex-end; align-items: center; gap: 24px; padding-right: 14px; }}
+{scope} .model-metrics {{ position: relative; z-index: 4; width: 20%; display: flex; justify-content: flex-end; align-items: center; gap: 24px; padding-right: 14px; }}
 {scope} .model-metric-raw {{ width: 54px; text-align: right; color: var(--model-metric-raw); font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; }}
 {scope} .model-metric-delta {{ width: 54px; text-align: right; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }}
 {scope} .model-delta-pos {{ color: var(--model-delta-pos); }}
@@ -3552,11 +3602,46 @@ ohepRDisplayr <- function() {
     neutral_band <- 0.05
     delta_text <- function(val) {
       if (!is.finite(val)) return("-")
-      if (abs(val) <= neutral_band) return("0.00")
       sprintf("%+.2f", val)
     }
     delta_class <- function(val) {
       if (!is.finite(val) || abs(val) <= neutral_band) "model-delta-neu" else if (val > 0) "model-delta-pos" else "model-delta-neg"
+    }
+
+    point_svg_html <- function(direction = c("neutral", "increase", "decrease"), ghost = FALSE) {
+      direction <- match.arg(direction)
+      cls <- if (ghost) "model-point-ghost-svg" else "model-point-svg"
+      fill_val <- if (ghost) {
+        "var(--model-point-ghost-bg)"
+      } else if (direction == "increase") {
+        "var(--model-delta-pos)"
+      } else if (direction == "decrease") {
+        "var(--model-delta-neg)"
+      } else {
+        "var(--model-delta-neu)"
+      }
+      stroke_val <- if (ghost) "var(--model-point-ghost-border)" else "var(--model-point-border)"
+      shape_html <- if (direction == "increase") {
+        paste0(
+          "<polygon points='4,3 20,12 4,21' fill='", fill_val,
+          "' stroke='", stroke_val, "' stroke-width='1.5' stroke-linejoin='round' />"
+        )
+      } else if (direction == "decrease") {
+        paste0(
+          "<polygon points='20,3 4,12 20,21' fill='", fill_val,
+          "' stroke='", stroke_val, "' stroke-width='1.5' stroke-linejoin='round' />"
+        )
+      } else {
+        paste0(
+          "<circle cx='12' cy='12' r='8' fill='", fill_val,
+          "' stroke='", stroke_val, "' stroke-width='1.5' />"
+        )
+      }
+      paste0(
+        "<svg class='", cls, "' viewBox='0 0 24 24' aria-hidden='true' focusable='false'>",
+        shape_html,
+        "</svg>"
+      )
     }
 
     render_rows <- function(df, is_outcomes = FALSE) {
@@ -3568,26 +3653,23 @@ ohepRDisplayr <- function() {
         current <- suppressWarnings(as.numeric(row$percentile[[1]]))
         stem_left <- if (has_prior) min(prior, current) else NA_real_
         stem_width <- if (has_prior) abs(current - prior) else NA_real_
-        shape <- tolower(trimws(as.character(row$shape[[1]])))
-        is_diamond <- identical(shape, "diamond") || is_outcomes
-        point_class <- if (is_diamond) "model-point-diamond" else "model-point-circle"
-        ghost_class <- if (is_diamond) "model-point-ghost-diamond" else "model-point-ghost-circle"
         stem_html <- if (has_prior && stem_width > 0) {
           glue::glue("<div class=\"model-stem\" style=\"left:{pct_pos(stem_left)}; width:{pct_pos(stem_width)};\"></div>")
         } else ""
         ghost_html <- if (has_prior) {
-          glue::glue("<div class=\"model-point {ghost_class}\" style=\"left:{pct_pos(prior)};\"></div>")
+          glue::glue("<div class=\"model-point\" style=\"left:{pct_pos(prior)};\">{point_svg_html('neutral', ghost = TRUE)}</div>")
         } else ""
         raw_txt <- if (is.finite(row$raw_avg[[1]])) sprintf("%.2f", row$raw_avg[[1]]) else "-"
         d_txt <- delta_text(row$delta[[1]])
         d_class <- delta_class(row$delta[[1]])
-        point_trend_class <- if (d_class == "model-delta-pos") {
-          "model-point-trend-pos"
+        point_direction <- if (d_class == "model-delta-pos") {
+          "increase"
         } else if (d_class == "model-delta-neg") {
-          "model-point-trend-neg"
+          "decrease"
         } else {
-          "model-point-trend-neu"
+          "neutral"
         }
+        current_point_html <- point_svg_html(point_direction, ghost = FALSE)
 
         glue::glue(
           "<div class=\"model-row\">
@@ -3596,7 +3678,7 @@ ohepRDisplayr <- function() {
               <div class=\"model-track\"></div>
               {stem_html}
               {ghost_html}
-              <div class=\"model-point {point_class} {point_trend_class}\" style=\"left:{pct_pos(current)};\"></div>
+              <div class=\"model-point\" style=\"left:{pct_pos(current)};\">{current_point_html}</div>
             </div>
             <div class=\"model-metrics\">
               <div class=\"model-metric-raw\">{raw_txt}</div>
@@ -4557,14 +4639,26 @@ ohepRDisplayr <- function() {
     } else {
       "Driver"
     }
-    outcomes_table <- env$build_outcomes_table(outcomes, driver_label = driver_label)
+    row_label <- if ("drivers_row_label" %in% names(fundamental)) {
+      as.character(fundamental$drivers_row_label[[1]])
+    } else {
+      "Outcome"
+    }
+    outcomes_table <- env$build_outcomes_table(outcomes, driver_label = driver_label, row_label = row_label)
     left_col <- env$build_item_column(items, "left", active_benchmarks = active_benchmarks)
     right_col <- env$build_item_column(items, "right", active_benchmarks = active_benchmarks)
     count_rows <- function(col_name) {
       sub <- items[as.character(items$column) == col_name, , drop = FALSE]
       if (nrow(sub) < 1L) return(0L)
       section_keys <- paste0(sub$section_order, "::", sub$section)
-      nrow(sub) + length(unique(section_keys))
+      header_count <- if ("show_section_header" %in% names(sub)) {
+        sum(vapply(split(sub, section_keys), function(df) {
+          any(as.logical(df$show_section_header), na.rm = TRUE)
+        }, logical(1)))
+      } else {
+        length(unique(section_keys))
+      }
+      nrow(sub) + header_count
     }
     max_item_rows <- max(count_rows("left"), count_rows("right"))
     dynamic_min_height <- max(720L, 420L + as.integer(max_item_rows) * 44L)

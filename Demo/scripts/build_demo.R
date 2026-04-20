@@ -348,10 +348,70 @@ load_turnover_item_templates <- function(path) {
   as.character(desc[seq_len(3L)])
 }
 
+normalize_item_match <- function(x) {
+  out <- tolower(normalize_text(x))
+  out <- gsub("[^a-z0-9]+", " ", out, perl = TRUE)
+  trimws(out)
+}
+
+apply_item_metadata_templates <- function(item_df, template_df) {
+  if (!is.data.frame(item_df) || nrow(item_df) < 1L || !is.data.frame(template_df) || nrow(template_df) < 1L) {
+    return(item_df)
+  }
+
+  item_df$metric_key <- normalize_outcome_label(item_df$fundamental_id)
+  template_df$metric_key <- normalize_outcome_label(template_df$fundamental_id)
+  mean_cols <- grep("^[0-9]{4}_mean$", names(template_df), value = TRUE)
+  for (nm in mean_cols) {
+    if (!nm %in% names(item_df)) item_df[[nm]] <- NA_real_
+  }
+  if (!"facet_order" %in% names(item_df)) item_df$facet_order <- NA_integer_
+  item_df$facet_order <- suppressWarnings(as.integer(item_df$facet_order))
+
+  for (metric_key in unique(item_df$metric_key)) {
+    item_idx <- which(item_df$metric_key == metric_key)
+    tmpl <- template_df[template_df$metric_key == metric_key, , drop = FALSE]
+    if (length(item_idx) < 1L || nrow(tmpl) < 1L) next
+
+    facet_levels <- unique(as.character(tmpl$facet_id))
+    tmpl$facet_order <- match(as.character(tmpl$facet_id), facet_levels)
+    tmpl$template_norm <- normalize_item_match(tmpl$item_text)
+    used_template <- rep(FALSE, nrow(tmpl))
+
+    for (ii in item_idx) {
+      item_norm <- normalize_item_match(item_df$item_text[[ii]])
+      dist_vec <- as.numeric(utils::adist(item_norm, tmpl$template_norm))
+      if (all(!is.finite(dist_vec))) next
+
+      if (sum(!used_template) > 0L) {
+        candidate_idx <- which(!used_template)
+        best_idx <- candidate_idx[[which.min(dist_vec[candidate_idx])]]
+        used_template[[best_idx]] <- TRUE
+      } else {
+        best_idx <- which.min(dist_vec)
+      }
+
+      item_df$facet_id[[ii]] <- as.character(tmpl$facet_id[[best_idx]])
+      item_df$facet_order[[ii]] <- as.integer(tmpl$facet_order[[best_idx]])
+      for (nm in mean_cols) {
+        item_df[[nm]][[ii]] <- suppressWarnings(as.numeric(tmpl[[nm]][[best_idx]]))
+      }
+    }
+  }
+
+  item_df$metric_key <- NULL
+  item_df
+}
+
 turnover_item_templates <- load_turnover_item_templates(
   file.path(ohep_dir, "inst", "extdata", "index_data", "user_data_key.csv")
 )
 turnover_item_idx <- 0L
+item_metadata_templates <- read_required_csv(
+  file.path(ohep_dir, "inst", "extdata", "index_data", "item_data.csv"),
+  c("item_text", "fundamental_id", "facet_id"),
+  "item_data.csv"
+)
 
 item_rows <- list()
 user_items <- list()
@@ -386,6 +446,7 @@ for (col in question_cols) {
 }
 
 item_data <- do.call(rbind, item_rows)
+item_data <- apply_item_metadata_templates(item_data, item_metadata_templates)
 
 if (!is.na(enps_col)) {
   enps_values <- jitter_enps(raw[[enps_col]])
@@ -530,6 +591,33 @@ predictive_data$significant <- as_flag(predictive_data$significant)
 predictive_data$N <- suppressWarnings(as.integer(predictive_data$N))
 predictive_data <- predictive_data[is.finite(predictive_data$strength), , drop = FALSE]
 marts <- prep_ohep_snapshot(user_data, index_data, predictive_data)
+benchmark_mean_cols <- grep("^[0-9]{4}_mean$", names(item_data), value = TRUE)
+if (length(benchmark_mean_cols) > 0L && is.list(marts) && is.data.frame(marts$benchmark_item_year)) {
+  benchmark_overrides <- do.call(rbind, lapply(benchmark_mean_cols, function(col_nm) {
+    yr <- suppressWarnings(as.integer(sub("_mean$", "", col_nm)))
+    vals <- suppressWarnings(as.numeric(item_data[[col_nm]]))
+    keep <- is.finite(vals) & nzchar(as.character(item_data$item_id))
+    if (!any(keep)) return(NULL)
+    data.frame(
+      item_id = as.character(item_data$item_id[keep]),
+      year = as.integer(yr),
+      override_mean = vals[keep],
+      stringsAsFactors = FALSE
+    )
+  }))
+  if (is.data.frame(benchmark_overrides) && nrow(benchmark_overrides) > 0L) {
+    marts$benchmark_item_year <- merge(
+      marts$benchmark_item_year,
+      benchmark_overrides,
+      by = c("item_id", "year"),
+      all.x = TRUE,
+      sort = FALSE
+    )
+    use_override <- is.finite(suppressWarnings(as.numeric(marts$benchmark_item_year$override_mean)))
+    marts$benchmark_item_year$mean[use_override] <- as.numeric(marts$benchmark_item_year$override_mean[use_override])
+    marts$benchmark_item_year$override_mean <- NULL
+  }
+}
 
 slugify <- function(x) {
   out <- tolower(trimws(as.character(x)))
@@ -972,7 +1060,7 @@ apply_demo_story_tuning <- function(kpi_hist, overall_filter_id, current_year, p
   if (!is.data.frame(kpi_hist) || nrow(kpi_hist) < 1L) return(kpi_hist)
   if (!is.character(overall_filter_id) || !nzchar(overall_filter_id)) return(kpi_hist)
 
-  set_metric <- function(df, year_val, group_val, metric_val, score_val) {
+  set_metric <- function(df, year_val, group_val, metric_val, score_val, percentile_val = NULL) {
     if (!is.finite(score_val)) return(df)
     idx <- which(
       as.character(df$filter_id) == overall_filter_id &
@@ -982,7 +1070,9 @@ apply_demo_story_tuning <- function(kpi_hist, overall_filter_id, current_year, p
     )
     if (length(idx) < 1L) return(df)
 
-    pct <- if (tolower(trimws(as.character(metric_val))) == "enps") {
+    pct <- if (is.finite(percentile_val)) {
+      pmax(1, pmin(99, round(as.numeric(percentile_val))))
+    } else if (tolower(trimws(as.character(metric_val))) == "enps") {
       pmax(1, pmin(99, round(50 + as.numeric(score_val) / 2)))
     } else {
       pmax(1, pmin(99, round((as.numeric(score_val) / 5) * 100)))
@@ -993,58 +1083,62 @@ apply_demo_story_tuning <- function(kpi_hist, overall_filter_id, current_year, p
   }
 
   current_targets <- list(
-    fundamental = c(
-      "Purpose" = 3.19,
-      "Strategy" = 3.42,
-      "Leadership" = 3.18,
-      "Communication" = 3.21,
-      "Learning & innovation" = 3.40,
-      "Respect, care, and trust" = 3.29,
-      "Performance development" = 3.14,
-      "Safety" = 4.35
+    fundamental = list(
+      "Purpose" = c(score = 3.14, percentile = 58),
+      "Strategy" = c(score = 3.20, percentile = 41),
+      "Leadership" = c(score = 3.10, percentile = 54),
+      "Communication" = c(score = 3.08, percentile = 47),
+      "Learning & innovation" = c(score = 3.28, percentile = 56),
+      "Respect, care, and trust" = c(score = 3.20, percentile = 55),
+      "Performance development" = c(score = 2.96, percentile = 32),
+      "Safety" = c(score = 4.32, percentile = 86)
     ),
-    outcome = c(
-      "Engagement" = 3.62,
-      "Burnout" = 3.61,
-      "Work Satisfaction" = 3.28,
-      "Turnover Intent" = 3.22,
-      "eNPS" = 63
+    outcome = list(
+      "Engagement" = c(score = 3.72, percentile = 69),
+      "Burnout" = c(score = 3.62, percentile = 56),
+      "Work Satisfaction" = c(score = 3.32, percentile = 51),
+      "Turnover Intent" = c(score = 3.24, percentile = 39),
+      "eNPS" = c(score = 66, percentile = 83)
     )
   )
 
   prior_targets <- list(
-    fundamental = c(
-      "Purpose" = 3.24,
-      "Strategy" = 3.40,
-      "Leadership" = 3.18,
-      "Communication" = 3.26,
-      "Learning & innovation" = 3.45,
-      "Respect, care, and trust" = 3.22,
-      "Performance development" = 3.10,
-      "Safety" = 4.32
+    fundamental = list(
+      "Purpose" = c(score = 3.19, percentile = 60),
+      "Strategy" = c(score = 3.23, percentile = 44),
+      "Leadership" = c(score = 3.12, percentile = 55),
+      "Communication" = c(score = 3.17, percentile = 49),
+      "Learning & innovation" = c(score = 3.32, percentile = 57),
+      "Respect, care, and trust" = c(score = 3.15, percentile = 53),
+      "Performance development" = c(score = 2.99, percentile = 29),
+      "Safety" = c(score = 4.29, percentile = 84)
     ),
-    outcome = c(
-      "Engagement" = 3.58,
-      "Burnout" = 3.58,
-      "Work Satisfaction" = 3.35,
-      "Turnover Intent" = 3.28,
-      "eNPS" = 62
+    outcome = list(
+      "Engagement" = c(score = 3.67, percentile = 67),
+      "Burnout" = c(score = 3.58, percentile = 53),
+      "Work Satisfaction" = c(score = 3.28, percentile = 48),
+      "Turnover Intent" = c(score = 3.20, percentile = 37),
+      "eNPS" = c(score = 64, percentile = 80)
     )
   )
 
   for (nm in names(current_targets$fundamental)) {
-    kpi_hist <- set_metric(kpi_hist, current_year, "fundamental", nm, current_targets$fundamental[[nm]])
+    target <- current_targets$fundamental[[nm]]
+    kpi_hist <- set_metric(kpi_hist, current_year, "fundamental", nm, target[["score"]], target[["percentile"]])
   }
   for (nm in names(current_targets$outcome)) {
-    kpi_hist <- set_metric(kpi_hist, current_year, "outcome", nm, current_targets$outcome[[nm]])
+    target <- current_targets$outcome[[nm]]
+    kpi_hist <- set_metric(kpi_hist, current_year, "outcome", nm, target[["score"]], target[["percentile"]])
   }
 
   if (is.finite(prior_year)) {
     for (nm in names(prior_targets$fundamental)) {
-      kpi_hist <- set_metric(kpi_hist, prior_year, "fundamental", nm, prior_targets$fundamental[[nm]])
+      target <- prior_targets$fundamental[[nm]]
+      kpi_hist <- set_metric(kpi_hist, prior_year, "fundamental", nm, target[["score"]], target[["percentile"]])
     }
     for (nm in names(prior_targets$outcome)) {
-      kpi_hist <- set_metric(kpi_hist, prior_year, "outcome", nm, prior_targets$outcome[[nm]])
+      target <- prior_targets$outcome[[nm]]
+      kpi_hist <- set_metric(kpi_hist, prior_year, "outcome", nm, target[["score"]], target[["percentile"]])
     }
   }
 
@@ -1219,7 +1313,7 @@ build_demographics_page <- function(fid) {
   slide_doc(
     paste0(
       "<div class='slide'><div id='demo-dynamic' class='main-card demographics-dynamic'>",
-      "<header class='card-header'><div class='eyebrow'>OHEP Summary</div><h1 class='title'>Demographics</h1><div class='divider'></div></header>",
+      "<header class='card-header'><div class='eyebrow'>Your Profile</div><h1 class='title'>Demographics</h1><div class='divider'></div></header>",
       "<div class='demo-grid'>", card_html, "</div>",
       "</div></div>",
       "<style>",
@@ -1288,7 +1382,8 @@ build_model_data <- function(fid) {
     if (is.finite(cur) && is.finite(prv)) round(cur - prv, 2) else 0
   }, numeric(1))
   amplify_delta <- function(x, scale = 2.1, min_abs = 0.08, digits = 2L) {
-    if (!is.finite(x) || x == 0) return(0)
+    if (!is.finite(x)) return(0)
+    if (x == 0) return(0.03)
     y <- x * scale
     if (abs(y) < min_abs) y <- sign(y) * min_abs
     round(y, digits)
@@ -1307,31 +1402,45 @@ build_model_data <- function(fid) {
   o_delta <- vapply(o_delta_raw, amplify_delta, numeric(1), scale = 2.0, min_abs = 0.10, digits = 2L)
 
   # Ensure demo contains all three delta states for point-color examples:
-  # green (up), grey (flat), red (down).
+  # green (up), grey (neutral band), red (down).
   ensure_delta_variety <- function(x) {
     if (!is.numeric(x) || length(x) < 1L) return(x)
     has_pos <- any(is.finite(x) & x > 0)
     has_neg <- any(is.finite(x) & x < 0)
-    has_zero <- any(is.finite(x) & x == 0)
+    has_neutral <- any(is.finite(x) & abs(x) <= 0.05)
     idx <- which(is.finite(x))
     if (length(idx) < 1L) return(x)
     p_idx <- idx[[1]]
     z_idx <- idx[[min(2L, length(idx))]]
     n_idx <- idx[[min(3L, length(idx))]]
     if (!has_pos) x[[p_idx]] <- 0.12
-    if (!has_zero) x[[z_idx]] <- 0
+    if (!has_neutral) x[[z_idx]] <- 0.03
     if (!has_neg) x[[n_idx]] <- -0.12
     x
   }
   f_delta <- ensure_delta_variety(f_delta)
   o_delta <- ensure_delta_variety(o_delta)
 
+  fundamental_pct <- if ("percentile" %in% names(f)) {
+    suppressWarnings(round(as.numeric(f$percentile)))
+  } else {
+    round((as.numeric(f$score) / 5) * 100)
+  }
+  fundamental_pct <- pmax(1, pmin(99, fundamental_pct))
+
+  outcome_pct <- if ("percentile" %in% names(o)) {
+    suppressWarnings(round(as.numeric(o$percentile)))
+  } else {
+    current_outcome_pct
+  }
+  outcome_pct <- pmax(1, pmin(99, outcome_pct))
+
   list(
-    summary = data.frame(title = "Organizational Health Model", subtitle = "", fundamentals_label = "Drivers", outcomes_label = "Outcomes", raw_avg_label = "Score", delta_label = paste("vs", history_year_label(if (is.finite(prior_year)) prior_year else (report_year - 1L))), stringsAsFactors = FALSE),
-    fundamentals = data.frame(label = f$metric_label, percentile = pmax(1, pmin(99, round((f$score / 5) * 100))), raw_avg = round(f$score, 2), delta = f_delta, shape = "circle", stringsAsFactors = FALSE),
+    summary = data.frame(title = "Organizational Health Model", subtitle = "", fundamentals_label = "Drivers", outcomes_label = "Outcomes", raw_avg_label = "Score", delta_label = paste("vs", report_year), stringsAsFactors = FALSE),
+    fundamentals = data.frame(label = f$metric_label, percentile = fundamental_pct, raw_avg = round(f$score, 2), delta = f_delta, shape = "circle", stringsAsFactors = FALSE),
     outcomes = data.frame(
       label = o$metric_label,
-      percentile = pmax(1, pmin(99, current_outcome_pct)),
+      percentile = outcome_pct,
       prior_percentile = NA_real_,
       raw_avg = round(outcome_display_score, 2),
       delta = o_delta,
@@ -1339,6 +1448,222 @@ build_model_data <- function(fid) {
       stringsAsFactors = FALSE
     )
   )
+}
+
+hex_to_rgba <- function(hex, alpha = 1) {
+  hex <- gsub("^#", "", as.character(hex))
+  if (nchar(hex) != 6L) {
+    return(sprintf("rgba(15,23,42,%.2f)", alpha))
+  }
+  rgb <- grDevices::col2rgb(paste0("#", hex))
+  sprintf("rgba(%s,%s,%s,%.2f)", rgb[1, 1], rgb[2, 1], rgb[3, 1], alpha)
+}
+
+render_radar_svg <- function(labels, series, width = 420, height = 360, label_width = 16L) {
+  labels <- as.character(labels)
+  n_axes <- length(labels)
+  if (n_axes < 3L) {
+    return("")
+  }
+
+  cx <- width / 2
+  cy <- height / 2 + 8
+  radius <- min(width, height) * 0.28
+  angles <- seq(-pi / 2, length.out = n_axes, by = 2 * pi / n_axes)
+
+  point_xy <- function(value, angle, scale_radius = radius) {
+    pct <- suppressWarnings(as.numeric(value))
+    if (!is.finite(pct)) pct <- 0
+    pct <- max(0, min(100, pct))
+    c(
+      x = cx + cos(angle) * scale_radius * (pct / 100),
+      y = cy + sin(angle) * scale_radius * (pct / 100)
+    )
+  }
+
+  ring_levels <- c(25, 50, 75, 100)
+  ring_polygons <- vapply(ring_levels, function(level) {
+    pts <- vapply(angles, function(angle) {
+      xy <- point_xy(level, angle)
+      paste0(sprintf("%.1f", xy[["x"]]), ",", sprintf("%.1f", xy[["y"]]))
+    }, character(1))
+    paste0(
+      "<polygon points='", paste(pts, collapse = " "), "' fill='none' stroke='#E2E8F0' stroke-width='1' />"
+    )
+  }, character(1))
+
+  axis_lines <- vapply(seq_along(labels), function(i) {
+    outer <- point_xy(100, angles[[i]])
+    paste0(
+      "<line x1='", sprintf("%.1f", cx), "' y1='", sprintf("%.1f", cy),
+      "' x2='", sprintf("%.1f", outer[["x"]]), "' y2='", sprintf("%.1f", outer[["y"]]),
+      "' stroke='#E2E8F0' stroke-width='1' />"
+    )
+  }, character(1))
+
+  ring_labels <- vapply(seq_along(ring_levels), function(i) {
+    level <- ring_levels[[i]]
+    y <- cy - radius * (level / 100)
+    paste0(
+      "<text x='", sprintf("%.1f", cx + 8), "' y='", sprintf("%.1f", y - 4),
+      "' font-size='9' fill='#94A3B8' font-weight='700'>", level, "</text>"
+    )
+  }, character(1))
+
+  axis_labels <- vapply(seq_along(labels), function(i) {
+    label_lines <- strwrap(labels[[i]], width = label_width)
+    if (length(label_lines) < 1L) label_lines <- ""
+    outer <- point_xy(100, angles[[i]], scale_radius = radius + 26)
+    anchor <- if (abs(cos(angles[[i]])) < 0.2) {
+      "middle"
+    } else if (cos(angles[[i]]) < 0) {
+      "end"
+    } else {
+      "start"
+    }
+    tspans <- paste(vapply(seq_along(label_lines), function(j) {
+      dy <- if (j == 1L) "0" else "1.05em"
+      paste0("<tspan x='", sprintf("%.1f", outer[["x"]]), "' dy='", dy, "'>", html_escape(label_lines[[j]]), "</tspan>")
+    }, character(1)), collapse = "")
+    paste0(
+      "<text x='", sprintf("%.1f", outer[["x"]]), "' y='", sprintf("%.1f", outer[["y"]]),
+      "' text-anchor='", anchor, "' font-size='10' font-weight='700' fill='#475569'>",
+      tspans,
+      "</text>"
+    )
+  }, character(1))
+
+  series_polygons <- vapply(series, function(s) {
+    vals <- as.numeric(s$values)
+    pts <- vapply(seq_along(angles), function(i) {
+      xy <- point_xy(vals[[i]], angles[[i]])
+      paste0(sprintf("%.1f", xy[["x"]]), ",", sprintf("%.1f", xy[["y"]]))
+    }, character(1))
+    fill <- if (!is.null(s$fill) && nzchar(s$fill)) s$fill else "none"
+    stroke_dash <- if (!is.null(s$stroke_dash) && nzchar(s$stroke_dash)) {
+      paste0(" stroke-dasharray='", s$stroke_dash, "'")
+    } else {
+      ""
+    }
+    point_nodes <- vapply(seq_along(angles), function(i) {
+      xy <- point_xy(vals[[i]], angles[[i]])
+      paste0(
+        "<circle cx='", sprintf("%.1f", xy[["x"]]), "' cy='", sprintf("%.1f", xy[["y"]]),
+        "' r='3.6' fill='", s$stroke, "' stroke='#FFFFFF' stroke-width='1.5' />"
+      )
+    }, character(1))
+    paste0(
+      "<polygon points='", paste(pts, collapse = " "), "' fill='", fill,
+      "' stroke='", s$stroke, "' stroke-width='2.4'", stroke_dash, " />",
+      paste(point_nodes, collapse = "")
+    )
+  }, character(1))
+
+  paste0(
+    "<svg viewBox='0 0 ", width, " ", height, "' role='img' aria-label='Radar comparison chart'>",
+    paste(ring_polygons, collapse = ""),
+    paste(axis_lines, collapse = ""),
+    paste(ring_labels, collapse = ""),
+    paste(series_polygons, collapse = ""),
+    paste(axis_labels, collapse = ""),
+    "</svg>"
+  )
+}
+
+render_ohep_radar_module <- function(model_data) {
+  drivers <- model_data$fundamentals[, c("label", "percentile"), drop = FALSE]
+  outcomes <- model_data$outcomes[, c("label", "percentile"), drop = FALSE]
+  drivers$percentile <- suppressWarnings(as.numeric(drivers$percentile))
+  outcomes$percentile <- suppressWarnings(as.numeric(outcomes$percentile))
+
+  drivers <- drivers[rev(seq_len(nrow(drivers))), , drop = FALSE]
+  driver_color <- "#0D9488"
+  outcome_color <- "#D97706"
+  lead_driver_label <- as.character(drivers$label[[1]])
+  lead_driver_value <- as.numeric(drivers$percentile[[1]])
+  trailing_driver_labels <- if (nrow(drivers) > 1L) as.character(drivers$label[-1]) else character(0)
+  trailing_driver_values <- if (nrow(drivers) > 1L) as.numeric(drivers$percentile[-1]) else numeric(0)
+  union_labels <- c(lead_driver_label, as.character(outcomes$label), trailing_driver_labels)
+  driver_union <- c(lead_driver_value, rep(0, nrow(outcomes)), trailing_driver_values)
+  outcome_union <- c(0, as.numeric(outcomes$percentile), rep(0, length(trailing_driver_values)))
+  payload_json <- jsonlite::toJSON(
+    list(
+      drivers = list(labels = as.character(drivers$label), values = as.numeric(drivers$percentile)),
+      outcomes = list(labels = as.character(outcomes$label), values = as.numeric(outcomes$percentile)),
+      combined = list(
+        labels = union_labels,
+        driver_values = as.numeric(driver_union),
+        outcome_values = as.numeric(outcome_union),
+        driver_count = nrow(drivers),
+        outcome_count = nrow(outcomes)
+      )
+    ),
+    auto_unbox = TRUE
+  )
+
+  css_html <- paste0(
+    "<style>",
+    ".ohep-radar-lab{margin:24px 0 10px;border:1px solid #E2E8F0;border-radius:14px;background:#FFFFFF;box-shadow:0 4px 6px -1px rgba(15,23,42,.03),0 2px 4px -1px rgba(15,23,42,.02);padding:20px 22px;}",
+    ".ohep-radar-controls{display:flex;justify-content:flex-start;align-items:center;margin-bottom:16px;}",
+    ".ohep-radar-toggle{display:inline-flex;background:#F1F5F9;border:1px solid #E2E8F0;border-radius:8px;padding:4px;gap:0;}",
+    ".ohep-radar-btn{appearance:none;border:none;background:transparent;color:#475569;opacity:.72;padding:8px 18px;border-radius:6px;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;}",
+    ".ohep-radar-btn.is-active{background:#FFFFFF;color:#0F172A;opacity:1;box-shadow:0 2px 4px rgba(15,23,42,.06);}",
+    ".ohep-radar-view{display:none;}",
+    ".ohep-radar-view.is-active{display:block;}",
+    ".ohep-radar-dual{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;}",
+    ".ohep-radar-panel{border:1px solid #E2E8F0;background:#F8FAFC;border-radius:12px;padding:14px;overflow:hidden;}",
+    ".ohep-radar-panel h3{font-size:13px;font-weight:800;color:#0F172A;margin:0 0 10px 0;text-transform:uppercase;letter-spacing:.8px;}",
+    ".ohep-radar-panel-center-title{font-size:15px !important;font-weight:900 !important;letter-spacing:1px !important;text-align:center;margin:0 0 12px 0 !important;color:#334155 !important;}",
+    ".ohep-radar-panel svg{display:block;width:86%;max-width:86%;height:auto;overflow:visible;margin:0 auto;}",
+    ".ohep-radar-panel-full svg{width:80%;max-width:80%;}",
+    ".ohep-radar-panel-full{padding:14px 10px;}",
+    ".layout-flanking{display:grid;grid-template-columns:72px minmax(0,1fr) 72px;align-items:center;gap:8px;width:100%;}",
+    ".side-label{writing-mode:vertical-rl;text-orientation:mixed;text-align:center;font-size:46px;font-weight:900;letter-spacing:3px;opacity:.12;text-transform:uppercase;line-height:1;user-select:none;}",
+    ".side-label.driver{color:", driver_color, ";transform:rotate(180deg);margin-right:auto;}",
+    ".side-label.outcome{color:", outcome_color, ";transform:rotate(0deg);margin-left:auto;}",
+    ".ohep-radar-canvas-wrap{min-width:0;display:flex;justify-content:center;align-items:center;}",
+    "@media (max-width:1100px){.ohep-radar-dual{grid-template-columns:1fr;}}",
+    "@media (max-width:860px){.layout-flanking{grid-template-columns:44px minmax(0,1fr) 44px;gap:4px;}.side-label{font-size:28px;letter-spacing:2px;}}",
+    "</style>"
+  )
+
+  body_html <- paste0(
+    "<div class='ohep-radar-lab'>",
+    "<div class='ohep-radar-controls'><div class='ohep-radar-toggle'><button type='button' class='ohep-radar-btn is-active' data-view='combined-filled'>Combined</button><button type='button' class='ohep-radar-btn' data-view='dual'>Split View</button></div></div>",
+    "<div class='ohep-radar-view' data-view='dual'><div class='ohep-radar-dual'>",
+    "<div class='ohep-radar-panel'><h3 class='ohep-radar-panel-center-title'>Drivers</h3><svg class='ohep-radar-svg' data-mode='drivers-dual' viewBox='0 0 420 320'></svg></div>",
+    "<div class='ohep-radar-panel'><h3 class='ohep-radar-panel-center-title'>Outcomes</h3><svg class='ohep-radar-svg' data-mode='outcomes-dual' viewBox='0 0 420 320'></svg></div>",
+    "</div></div>",
+    "<div class='ohep-radar-view is-active' data-view='combined-filled'><div class='ohep-radar-panel ohep-radar-panel-full'><div class='layout-flanking'><div class='side-label driver'>Drivers</div><div class='ohep-radar-canvas-wrap'><svg class='ohep-radar-svg' data-mode='combined-filled' viewBox='0 0 420 320'></svg></div><div class='side-label outcome'>Outcomes</div></div></div></div>",
+    "</div>"
+  )
+
+  script_html <- paste0(
+    "<script>(function(){",
+    "var root=document.querySelector('.ohep-radar-lab');if(!root)return;",
+    "var payload=", payload_json, ";",
+    "var btns=root.querySelectorAll('.ohep-radar-btn');",
+    "var views=root.querySelectorAll('.ohep-radar-view');",
+    "var svgs=root.querySelectorAll('.ohep-radar-svg');",
+    "function wrapLabel(label,width){var words=String(label||'').split(/\\s+/);var lines=[];var line='';words.forEach(function(word){var next=line?line+' '+word:word;if(next.length>width&&line){lines.push(line);line=word;}else{line=next;}});if(line)lines.push(line);return lines.length?lines:[''];}",
+    "function esc(text){return String(text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}",
+    "function makeSeries(stroke,fill,values,dash){return{stroke:stroke,fill:fill,values:values,dash:dash||''};}",
+    "function ordinal(n){n=Math.round(Number(n)||0);var v=n%100;if(v>=11&&v<=13)return n+'th';switch(n%10){case 1:return n+'st';case 2:return n+'nd';case 3:return n+'rd';default:return n+'th';}}",
+    "function getConfig(mode){",
+    "if(mode==='drivers-dual'){return{kind:'radar',labels:payload.drivers.labels,series:[makeSeries('", driver_color, "','", hex_to_rgba(driver_color, 0.18), "',payload.drivers.values,'')]};}",
+    "if(mode==='outcomes-dual'){return{kind:'radar',labels:payload.outcomes.labels,series:[makeSeries('", outcome_color, "','", hex_to_rgba(outcome_color, 0.20), "',payload.outcomes.values,'')]};}",
+    "return{kind:'radar',labels:payload.combined.labels,series:[makeSeries('", driver_color, "','", hex_to_rgba(driver_color, 0.16), "',payload.combined.driver_values,''),makeSeries('", outcome_color, "','", hex_to_rgba(outcome_color, 0.18), "',payload.combined.outcome_values,'')]};",
+    "}",
+    "function drawRadar(svg,config){if(!svg||!config||!config.labels||config.labels.length<3)return;var width=420,height=320,cx=210,cy=166,radius=106,angles=config.labels.map(function(_,i){return(-Math.PI/2)+(2*Math.PI*i/config.labels.length);});function point(value,angle,scaleRadius){var pct=Number(value);if(!isFinite(pct))pct=0;pct=Math.max(0,Math.min(100,pct));var r=(scaleRadius||radius)*(pct/100);return{x:cx+Math.cos(angle)*r,y:cy+Math.sin(angle)*r};}var parts=[];parts.push(\"<text x='\"+cx+\"' y='18' text-anchor='middle' font-size='10' font-weight='800' fill='#94A3B8'>Percentile Rank</text>\");[25,50,75,100].forEach(function(level){var pts=angles.map(function(angle){var xy=point(level,angle);return xy.x.toFixed(1)+','+xy.y.toFixed(1);}).join(' ');parts.push(\"<polygon points='\"+pts+\"' fill='none' stroke='#E2E8F0' stroke-width='1' />\");parts.push(\"<text x='\"+(cx+8).toFixed(1)+\"' y='\"+(cy-radius*(level/100)-4).toFixed(1)+\"' font-size='9' fill='#94A3B8' font-weight='700'>\"+ordinal(level)+\"</text>\");});angles.forEach(function(angle){var outer=point(100,angle);parts.push(\"<line x1='\"+cx.toFixed(1)+\"' y1='\"+cy.toFixed(1)+\"' x2='\"+outer.x.toFixed(1)+\"' y2='\"+outer.y.toFixed(1)+\"' stroke='#E2E8F0' stroke-width='1' />\");});config.series.forEach(function(series){var pts=angles.map(function(angle,idx){var xy=point(series.values[idx],angle);return xy.x.toFixed(1)+','+xy.y.toFixed(1);});parts.push(\"<polygon points='\"+pts.join(' ')+\"' fill='\"+series.fill+\"' stroke='\"+series.stroke+\"' stroke-width='2.4'\"+(series.dash?\" stroke-dasharray='\"+series.dash+\"'\":\"\")+\" />\");});config.series.forEach(function(series){angles.forEach(function(angle,idx){var xy=point(series.values[idx],angle);parts.push(\"<circle cx='\"+xy.x.toFixed(1)+\"' cy='\"+xy.y.toFixed(1)+\"' r='3.6' fill='\"+series.stroke+\"' stroke='#FFFFFF' stroke-width='1.5'><title>\"+esc(config.labels[idx])+\": \"+ordinal(series.values[idx])+\" Percentile</title></circle>\");});});config.labels.forEach(function(label,idx){var outer=point(100,angles[idx],radius+22);var cos=Math.cos(angles[idx]);var anchor=Math.abs(cos)<0.2?'middle':(cos<0?'end':'start');var lines=wrapLabel(label,14);var text=\"<text x='\"+outer.x.toFixed(1)+\"' y='\"+outer.y.toFixed(1)+\"' text-anchor='\"+anchor+\"' font-size='10' font-weight='700' fill='#475569'>\";lines.forEach(function(line,lineIdx){text+=\"<tspan x='\"+outer.x.toFixed(1)+\"' dy='\"+(lineIdx===0?'0':'1.05em')+\"'>\"+esc(line)+\"</tspan>\";});text+=\"</text>\";parts.push(text);});svg.innerHTML=parts.join('');}",
+    "function draw(svg,config){if(!config)return;drawRadar(svg,config);}",
+    "function setView(view){btns.forEach(function(btn){btn.classList.toggle('is-active',btn.getAttribute('data-view')===view);});views.forEach(function(panel){panel.classList.toggle('is-active',panel.getAttribute('data-view')===view);});}",
+    "svgs.forEach(function(svg){draw(svg,getConfig(svg.getAttribute('data-mode')));});",
+    "btns.forEach(function(btn){btn.addEventListener('click',function(){setView(btn.getAttribute('data-view'));});});",
+    "setView('combined-filled');",
+    "})();</script>"
+  )
+
+  paste0(css_html, body_html, script_html)
 }
 
 build_matrix_points <- function(fid) {
@@ -1598,7 +1923,7 @@ build_heatmap <- function(fr) {
 
 build_participation_profile_page <- function(rows_sub) {
   rows_curr <- rows_sub[rows_sub$year == report_year, , drop = FALSE]
-  if (nrow(rows_curr) < 1L) return(no_data_slide("Insufficient data for participation profile."))
+  if (nrow(rows_curr) < 1L) return(no_data_slide("Insufficient data for participation."))
 
   company_cols <- setdiff(dim_company, "All")
   if (length(company_cols) < 1L) company_cols <- c("Company")
@@ -1654,8 +1979,12 @@ build_participation_profile_page <- function(rows_sub) {
       row_name <- rownames(pct_mat)[[i]]
       cells <- paste0(vapply(seq_len(ncol(pct_mat)), function(j) {
         p <- pct_mat[i, j]
-        cls <- classify_pct(p)
-        paste0("<td><span class='heat-pill ", cls, "'>", as.integer(p), "%</span></td>")
+        txt <- if (is.finite(p)) paste0(as.integer(p), "%") else "NA"
+        if (is.finite(p)) {
+          paste0("<td class='hm-value' data-value='", sprintf("%.2f", p), "'>", txt, "</td>")
+        } else {
+          "<td class='hm-na'>NA</td>"
+        }
       }, character(1)), collapse = "")
       paste0("<tr><td>", html_escape(row_name), "</td>", cells, "</tr>")
     }, character(1)), collapse = "")
@@ -1669,62 +1998,69 @@ build_participation_profile_page <- function(rows_sub) {
   loc_mat <- build_matrix("demo_location", setdiff(dim_location, "All"))
   ten_mat <- build_matrix("demo_tenure", setdiff(dim_tenure, "All"))
 
-  slide_doc(
-    paste0(
-      "<div class='slide'><div class='main-card participation-card'>",
-      "<header class='card-header'>",
-      "<div class='header-top-row'>",
-      "<div class='title-group'><div class='eyebrow'>Getting Started</div><h1 class='title'>Participation Profile</h1></div>",
-      "<div class='filter-container'>",
-      "<label class='filter-label' for='participation-rows'>Rows:</label>",
-      "<select id='participation-rows' class='segment-select'>",
-      "<option value='table-dept' selected>Department</option>",
-      "<option value='table-location'>Location</option>",
-      "<option value='table-tenure'>Tenure</option>",
-      "</select>",
-      "<label class='filter-label cols-label' for='participation-cols'>Columns:</label>",
-      "<select id='participation-cols' class='segment-select'><option selected>Company</option></select>",
-      "</div></div><div class='divider'></div></header>",
-      "<div class='legend-wrapper'>",
-      "<span class='legend-label'>Low Participation (&lt;60%)</span>",
-      "<div class='legend-gradient'></div>",
-      "<span class='legend-label'>High Participation (85%+)</span>",
-      "</div>",
-      render_table("table-dept", "Department", dept_mat, active = TRUE),
-      render_table("table-location", "Location", loc_mat, active = FALSE),
-      render_table("table-tenure", "Tenure", ten_mat, active = FALSE),
-      "</div></div>",
-      "<style>",
-      ".participation-card{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:34px;box-shadow:0 10px 25px -5px rgba(15,23,42,.05);}",
-      ".participation-card .header-top-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;gap:16px;}",
-      ".participation-card .title-group{display:flex;flex-direction:column;}",
-      ".participation-card .eyebrow{font-size:11px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}",
-      ".participation-card .title{font-size:28px;font-weight:900;color:#0F172A;letter-spacing:-.5px;margin:0;line-height:1;}",
-      ".participation-card .filter-container{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end;}",
-      ".participation-card .filter-label{font-size:12px;font-weight:800;color:#0F172A;text-transform:uppercase;letter-spacing:.5px;}",
-      ".participation-card .cols-label{margin-left:12px;}",
-      ".participation-card .segment-select{appearance:none;background-color:#FFFFFF;border:1px solid #E2E8F0;padding:8px 32px 8px 12px;border-radius:6px;font-size:13px;font-weight:700;color:#0F172A;cursor:pointer;outline:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748B'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;}",
-      ".participation-card .divider{width:100%;height:2px;background-color:#0D9488;margin-bottom:22px;}",
-      ".participation-card .legend-wrapper{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-bottom:16px;}",
-      ".participation-card .legend-label{font-size:10px;font-weight:800;color:#64748B;text-transform:uppercase;letter-spacing:.5px;}",
-      ".participation-card .legend-gradient{width:140px;height:6px;border-radius:99px;background:linear-gradient(90deg,#FCA5A5 0%, #F8FAFC 50%, #4ADE80 100%);}",
-      ".participation-card .table-wrapper{border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;overflow-x:auto;display:none;}",
-      ".participation-card .table-wrapper.active{display:block;}",
-      ".participation-card .heatmap-table{width:100%;border-collapse:collapse;min-width:900px;}",
-      ".participation-card .heatmap-table th,.participation-card .heatmap-table td{padding:16px 12px;text-align:center;border-bottom:1px solid #E2E8F0;}",
-      ".participation-card .heatmap-table tr:last-child td{border-bottom:none;}",
-      ".participation-card .heatmap-table th{font-size:10px;font-weight:800;color:#64748B;text-transform:uppercase;letter-spacing:.5px;vertical-align:bottom;white-space:normal;line-height:1.4;max-width:140px;}",
-      ".participation-card .heatmap-table th:first-child,.participation-card .heatmap-table td:first-child{text-align:left;min-width:220px;font-size:13px;font-weight:700;color:#0F172A;}",
-      ".participation-card .heat-pill{display:inline-flex;align-items:center;justify-content:center;width:52px;height:40px;border-radius:6px;font-size:13px;font-weight:800;color:#0F172A;}",
-      ".participation-card .bg-high-strong{background-color:#4ADE80;}",
-      ".participation-card .bg-high-light{background-color:#DCFCE7;}",
-      ".participation-card .bg-mid{background-color:#F1F5F9;}",
-      ".participation-card .bg-low-light{background-color:#FEE2E2;}",
-      ".participation-card .bg-low-strong{background-color:#FCA5A5;}",
-      "</style>",
-      "<script>(function(){var root=document.querySelector('.participation-card');if(!root) return;var sel=root.querySelector('#participation-rows');var tabs=root.querySelectorAll('.participation-table');function show(id){tabs.forEach(function(t){t.classList.toggle('active',t.id===id);});}if(sel){sel.addEventListener('change',function(){show(sel.value);});show(sel.value);} })();</script>"
+  participation_controls <- paste0(
+    "<div class='page-control-group'>",
+    "<label for='participation-rows' class='page-control-label'>Rows:</label>",
+    "<select id='participation-rows' class='page-control-select'>",
+    "<option value='table-dept' selected>Department</option>",
+    "<option value='table-location'>Location</option>",
+    "<option value='table-tenure'>Tenure</option>",
+    "</select>",
+    "</div>",
+    "<div class='page-control-group'>",
+    "<label for='participation-cols' class='page-control-label'>Columns:</label>",
+    "<select id='participation-cols' class='page-control-select'><option selected>Company</option></select>",
+    "</div>"
+  )
+
+  widget_shell_doc(
+    htmltools::HTML(
+      paste0(
+        "<div class='participation-page'>",
+        "<div class='participation-legend'>",
+        "<span class='participation-legend-label'>Low Participation (&lt;60%)</span>",
+        "<div class='participation-legend-gradient'></div>",
+        "<span class='participation-legend-label'>High Participation (85%+)</span>",
+        "</div>",
+        render_table("table-dept", "Department", dept_mat, active = TRUE),
+        render_table("table-location", "Location", loc_mat, active = FALSE),
+        render_table("table-tenure", "Tenure", ten_mat, active = FALSE),
+        "<style>",
+        ".participation-page{width:100%;}",
+        ".participation-page .participation-legend{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-bottom:16px;}",
+        ".participation-page .participation-legend-label{font-size:10px;font-weight:800;color:#64748B;text-transform:uppercase;letter-spacing:.5px;}",
+        ".participation-page .participation-legend-gradient{width:140px;height:6px;border-radius:99px;background:linear-gradient(90deg,#EF4444 0%, #FDE047 50%, #16A34A 100%);}",
+        ".participation-page .table-wrapper{border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;overflow-x:auto;display:none;}",
+        ".participation-page .table-wrapper.active{display:block;}",
+        ".participation-page .heatmap-table{width:100%;min-width:900px;border-collapse:separate;border-spacing:2px;table-layout:fixed;background:#FFFFFF;}",
+        ".participation-page .heatmap-table th{padding:8px 12px 16px 12px;text-align:center;text-transform:uppercase;font-size:10px;font-weight:800;color:#64748B;vertical-align:bottom;min-width:0;line-height:1.35;white-space:normal;word-wrap:break-word;}",
+        ".participation-page .heatmap-table th:first-child{text-align:left;width:220px;min-width:220px;padding-left:0;color:#0F172A;}",
+        ".participation-page .heatmap-table td{padding:14px 8px;text-align:center;vertical-align:middle;font-size:14px;font-weight:800;color:#0F172A;border-radius:6px;transition:transform .1s ease,filter .2s ease;}",
+        ".participation-page .heatmap-table td:first-child{text-align:left;font-size:13px;font-weight:700;color:#0F172A;background:transparent;padding-left:0;}",
+        ".participation-page .heatmap-table td.hm-value:hover{filter:brightness(.95);transform:scale(1.02);cursor:pointer;}",
+        ".participation-page .heatmap-table td.hm-na{background:#F8FAFC;color:#94A3B8;border:1px dashed #CBD5E1;font-weight:700;}",
+        ".participation-page .heatmap-table td.text-white{color:#FFFFFF;}",
+        "</style>",
+        "<script>(function(){",
+        "var root=document.querySelector('.participation-page');if(!root) return;",
+        "var sel=root.querySelector('#participation-rows');",
+        "var tabs=root.querySelectorAll('.participation-table');",
+        "function lerp(a,b,t){return Math.round(a+(b-a)*t);} ",
+        "function hexToRgb(hex){var clean=(hex||'').replace('#','').trim();if(clean.length===3) clean=clean.split('').map(function(ch){return ch+ch;}).join('');var num=parseInt(clean,16);return{r:(num>>16)&255,g:(num>>8)&255,b:num&255};}",
+        "function rgbToHex(rgb){function h(n){var s=Number(n).toString(16);return s.length===1?'0'+s:s;}return '#'+h(rgb.r)+h(rgb.g)+h(rgb.b);}",
+        "function mix(c1,c2,t){return{r:lerp(c1.r,c2.r,t),g:lerp(c1.g,c2.g,t),b:lerp(c1.b,c2.b,t)};}",
+        "function luminance(rgb){return (0.299*rgb.r)+(0.587*rgb.g)+(0.114*rgb.b);} ",
+        "function applyGradient(scope){if(!scope) return;var low=hexToRgb('#EF4444');var med=hexToRgb('#FDE047');var high=hexToRgb('#16A34A');var rows=scope.querySelectorAll('tbody tr');rows.forEach(function(tr){var cells=tr.querySelectorAll('td.hm-value[data-value]');if(!cells.length) return;var vals=[];cells.forEach(function(td){var v=parseFloat(td.getAttribute('data-value'));if(Number.isFinite(v)) vals.push(v);});if(!vals.length) return;vals.sort(function(a,b){return a-b;});var min=vals[0],max=vals[vals.length-1],mid=vals[Math.floor(vals.length/2)];if(!(mid>min&&mid<max)) mid=(min+max)/2;cells.forEach(function(td){var v=parseFloat(td.getAttribute('data-value'));if(!Number.isFinite(v)) return;var rgb;if(max<=min){rgb=med;}else if(v<=mid){var denomL=(mid-min);var tL=denomL<=0?0.5:(v-min)/denomL;tL=Math.max(0,Math.min(1,tL));rgb=mix(low,med,tL);}else{var denomH=(max-mid);var tH=denomH<=0?0.5:(v-mid)/denomH;tH=Math.max(0,Math.min(1,tH));rgb=mix(med,high,tH);}td.style.backgroundColor=rgbToHex(rgb);td.classList.toggle('text-white',luminance(rgb)<150);});});}",
+        "function show(id){tabs.forEach(function(t){var active=t.id===id;t.classList.toggle('active',active);if(active) applyGradient(t);});}",
+        "if(sel){sel.addEventListener('change',function(){show(sel.value);});show(sel.value);} else if(tabs.length){applyGradient(tabs[0]);}",
+        "})();</script>",
+        "</div>"
+      )
     ),
-    "Participation Profile"
+    title = "Participation",
+    eyebrow = "Getting Started",
+    description = NULL,
+    controls_html = participation_controls
   )
 }
 
@@ -1740,6 +2076,69 @@ filter_label <- function(fr) {
   )
   if (length(parts) < 1L) return("All respondents")
   paste(parts, collapse = " | ")
+}
+
+layout_metric_items_by_facet <- function(items_df, default_section) {
+  if (!is.data.frame(items_df) || nrow(items_df) < 1L) {
+    return(items_df)
+  }
+
+  if (!"facet_id" %in% names(items_df)) items_df$facet_id <- as.character(default_section)
+  if (!"facet_order" %in% names(items_df)) items_df$facet_order <- 1L
+  if (!"source_item_order" %in% names(items_df)) items_df$source_item_order <- seq_len(nrow(items_df))
+
+  items_df$facet_label <- trimws(ifelse(
+    is.na(items_df$facet_id) | items_df$facet_id == "",
+    as.character(default_section),
+    as.character(items_df$facet_id)
+  ))
+  facet_order <- suppressWarnings(as.numeric(items_df$facet_order))
+  facet_order[!is.finite(facet_order)] <- seq_len(sum(!is.finite(facet_order)))
+  source_item_order <- suppressWarnings(as.numeric(items_df$source_item_order))
+  source_item_order[!is.finite(source_item_order)] <- seq_len(sum(!is.finite(source_item_order)))
+
+  items_df <- items_df[order(facet_order, source_item_order, seq_len(nrow(items_df))), , drop = FALSE]
+  facet_levels <- unique(items_df$facet_label)
+  facet_count <- length(facet_levels)
+  items_df$show_section_header <- facet_count > 1L
+
+  if (facet_count <= 1L) {
+    left_n <- ceiling(nrow(items_df) / 2)
+    items_df$column <- c(rep("left", left_n), rep("right", nrow(items_df) - left_n))
+    items_df$section <- as.character(default_section)
+    items_df$section_order <- 1L
+  } else if (facet_count == 2L) {
+    items_df$column <- ifelse(items_df$facet_label == facet_levels[[1]], "left", "right")
+    items_df$section <- items_df$facet_label
+    items_df$section_order <- match(items_df$facet_label, facet_levels)
+  } else {
+    facet_sizes <- vapply(facet_levels, function(facet) {
+      sum(items_df$facet_label == facet)
+    }, numeric(1))
+    facet_columns <- setNames(character(length(facet_levels)), facet_levels)
+    left_total <- 0
+    right_total <- 0
+    for (i in seq_along(facet_levels)) {
+      facet <- facet_levels[[i]]
+      if (left_total <= right_total) {
+        facet_columns[[facet]] <- "left"
+        left_total <- left_total + facet_sizes[[i]]
+      } else {
+        facet_columns[[facet]] <- "right"
+        right_total <- right_total + facet_sizes[[i]]
+      }
+    }
+    items_df$column <- unname(facet_columns[items_df$facet_label])
+    items_df$section <- items_df$facet_label
+    items_df$section_order <- match(items_df$facet_label, facet_levels)
+  }
+
+  items_df$row_sort <- seq_len(nrow(items_df))
+  items_df <- items_df[order(items_df$column, items_df$section_order, items_df$row_sort), , drop = FALSE]
+  items_df$item_order <- stats::ave(items_df$row_sort, items_df$column, FUN = seq_along)
+  items_df$row_sort <- NULL
+  items_df$facet_label <- NULL
+  items_df
 }
 
 build_outcome_data <- function(outcome_name, rows_sub, fid) {
@@ -1812,25 +2211,30 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
     if (!is.finite(bm_prev_sd) || bm_prev_sd <= 0) bm_prev_sd <- 1e-9
     cur_mean <- mean(curr_ok, na.rm = TRUE)
     pri_mean <- if (length(prior_ok) > 0L) mean(prior_ok, na.rm = TRUE) else NA_real_
+    display_mean <- if (isTRUE(rev) && is.finite(cur_mean)) (min_s + max_s - cur_mean) else cur_mean
+    prior_display_mean <- if (isTRUE(rev) && is.finite(pri_mean)) (min_s + max_s - pri_mean) else pri_mean
+    benchmark_display_mean <- if (isTRUE(rev) && is.finite(bm_mean)) (min_s + max_s - bm_mean) else bm_mean
     cur_pct <- if (is.finite(cur_mean) && is.finite(bm_mean)) stats::pnorm((cur_mean - bm_mean) / bm_sd) * 100 else 50
     pri_pct <- if (is.finite(pri_mean) && is.finite(bm_prev_mean)) stats::pnorm((pri_mean - bm_prev_mean) / bm_prev_sd) * 100 else 50
 
     item_rows[[length(item_rows) + 1L]] <- data.frame(
-      column = ifelse(i %% 2 == 1L, "left", "right"),
-      section = outcome_name,
-      section_order = 1L,
-      item_order = i,
+      facet_id = as.character(first_or(m$facet_id[[i]], outcome_name)),
+      facet_order = suppressWarnings(as.numeric(first_or(m$facet_order[[i]], 1L))),
+      source_item_order = i,
       label = as.character(m$item_text[[i]]),
-      mean = cur_mean,
+      mean = display_mean,
       agree_pct = agree,
       neutral_pct = neutral,
       disagree_pct = disagree,
-      vs_industry = round(cur_pct - 50),
-      vs_prior = round(cur_pct - pri_pct),
+      vs_industry = if (is.finite(display_mean) && is.finite(benchmark_display_mean)) round((display_mean - benchmark_display_mean) * 100) else NA_real_,
+      vs_prior = if (is.finite(display_mean) && is.finite(prior_display_mean)) round((display_mean - prior_display_mean) * 100) else NA_real_,
       stringsAsFactors = FALSE
     )
   }
   items_df <- if (length(item_rows) > 0L) do.call(rbind, item_rows) else data.frame()
+  if (is.data.frame(items_df) && nrow(items_df) > 0L) {
+    items_df <- layout_metric_items_by_facet(items_df, default_section = outcome_name)
+  }
   if (!is.data.frame(items_df) || nrow(items_df) < 1L) {
     if (identical(outcome_name, "Turnover Intent")) {
       turnover_labels <- turnover_item_templates
@@ -1848,19 +2252,19 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
       }
       s <- t(vapply(turnover_means, sentiment_split, numeric(3)))
       items_df <- data.frame(
-        column = ifelse(seq_along(turnover_labels) %% 2L == 1L, "left", "right"),
-        section = outcome_name,
-        section_order = 1L,
-        item_order = seq_along(turnover_labels),
+        facet_id = outcome_name,
+        facet_order = 1L,
+        source_item_order = seq_along(turnover_labels),
         label = as.character(turnover_labels),
         mean = as.numeric(turnover_means),
         disagree_pct = as.numeric(s[, 1]),
         neutral_pct = as.numeric(s[, 2]),
         agree_pct = as.numeric(s[, 3]),
-        vs_industry = c(2, 0, -3),
-        vs_prior = c(1, 0, -1),
+        vs_industry = c(8, 3, -6),
+        vs_prior = c(5, 2, -4),
         stringsAsFactors = FALSE
       )
+      items_df <- layout_metric_items_by_facet(items_df, default_section = outcome_name)
     }
   }
   if (!is.data.frame(items_df) || nrow(items_df) < 1L) {
@@ -1873,10 +2277,9 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
       fallback <- utils::head(fallback, 8L)
       fallback$item_order <- seq_len(nrow(fallback))
       items_df <- data.frame(
-        column = ifelse(fallback$item_order %% 2L == 1L, "left", "right"),
-        section = outcome_name,
-        section_order = 1L,
-        item_order = fallback$item_order,
+        facet_id = outcome_name,
+        facet_order = 1L,
+        source_item_order = fallback$item_order,
         label = as.character(fallback$item_label),
         mean = as.numeric(fallback$mean),
         agree_pct = as.numeric(fallback$agree_pct),
@@ -1886,6 +2289,7 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
         vs_prior = as.numeric(fallback$vs_prior),
         stringsAsFactors = FALSE
       )
+      items_df <- layout_metric_items_by_facet(items_df, default_section = outcome_name)
     }
   }
   if (!is.data.frame(items_df) || nrow(items_df) < 1L) {
@@ -1908,9 +2312,19 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
   }
   d <- d[order(-abs(as.numeric(d$strength))), , drop = FALSE]
   d <- utils::head(d, 5L)
+  driver_pct_lookup <- setNames(
+    suppressWarnings(as.numeric(kpi_scores$percentile[kpi_scores$filter_id == fid & kpi_scores$metric_group == "fundamental"])),
+    as.character(kpi_scores$metric_id[kpi_scores$filter_id == fid & kpi_scores$metric_group == "fundamental"])
+  )
   drivers_df <- data.frame(
     rank = seq_len(nrow(d)),
     fundamental = as.character(d$fundamental),
+    percentile = vapply(as.character(d$fundamental), function(lbl) {
+      pct <- if (lbl %in% names(driver_pct_lookup)) suppressWarnings(as.numeric(driver_pct_lookup[[lbl]])) else NA_real_
+      strength_idx <- match(lbl, as.character(d$fundamental))
+      strength_val <- if (is.finite(strength_idx)) suppressWarnings(as.numeric(d$strength[[strength_idx]])) else NA_real_
+      if (is.finite(pct)) pmax(1, pmin(99, round(pct))) else pmax(1, pmin(99, round(abs(strength_val) * 100)))
+    }, numeric(1)),
     driver_strength = round(abs(as.numeric(d$strength)), 2),
     status_label = ifelse(abs(as.numeric(d$strength)) >= 0.45, "High", ifelse(abs(as.numeric(d$strength)) >= 0.3, "Medium", "Low")),
     stringsAsFactors = FALSE
@@ -1923,7 +2337,7 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
       status_label = status_label,
       percentile = round((score_now / 5) * 100),
       percentile_delta = if (is.finite(score_prior)) round((score_now - score_prior) * 20) else 0,
-      delta_label = paste0("vs. ", if (is.finite(prior_year)) prior_year else (report_year - 1L)),
+      delta_label = paste0("vs. ", report_year),
       score = score_now,
       score_delta = score_delta,
       stringsAsFactors = FALSE
@@ -1977,6 +2391,7 @@ build_outcomes_overview_data <- function(rows_sub, fid) {
     items <- d$items
     items$section <- nm
     items$section_order <- i
+    items$show_section_header <- TRUE
     items
   }))
   items_all <- items_all[order(items_all$column, items_all$section_order, items_all$item_order), , drop = FALSE]
@@ -1984,10 +2399,10 @@ build_outcomes_overview_data <- function(rows_sub, fid) {
   list(
     summary = data.frame(
       outcome = "Outcomes Overview",
-      status_label = if (percentile < 40) "Area for Growth" else if (percentile < 60) "Industry Standard" else "Above Standard",
+      status_label = if (percentile < 35) "Area for Growth" else if (percentile < 65) "Industry Standard" else if (percentile < 90) "Above Standard" else "Industry Leader",
       percentile = percentile,
       percentile_delta = round(score_delta * 20),
-      delta_label = paste0("vs. ", if (is.finite(prior_year)) prior_year else (report_year - 1L)),
+      delta_label = paste0("vs. ", report_year),
       score = score_now,
       score_delta = score_delta,
       stringsAsFactors = FALSE
@@ -2038,10 +2453,19 @@ build_drivers_overview_data <- function(fid) {
     pe <- pe[is.finite(pe$strength), , drop = FALSE]
     pe <- pe[order(abs(pe$strength), decreasing = TRUE), , drop = FALSE]
     pe <- utils::head(pe, 3L)
+    outcome_pct_lookup <- setNames(
+      suppressWarnings(as.numeric(kpi_scores$percentile[kpi_scores$filter_id == fid & kpi_scores$metric_group == "outcome"])),
+      normalize_outcome_label(as.character(kpi_scores$metric_id[kpi_scores$filter_id == fid & kpi_scores$metric_group == "outcome"]))
+    )
+    out_labels <- normalize_outcome_label(as.character(pe$Outcome))
     outcomes <- data.frame(
       rank = seq_len(nrow(pe)),
-      outcome = as.character(pe$Outcome),
-      percentile = pmax(1, pmin(99, round(abs(as.numeric(pe$strength)) * 100))),
+      outcome = out_labels,
+      percentile = vapply(seq_along(out_labels), function(i) {
+        key <- out_labels[[i]]
+        pct <- if (key %in% names(outcome_pct_lookup)) suppressWarnings(as.numeric(outcome_pct_lookup[[key]])) else NA_real_
+        if (is.finite(pct)) pmax(1, pmin(99, round(pct))) else pmax(1, pmin(99, round(abs(as.numeric(pe$strength[[i]])) * 100)))
+      }, numeric(1)),
       stringsAsFactors = FALSE
     )
   } else {
@@ -2084,7 +2508,7 @@ build_drivers_overview_data <- function(fid) {
       drivers_row_label = "Outcome",
       percentile = pct_now,
       percentile_delta = as.integer(round(pct_now - pct_prev)),
-      delta_label = paste0("vs. ", if (is.finite(prior_year)) prior_year else (report_year - 1L)),
+      delta_label = paste0("vs. ", report_year),
       score = round(score_now, 2),
       score_delta = round(score_now - score_prev, 2),
       stringsAsFactors = FALSE
@@ -2100,16 +2524,11 @@ outcome_to_dashboard_data <- function(od) {
   out_df <- data.frame(
     rank = seq_len(nrow(drv)),
     outcome = as.character(drv$fundamental),
-    percentile = pmax(1, pmin(99, round(abs(as.numeric(drv$driver_strength)) * 100))),
+    percentile = if ("percentile" %in% names(drv)) pmax(1, pmin(99, round(as.numeric(drv$percentile)))) else pmax(1, pmin(99, round(abs(as.numeric(drv$driver_strength)) * 100))),
     stringsAsFactors = FALSE
   )
   items <- od$items
   items <- items[order(items$column, items$section_order, items$item_order), , drop = FALSE]
-  left_items <- items[items$column == "left", , drop = FALSE]
-  right_items <- items[items$column == "right", , drop = FALSE]
-  left_items <- utils::head(left_items, 4L)
-  right_items <- utils::head(right_items, 4L)
-  items <- rbind(left_items, right_items)
   items$item_order <- ave(seq_len(nrow(items)), items$column, FUN = seq_along)
   if (!"vs_company" %in% names(items)) items$vs_company <- NA_real_
   if (!"item_n" %in% names(items)) items$item_n <- NA_integer_
@@ -2136,7 +2555,8 @@ outcome_to_dashboard_data <- function(od) {
     items = items[, c(
       "column", "section", "section_order", "item_order", "label", "mean",
       "disagree_pct", "neutral_pct", "agree_pct", "vs_company", "vs_industry", "vs_prior",
-      "item_n", "prior_n", "suppress_row", "suppress_vs_company", "suppress_vs_industry", "suppress_vs_prior", "min_n"
+      "item_n", "prior_n", "suppress_row", "suppress_vs_company", "suppress_vs_industry", "suppress_vs_prior", "min_n",
+      "show_section_header"
     ), drop = FALSE]
   )
 }
@@ -2553,7 +2973,7 @@ slides <- data.frame(
     "comments_explorer"
   ),
   slide_label = c(
-    "Introduction", "About the OHEP", "Participation Profile",
+    "Introduction", "About the OHEP", "Participation",
     "OHEP Results", "Demographics", "Priority Matrix", "Heat Map",
     "Overview",
     theme_slide_labels,
@@ -2596,7 +3016,7 @@ slides$sort_order <- seq_len(nrow(slides))
 
 section_meta <- data.frame(
   section_id = c("system_orientation","ohep_summary","insights","drivers","outcomes","action_plan","comments"),
-  section_label = c("Getting Started","OHEP Summary","Insights","Drivers","Outcomes","Action Plan","Comments"),
+  section_label = c("Getting Started","Your Profile","Insights","Drivers","Outcomes","Action Plan","Comments"),
   section_order = seq_len(7),
   stringsAsFactors = FALSE
 )
@@ -2713,6 +3133,44 @@ render_slide <- function(slide_id, fr) {
     k_now[k_now$metric_group == "outcome" & normalize_outcome_label(k_now$metric_id) != "eNPS", , drop = FALSE],
     k_prev[k_prev$metric_group == "outcome" & normalize_outcome_label(k_prev$metric_id) != "eNPS", , drop = FALSE]
   )
+  assign_status <- function(pct_now) {
+    if (!is.finite(pct_now)) return("Industry Standard")
+    if (pct_now < 35) {
+      "Needs Improvement"
+    } else if (pct_now < 65) {
+      "Industry Standard"
+    } else if (pct_now < 90) {
+      "Above Standard"
+    } else {
+      "Industry Leader"
+    }
+  }
+  drv_overview_data <- build_drivers_overview_data(fid)
+  if (!is.null(drv_overview_data) && is.data.frame(drv_overview_data$fundamental)) {
+    drv_pct <- as.numeric(drv_overview_data$fundamental$percentile[[1]])
+    drv_status <- assign_status(drv_pct)
+    drivers_overview <- list(
+      score = as.numeric(drv_overview_data$fundamental$score[[1]]),
+      score_delta = as.numeric(drv_overview_data$fundamental$score_delta[[1]]),
+      percentile = drv_pct,
+      percentile_delta = as.numeric(drv_overview_data$fundamental$percentile_delta[[1]]),
+      status = drv_status,
+      status_class = status_class_for(drv_status)
+    )
+  }
+  out_overview_data <- build_outcomes_overview_data(rows_sub, fid)
+  if (!is.null(out_overview_data) && is.data.frame(out_overview_data$summary)) {
+    out_pct <- as.numeric(out_overview_data$summary$percentile[[1]])
+    out_status <- assign_status(out_pct)
+    outcomes_overview <- list(
+      score = as.numeric(out_overview_data$summary$score[[1]]),
+      score_delta = as.numeric(out_overview_data$summary$score_delta[[1]]),
+      percentile = out_pct,
+      percentile_delta = as.numeric(out_overview_data$summary$percentile_delta[[1]]),
+      status = out_status,
+      status_class = status_class_for(out_status)
+    )
+  }
   driver_now <- k_now[k_now$metric_group == "fundamental", c("metric_label", "score"), drop = FALSE]
   if (nrow(driver_now) > 0L) {
     driver_now <- driver_now[order(-as.numeric(driver_now$score)), , drop = FALSE]
@@ -3075,14 +3533,18 @@ render_slide <- function(slide_id, fr) {
     slide_doc(
       paste0(
         "<div class='slide'><div class='main-card themes-overview'>",
+        "<svg style='display:none;'>",
+        "<symbol id='theme-icon-map' viewBox='0 0 24 24' fill='none' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7' /></symbol>",
+        "<symbol id='theme-icon-layers' viewBox='0 0 24 24' fill='none' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' /></symbol>",
+        "<symbol id='theme-icon-flame' viewBox='0 0 24 24' fill='none' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' d='M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z' /><path stroke-linecap='round' stroke-linejoin='round' d='M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z' /></symbol>",
+        "</svg>",
         "<header><div class='eyebrow'>Themes</div><h1 class='title'>Overview</h1><div class='divider'></div></header>",
         "<div class='intro'>Three enterprise patterns are shaping current results. The sequence below explains the story arc from signal to root cause to risk, followed by a targeted Action Plan.</div>",
         "<div class='cards'>",
-        "<div class='ov-card'><div class='ov-k'>Theme 1</div><h3>Strategy Gap</h3><p>Employees hear the strategy, but translation into planning and execution remains inconsistent across teams.</p></div>",
-        "<div class='ov-card'><div class='ov-k'>Theme 2</div><h3>Work Strain</h3><p>Operational load is manageable; the deeper friction is in changing conditions, coordination gaps, and uneven support.</p></div>",
-        "<div class='ov-card'><div class='ov-k'>Theme 3</div><h3>Burnout Risk</h3><p>Burnout indicators are rising before attrition, driven by purpose clarity, communication quality, and development support.</p></div>",
+        "<button type='button' class='ov-card tint-teal' data-slide-target='theme_evidence_01'><div class='ov-head'><div class='ov-icon-wrap'><svg><use href='#theme-icon-map'></use></svg></div><div><div class='ov-k'>Theme 1</div><h3>Strategy Gap</h3></div></div><p>Employees hear the strategy, but translation into planning and execution remains inconsistent across teams.</p></button>",
+        "<button type='button' class='ov-card tint-amber' data-slide-target='theme_evidence_02'><div class='ov-head'><div class='ov-icon-wrap'><svg><use href='#theme-icon-layers'></use></svg></div><div><div class='ov-k'>Theme 2</div><h3>Work Strain</h3></div></div><p>Operational load is manageable; the deeper friction is in changing conditions, coordination gaps, and uneven support.</p></button>",
+        "<button type='button' class='ov-card tint-rose' data-slide-target='theme_evidence_03'><div class='ov-head'><div class='ov-icon-wrap'><svg><use href='#theme-icon-flame'></use></svg></div><div><div class='ov-k'>Theme 3</div><h3>Burnout Risk</h3></div></div><p>Burnout indicators are rising before attrition, driven by purpose clarity, communication quality, and development support.</p></button>",
         "</div>",
-        "<div class='next-note'>Next step: review each Theme page, then use <strong>Action Plan</strong> to move from insight to execution.</div>",
         "</div></div>",
         "<style>",
         ".themes-overview{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:42px;box-shadow:0 10px 25px -5px rgba(15,23,42,.05);max-width:1020px;margin:0 auto;}",
@@ -3090,13 +3552,22 @@ render_slide <- function(slide_id, fr) {
         ".themes-overview .title{font-size:32px;font-weight:900;color:#0F172A;letter-spacing:-.5px;margin:0 0 22px 0;}",
         ".themes-overview .divider{width:100%;height:2px;background:#0D9488;margin-bottom:26px;}",
         ".themes-overview .intro{font-size:15px;line-height:1.65;color:#334155;margin-bottom:22px;max-width:900px;}",
-        ".themes-overview .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}",
-        ".themes-overview .ov-card{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:18px;}",
-        ".themes-overview .ov-k{font-size:10px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}",
-        ".themes-overview .ov-card h3{font-size:18px;line-height:1.2;color:#0F172A;margin:0 0 8px 0;}",
-        ".themes-overview .ov-card p{font-size:14px;line-height:1.55;color:#334155;margin:0;}",
-        ".themes-overview .next-note{margin-top:18px;padding:12px 14px;background:#F0FDFA;border:1px solid #CCFBF1;border-radius:8px;font-size:13px;line-height:1.5;color:#334155;}",
-        "@media (max-width: 980px){.themes-overview .cards{grid-template-columns:1fr;}}",
+        ".themes-overview .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;}",
+        ".themes-overview .ov-card{appearance:none;text-align:left;border-radius:12px;padding:28px 24px;display:flex;flex-direction:column;border:1px solid transparent;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;min-height:250px;}",
+        ".themes-overview .ov-card:hover{transform:translateY(-2px);box-shadow:0 10px 18px -8px rgba(15,23,42,.12);}",
+        ".themes-overview .ov-card:focus-visible{outline:2px solid #0D9488;outline-offset:2px;}",
+        ".themes-overview .tint-teal{background:#F0FDFA;border-color:#CCFBF1;}",
+        ".themes-overview .tint-amber{background:#FFFBEB;border-color:#FEF08A;}",
+        ".themes-overview .tint-rose{background:#FFF1F2;border-color:#FECDD3;}",
+        ".themes-overview .ov-head{display:flex;align-items:center;gap:16px;margin-bottom:16px;}",
+        ".themes-overview .ov-icon-wrap{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#FFFFFF;box-shadow:0 2px 6px rgba(0,0,0,.06);}",
+        ".themes-overview .tint-teal .ov-icon-wrap{color:#0D9488;}",
+        ".themes-overview .tint-amber .ov-icon-wrap{color:#D97706;}",
+        ".themes-overview .tint-rose .ov-icon-wrap{color:#E11D48;}",
+        ".themes-overview .ov-icon-wrap svg{width:22px;height:22px;stroke-width:2;}",
+        ".themes-overview .ov-k{font-size:11px;font-weight:800;color:#64748B;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}",
+        ".themes-overview .ov-card h3{font-size:20px;line-height:1.2;color:#0F172A;margin:0;letter-spacing:-.5px;}",
+        ".themes-overview .ov-card p{font-size:14px;line-height:1.6;color:#334155;margin:0;}",
         "</style>"
       ),
       "Themes Overview"
@@ -3104,71 +3575,137 @@ render_slide <- function(slide_id, fr) {
   }
 
   render_action_plan_page <- function() {
-    action_card <- function(num, title, context, items) {
-      items_html <- paste(vapply(items, function(it) {
-        paste0(
-          "<div class='action-item'>",
-          "<svg class='action-icon' fill='none' viewBox='0 0 24 24' stroke='currentColor' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>",
-          "<div class='action-text'>", html_escape(it), "</div>",
-          "</div>"
-        )
+    action_card <- function(num, title, signal_text, action_items, evidence_items) {
+      action_html <- paste(vapply(action_items, function(it) {
+        paste0("<li>", html_escape(it), "</li>")
       }, character(1)), collapse = "")
+      evidence_html <- paste(vapply(evidence_items, function(it) {
+        paste0("<li>", html_escape(it), "</li>")
+      }, character(1)), collapse = "")
+
       paste0(
-        "<div class='action-card'>",
-        "<div class='action-card-header'>",
-        "<span class='action-number'>Focus Area ", sprintf("%02d", num), "</span>",
-        "<h2 class='action-title'>", html_escape(title), "</h2>",
-        "<p class='action-context'>", html_escape(context), "</p>",
+        "<article class='focus-card'>",
+        "<div class='focus-card-header'>",
+        "<span class='focus-number'>Focus Area ", sprintf("%02d", num), "</span>",
+        "<h2 class='focus-title'>", html_escape(title), "</h2>",
         "</div>",
-        "<div class='action-items-container'>", items_html, "</div>",
-        "</div>"
+        "<div class='focus-body'>",
+        "<section class='focus-block block-signal'>",
+        "<div class='block-header'>",
+        "<svg class='block-icon'><use href='#ap-icon-search'></use></svg>",
+        "<h3 class='focus-label'>What the data suggests</h3>",
+        "</div>",
+        "<p>", html_escape(signal_text), "</p>",
+        "</section>",
+        "<section class='focus-block block-action'>",
+        "<div class='block-header'>",
+        "<svg class='block-icon'><use href='#ap-icon-check'></use></svg>",
+        "<h3 class='focus-label'>Potential next steps</h3>",
+        "</div>",
+        "<ul class='focus-list list-action'>", action_html, "</ul>",
+        "</section>",
+        "<section class='focus-block block-evidence'>",
+        "<div class='block-header'>",
+        "<svg class='block-icon'><use href='#ap-icon-trend'></use></svg>",
+        "<h3 class='focus-label'>How progress should show up in the data</h3>",
+        "</div>",
+        "<ul class='focus-list list-evidence'>", evidence_html, "</ul>",
+        "</section>",
+        "</div>",
+        "</article>"
       )
     }
 
     cards_html <- paste0(
-      action_card(1, "Strengthen translation from strategy to execution", "Top-performing organizations do not stop at communicating priorities. They ensure strategy shows up in how work is assigned, prioritized, and executed.", c(
-        "Require each function leader to translate strategy into 3-5 operational priorities for their teams.",
-        "Run a monthly field-to-office review to verify strategic priorities are reflected in scheduling, scoping, dispatch, and crew-level decisions."
-      )),
-      action_card(2, "Improve field experience through leadership, communication, and trust", "In operational environments, employees judge the organization by whether they feel informed, supported, and set up to succeed.", c(
-        "Identify the top 3 recurring field friction points, assign clear owners, and close them on explicit timelines.",
-        "Set one consistent process for communicating scope changes, delays, and shifting expectations in real time."
-      )),
-      action_card(3, "Reduce burnout by reinforcing purpose", "Burnout risk increases when effort feels heavy but disconnected from impact.", c(
-        "Equip leaders to connect current work to company goals, customer value, and operational outcomes on a regular cadence.",
-        "Review groups with highest burnout risk first, then intervene on workload, sequencing, and role clarity."
-      )),
-      action_card(4, "Build support through performance development", "Employees need to feel they are being developed and supported while carrying demanding work.", c(
-        "Implement a monthly development check-in for supervisors and mid-level leaders focused on support and growth, not just task updates.",
-        "Provide targeted coaching for critical people-leader roles on communication, delegation, and strain management."
-      )),
-      action_card(5, "Protect sustainable performance across drivers", "High performance should come from system strength, not repeated heroics by a small group.", c(
-        "Map where extra effort and interrupted recovery are propping up delivery, and address those pressure points directly.",
-        "Reset team-level workload, coverage, and responsiveness norms where current expectations are no longer realistic."
-      ))
+      action_card(
+        1,
+        "Strengthen Translation from Strategy to Execution",
+        "Relative gaps in Strategy and Communication suggest priorities may not consistently translate into day-to-day execution. Themes also point to a disconnect between stated priorities and operational decisions, particularly between office-based planning and field execution.",
+        c(
+          "Introduce a more structured approach to cascading priorities across functions.",
+          "Make strategy more visible in operational decisions such as scheduling, dispatch, and scope changes.",
+          "Create regular field-to-office reviews to identify where translation is breaking down in execution."
+        ),
+        c(
+          "Higher percentile scores in Strategy and Communication.",
+          "Fewer comments tied to unclear priorities, inconsistent direction, and cross-team misalignment.",
+          "Reduced variability in Strategy scores across departments and locations."
+        )
+      ),
+      action_card(
+        2,
+        "Improve Field Experience Through Clarity, Communication, and Trust",
+        "Work-strain themes point to friction in day-to-day operations, especially in field settings, driven more by the conditions around the work than the work itself. Lower Communication and Respect, Care & Trust scores suggest employees do not always feel informed, supported, or set up to succeed.",
+        c(
+          "Systematically identify the most common sources of operational friction and assign clear ownership for resolution.",
+          "Reduce avoidable variability in planning, handoffs, and execution wherever possible.",
+          "Standardize communication when priorities or conditions change.",
+          "Equip frontline leaders with simple, repeatable communication rhythms."
+        ),
+        c(
+          "Higher percentile scores in Communication and Respect, Care & Trust.",
+          "Lower comment volume around last-minute changes, poor coordination, and lack of clarity.",
+          "Narrower gaps between field and corporate populations on key drivers.",
+          "Improvement in Engagement and reduced Turnover Intent in field-heavy groups."
+        )
+      ),
+      action_card(
+        3,
+        "Reduce Burnout Risk by Improving Work Design and Connection to Purpose",
+        "Burnout-related themes suggest sustained workload pressure and a growing disconnect between effort and impact. The pattern implies strain may currently be absorbed by a relatively small group of highly committed employees, particularly in project-based and field environments.",
+        c(
+          "Focus on both high-risk groups and high-reliance groups carrying disproportionate load.",
+          "Help leaders more consistently connect day-to-day work to organizational impact and customer outcomes.",
+          "Create lightweight, regular check-ins focused on support and sustainability.",
+          "Reduce dependency on individual effort through stronger bench depth, cross-training, and coverage."
+        ),
+        c(
+          "Lower Burnout risk, including fewer employees in higher-risk bands.",
+          "Higher percentile scores in Work Satisfaction and Purpose / Meaningful Work.",
+          "Lower Turnover Intent, especially in higher-risk and high-reliance groups.",
+          "Less concentration of burnout risk in a small subset of teams or roles."
+        )
+      )
     )
 
     slide_doc(
       paste0(
         "<div class='slide'><div class='main-card action-plan'>",
-        "<header><div class='eyebrow'>Action Plan</div><h1 class='title'>Targeted Focus Areas &amp; Recommended Actions</h1><div class='divider'></div></header>",
+        "<svg style='display:none;'>",
+        "<symbol id='ap-icon-search' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'></circle><line x1='21' y1='21' x2='16.65' y2='16.65'></line></symbol>",
+        "<symbol id='ap-icon-check' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 11 12 14 22 4'></polyline><path d='M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'></path></symbol>",
+        "<symbol id='ap-icon-trend' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='23 6 13.5 15.5 8.5 10.5 1 18'></polyline><polyline points='17 6 23 6 23 12'></polyline></symbol>",
+        "</svg>",
+        "<header><div class='eyebrow'>Action Plan</div><h1 class='title'>Targeted Focus Areas &amp; Recommended Actions</h1><p class='page-intro'>This page translates the current themes into practical organizational actions and shows how progress should appear in the data over time.</p><div class='divider'></div></header>",
         "<div class='action-stack'>", cards_html, "</div>",
         "</div></div>",
         "<style>",
-        ".action-plan{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;max-width:1020px;margin:0 auto;padding:42px;box-shadow:0 10px 25px -5px rgba(15,23,42,.05);}",
+        ".action-plan{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:16px;max-width:1200px;margin:0 auto;padding:42px;box-shadow:0 10px 25px -5px rgba(15,23,42,.05);}",
         ".action-plan .eyebrow{font-size:11px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}",
-        ".action-plan .title{font-size:32px;font-weight:900;color:#0F172A;letter-spacing:-.5px;margin:0 0 24px 0;line-height:1.2;}",
+        ".action-plan .title{font-size:32px;font-weight:900;color:#0F172A;letter-spacing:-.5px;margin:0 0 16px 0;line-height:1.2;}",
+        ".action-plan .page-intro{font-size:16px;line-height:1.6;color:#334155;max-width:860px;margin:0;}",
         ".action-plan .divider{width:100%;height:2px;background:#0D9488;margin-bottom:34px;}",
         ".action-plan .action-stack{display:flex;flex-direction:column;gap:24px;}",
-        ".action-plan .action-card{border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;box-shadow:0 2px 4px rgba(15,23,42,.02);}",
-        ".action-plan .action-card-header{background:#FFFFFF;padding:22px 28px;border-bottom:1px solid #E2E8F0;}",
-        ".action-plan .action-number{font-size:12px;font-weight:800;color:#0D9488;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:block;}",
-        ".action-plan .action-title{font-size:20px;font-weight:800;color:#0F172A;margin:0 0 10px 0;line-height:1.25;}",
-        ".action-plan .action-context{font-size:14px;line-height:1.6;color:#334155;margin:0;}",
-        ".action-plan .action-items-container{background:#F8FAFC;padding:20px 28px;display:flex;flex-direction:column;gap:12px;}",
-        ".action-plan .action-item{background:#FFFFFF;border:1px solid #E2E8F0;padding:14px 16px;border-radius:8px;display:flex;align-items:flex-start;gap:12px;}",
-        ".action-plan .action-icon{width:18px;height:18px;color:#0D9488;flex-shrink:0;margin-top:2px;}",
-        ".action-plan .action-text{font-size:14px;line-height:1.5;color:#0F172A;font-weight:500;}",
+        ".action-plan .focus-card{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:16px;overflow:hidden;box-shadow:0 10px 15px -3px rgba(15,23,42,.05);display:flex;flex-direction:column;}",
+        ".action-plan .focus-card-header{padding:32px 40px;border-bottom:1px solid #E2E8F0;background:#FFFFFF;}",
+        ".action-plan .focus-number{display:inline-block;padding:4px 12px;background:#F0FDFA;color:#0D9488;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}",
+        ".action-plan .focus-title{font-size:22px;font-weight:900;letter-spacing:-.5px;color:#0F172A;line-height:1.25;margin:0;}",
+        ".action-plan .focus-body{display:grid;grid-template-columns:1fr 1.2fr 1fr;align-items:stretch;}",
+        ".action-plan .focus-block{padding:32px 40px;border-right:1px solid #E2E8F0;display:flex;flex-direction:column;justify-content:flex-start;}",
+        ".action-plan .focus-block:last-child{border-right:none;}",
+        ".action-plan .block-signal{background:#F8FAFC;}",
+        ".action-plan .block-action{background:#FFFFFF;}",
+        ".action-plan .block-evidence{background:#F0FDFA;}",
+        ".action-plan .block-header{display:flex;align-items:center;gap:8px;margin-bottom:16px;}",
+        ".action-plan .block-icon{width:18px;height:18px;color:#0D9488;flex-shrink:0;}",
+        ".action-plan .focus-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#0F172A;margin:0;}",
+        ".action-plan .block-signal p{font-size:14px;color:#334155;line-height:1.6;margin:0;}",
+        ".action-plan .focus-list{list-style:none;margin:0;padding:0;}",
+        ".action-plan .focus-list li{font-size:14px;color:#334155;line-height:1.55;margin-bottom:16px;position:relative;padding-left:24px;}",
+        ".action-plan .focus-list li:last-child{margin-bottom:0;}",
+        ".action-plan .list-action li::before{content:'\\2192';position:absolute;left:0;color:#0D9488;font-weight:900;}",
+        ".action-plan .list-evidence li::before{content:'';position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%;background:#0D9488;}",
+        "@media (max-width: 960px){.action-plan{padding:30px;}.action-plan .focus-card-header,.action-plan .focus-block{padding:26px 28px;}.action-plan .focus-body{grid-template-columns:1fr;}.action-plan .focus-block{border-right:none;border-bottom:1px solid #E2E8F0;}.action-plan .focus-block:last-child{border-bottom:none;}}",
         "</style>"
       ),
       "Action Plan"
@@ -3193,7 +3730,13 @@ render_slide <- function(slide_id, fr) {
           "<section class='cc-insights'>",
           "<article class='cc-card cc-card-north'>",
           "<div class='cc-label'>Overall Index Position</div>",
+          "<div class='cc-metric-row'>",
           "<div class='cc-metric'>", overall_percentile, "<span class='cc-metric-sfx'>", ordinal_suffix(overall_percentile), "</span></div>",
+          "<div class='cc-trend ", if (overall_percentile_delta > 0) "up" else if (overall_percentile_delta < 0) "down" else "flat", "'>",
+          "<div class='cc-trend-arrow'></div>",
+          "<div class='cc-trend-copy'><div class='cc-trend-points'>", if (overall_percentile_delta > 0) "+" else "", overall_percentile_delta, " pts</div><div class='cc-trend-year'>VS. ", report_year, "</div></div>",
+          "</div>",
+          "</div>",
           "<div class='cc-metric-sub'>Percentile rank against industry benchmarks.</div>",
           "<div class='cc-stat-row'>",
           "<div class='cc-pill'><strong>", formatC(current_n, format = "d", big.mark = ","), "</strong> Responses</div>",
@@ -3212,7 +3755,7 @@ render_slide <- function(slide_id, fr) {
           "</div>",
           "</article>",
           "<article class='cc-card'>",
-          "<div class='cc-label'>Follow-Up Areas</div>",
+          "<div class='cc-label'>Opportunity Areas</div>",
           "<div class='cc-list-item'>",
           "<div class='cc-icon-box cc-warning'><svg><use href='#cc-icon-target'></use></svg></div>",
           "<div><div class='cc-item-text'>", html_escape(follow_up_labels[[1]]), "</div><div class='cc-item-sub'>Priority driver to address</div></div>",
@@ -3247,15 +3790,18 @@ render_slide <- function(slide_id, fr) {
           "</section>",
           "<section class='cc-nav-sec'>",
           "<h2 class='cc-sec-title'>Navigating Your Dashboard</h2>",
-          "<div class='cc-nav-grid'>",
+          "<div class='cc-nav-grid cc-nav-grid-4'>",
           "<button type='button' class='cc-nav-card' data-slide-target='orientation_model'>",
-          "<div class='cc-nav-step'>1</div><h3>Review Overall Results</h3><p>Start with OHEP Summary for overall index position, participation, and core organizational signals.</p>",
+          "<div class='cc-nav-step'>1</div><h3>Review Your Profile</h3><p>Start with Your Profile to see overall position, benchmark standing, and the core signals shaping this report.</p>",
           "</button>",
           "<button type='button' class='cc-nav-card' data-slide-target='open_ended_overall_summary'>",
-          "<div class='cc-nav-step'>2</div><h3>Explore the Why</h3><p>Use Insights and Action Plan to move from evidence to targeted execution priorities.</p>",
+          "<div class='cc-nav-step'>2</div><h3>Explore the Themes</h3><p>Move into the themes first to understand the meaning behind the scores and the leadership story emerging from the data.</p>",
           "</button>",
           "<button type='button' class='cc-nav-card' data-slide-target='segment_heatmap'>",
-          "<div class='cc-nav-step'>3</div><h3>Segment the Data</h3><p>Drill into Drivers, Outcomes, and Heat Map filters to validate where patterns are concentrated.</p>",
+          "<div class='cc-nav-step'>3</div><h3>Segment & Explore Details</h3><p>Use the filters at the top with Drivers, Outcomes, Heat Map, and Comments to isolate where patterns concentrate and which details matter most.</p>",
+          "</button>",
+          "<button type='button' class='cc-nav-card' data-slide-target='open_ended_action_plan'>",
+          "<div class='cc-nav-step'>4</div><h3>Develop Action Plans</h3><p>Translate the themes into targeted focus areas and practical next steps for leaders, teams, and functions.</p>",
           "</button>",
           "</div>",
           "</section>",
@@ -3274,8 +3820,20 @@ render_slide <- function(slide_id, fr) {
           ".cc-card{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;padding:28px;box-shadow:0 10px 25px -5px rgba(15,23,42,.09),0 4px 6px -4px rgba(15,23,42,.06);}",
           ".cc-card-north{border-top:4px solid #0D9488;}",
           ".cc-label{font-size:12px;font-weight:800;color:#64748B;text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;}",
-          ".cc-metric{font-size:56px;font-weight:900;color:#0F172A;line-height:1;letter-spacing:-1px;margin-bottom:8px;}",
+          ".cc-metric-row{display:flex;align-items:flex-end;gap:16px;margin-bottom:8px;}",
+          ".cc-metric{font-size:56px;font-weight:900;color:#0F172A;line-height:1;letter-spacing:-1px;}",
           ".cc-metric-sfx{font-size:24px;color:#334155;}",
+          ".cc-trend{display:flex;align-items:center;gap:8px;padding-bottom:6px;}",
+          ".cc-trend-arrow{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;}",
+          ".cc-trend.up .cc-trend-arrow{border-bottom:10px solid #16A34A;}",
+          ".cc-trend.down .cc-trend-arrow{border-top:10px solid #DC2626;}",
+          ".cc-trend.flat .cc-trend-arrow{width:10px;height:10px;border:none;background:#64748B;border-radius:999px;}",
+          ".cc-trend-copy{display:flex;flex-direction:column;gap:2px;line-height:1.1;}",
+          ".cc-trend-points{font-size:14px;font-weight:800;}",
+          ".cc-trend.up .cc-trend-points{color:#16A34A;}",
+          ".cc-trend.down .cc-trend-points{color:#DC2626;}",
+          ".cc-trend.flat .cc-trend-points{color:#64748B;}",
+          ".cc-trend-year{font-size:10px;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:.5px;}",
           ".cc-metric-sub{font-size:13px;font-weight:600;color:#64748B;margin-bottom:14px;}",
           ".cc-stat-row{display:flex;gap:10px;flex-wrap:wrap;padding-top:14px;border-top:1px solid #E2E8F0;}",
           ".cc-pill{background:#F8FAFC;border:1px solid #E2E8F0;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;color:#334155;}",
@@ -3297,6 +3855,7 @@ render_slide <- function(slide_id, fr) {
           ".cc-nav-sec{padding:24px 44px 18px 44px;}",
           ".cc-sec-title{font-size:20px;font-weight:900;color:#0F172A;letter-spacing:-.4px;margin:0 0 20px 0;}",
           ".cc-nav-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}",
+          ".cc-nav-grid-4{grid-template-columns:repeat(4,1fr);}",
           ".cc-nav-card{text-align:left;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;padding:22px;cursor:pointer;transition:all .2s ease;display:flex;flex-direction:column;appearance:none;}",
           ".cc-nav-card:hover{border-color:#0D9488;box-shadow:0 10px 15px -3px rgba(13,148,136,.10);transform:translateY(-2px);}",
           ".cc-nav-step{width:28px;height:28px;background:#F0FDFA;color:#0D9488;border-radius:99px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;margin-bottom:14px;}",
@@ -3306,7 +3865,7 @@ render_slide <- function(slide_id, fr) {
           ".cc-policy svg{width:20px;height:20px;color:#64748B;flex-shrink:0;}",
           ".cc-policy strong{font-size:12px;color:#334155;display:block;margin-bottom:4px;}",
           ".cc-policy p{font-size:12px;line-height:1.5;color:#64748B;margin:0;}",
-          "@media (max-width: 1120px){.cc-insights{grid-template-columns:1fr;}.cc-method{grid-template-columns:1fr 1fr;}.cc-nav-grid{grid-template-columns:1fr;}.cc-nav-sec{padding-top:20px;}.cc-hero{padding-bottom:74px;}}",
+          "@media (max-width: 1120px){.cc-insights{grid-template-columns:1fr;}.cc-method{grid-template-columns:1fr 1fr;}.cc-nav-grid,.cc-nav-grid-4{grid-template-columns:1fr;}.cc-nav-sec{padding-top:20px;}.cc-hero{padding-bottom:74px;}}",
           "@media (max-width: 760px){.cc-wrap{border-radius:12px;}.cc-hero,.cc-insights,.cc-nav-sec{padding-left:20px;padding-right:20px;}.cc-insights{margin-top:-42px;}.cc-method{margin-left:20px;margin-right:20px;grid-template-columns:1fr;}.cc-mcol{padding:12px 20px;border-right:none;border-bottom:1px solid #E2E8F0;}.cc-mcol:last-child{border-bottom:none;}.cc-policy{margin-left:20px;margin-right:20px;margin-bottom:22px;}}",
           "</style>"
         ),
@@ -3342,7 +3901,7 @@ render_slide <- function(slide_id, fr) {
           "<div class='guidance-card'>",
           "<svg class='guidance-icon' fill='none' viewBox='0 0 24 24' stroke='currentColor' stroke-width='2'><path stroke-linecap='round' stroke-linejoin='round' d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' /></svg>",
           "<h3>Interpretation Guidance</h3>",
-          "<p>Use OHEP summary, drivers, outcomes, and comments together. Summary pages show <strong>where</strong> to focus; driver and outcome pages show <strong>what</strong> is moving performance; qualitative pages provide <strong>operational context</strong> behind the scores.</p>",
+          "<p>Use Your Profile, drivers, outcomes, and comments together. Summary pages show <strong>where</strong> to focus; driver and outcome pages show <strong>what</strong> is moving performance; qualitative pages provide <strong>operational context</strong> behind the scores.</p>",
           "</div>",
           "<div class='guidance-card' style='background:#F8FAFC;border-color:#E2E8F0;'>",
           "<h3 style='color:#0F172A;'>The Objective</h3>",
@@ -3374,12 +3933,14 @@ render_slide <- function(slide_id, fr) {
           "<div class='metric-label'>Percentile</div>",
           "<div class='pct-row'>",
           "<div class='pct-val'>", pct, "<span class='pct-sfx'>", ordinal_suffix(pct), "</span></div>",
-          "<div class='trend ", tr_cls, "'><div class='trend-arrow'></div><div><div class='trend-pts'>", if (dlt > 0) "+" else "", dlt, " pts</div><div class='trend-vs'>VS. ", if (is.finite(prior_year)) prior_year else report_year - 1L, "</div></div></div>",
+          "<div class='trend ", tr_cls, "'><div class='trend-arrow'></div><div><div class='trend-pts'>", if (dlt > 0) "+" else "", dlt, " pts</div><div class='trend-vs'>VS. ", report_year, "</div></div></div>",
           "</div>",
           "<div class='score'>Score: <strong>", sprintf('%.2f', ov$score), "</strong> <span class='", score_delta_cls, "'>(", if (ov$score_delta > 0) "+" else "", sprintf('%.2f', ov$score_delta), ")</span></div>",
+          "<div class='band-wrap'>",
           "<div class='ticks'><span class='tick' style='left:35%;'>35</span><span class='tick mid' style='left:50%;'>50</span><span class='tick' style='left:65%;'>65</span><span class='tick' style='left:90%;'>90</span></div>",
-          "<div class='bar'><div class='seg1'></div><div class='seg2'></div><div class='seg3'></div><div class='seg4'></div><div class='line' style='left:", pct, "%;'></div></div>",
+          "<div class='bar-shell'><div class='bar-track'><div class='seg1'></div><div class='seg2'></div><div class='seg3'></div><div class='seg4'></div></div><div class='midline'></div><div class='line' style='left:", pct, "%;'></div></div>",
           "<div class='lbls'><div class='lbl l1'>Needs Improvement</div><div class='lbl l2'>Industry standard</div><div class='lbl l3'>Above standard</div><div class='lbl l4'>Leader</div></div>",
+          "</div>",
           "</div>"
         )
       }
@@ -3413,15 +3974,18 @@ render_slide <- function(slide_id, fr) {
         ".ohep-overview-card .score .pos{color:#16A34A;font-weight:800;}",
         ".ohep-overview-card .score .neg{color:#DC2626;font-weight:800;}",
         ".ohep-overview-card .score .neu{color:#64748B;font-weight:800;}",
+        ".ohep-overview-card .band-wrap{position:relative;}",
         ".ohep-overview-card .ticks{position:relative;height:16px;margin:0 0 4px 0;}",
         ".ohep-overview-card .tick{position:absolute;transform:translateX(-50%);font-size:11px;font-weight:800;color:#334155;}",
         ".ohep-overview-card .tick.mid{color:#0F172A;font-size:12px;}",
-        ".ohep-overview-card .bar{display:flex;width:100%;height:20px;border-radius:999px;overflow:hidden;position:relative;margin-bottom:8px;}",
+        ".ohep-overview-card .bar-shell{position:relative;margin-bottom:8px;}",
+        ".ohep-overview-card .bar-track{display:flex;width:100%;height:20px;border-radius:999px;overflow:hidden;}",
         ".ohep-overview-card .seg1{width:35%;background:#FCD34D;}",
         ".ohep-overview-card .seg2{width:30%;background:#CBD5E1;border-left:1px solid #FFF;border-right:1px solid #FFF;}",
         ".ohep-overview-card .seg3{width:25%;background:#4A8C98;border-right:1px solid #FFF;}",
         ".ohep-overview-card .seg4{width:10%;background:#475569;}",
-        ".ohep-overview-card .line{position:absolute;top:-4px;bottom:-4px;width:3px;background:#0F172A;border-radius:2px;z-index:2;}",
+        ".ohep-overview-card .midline{position:absolute;left:50%;top:-6px;height:32px;width:3px;background:#0F172A;border-radius:2px;z-index:2;transform:translateX(-50%);opacity:.22;}",
+        ".ohep-overview-card .line{position:absolute;top:-6px;height:32px;width:3px;background:#0F172A;border-radius:2px;z-index:3;transform:translateX(-50%);}",
         ".ohep-overview-card .lbls{display:flex;width:100%;}",
         ".ohep-overview-card .lbl{font-size:11px;font-weight:700;color:#64748B;text-align:center;}",
         ".ohep-overview-card .l1{width:35%;}.ohep-overview-card .l2{width:30%;}.ohep-overview-card .l3{width:25%;}.ohep-overview-card .l4{width:10%;}",
@@ -3430,7 +3994,8 @@ render_slide <- function(slide_id, fr) {
         "<div class='ohep-overview-grid'>",
         render_overview_card("Drivers Overview", drivers_overview),
         render_overview_card("Outcomes Overview", outcomes_overview),
-        "</div>"
+        "</div>",
+        render_ohep_radar_module(md)
       )
       return(widget_shell_doc(model_page(
         model_data = md,
@@ -3444,7 +4009,7 @@ render_slide <- function(slide_id, fr) {
           model_point_as = "#059669",
           model_point_il = "#0D9488"
         )
-      ), title = "OHEP Results", eyebrow = "OHEP Summary", description = NULL, pre_widget_html = ohep_snapshot_html))
+      ), title = "OHEP Results", eyebrow = "Your Profile", description = NULL, pre_widget_html = ohep_snapshot_html))
     }
     if (slide_id == "survey_overview") {
       prior_n <- if (is.finite(prior_year)) sum(rows_sub$year == prior_year) else 0L
@@ -3479,7 +4044,7 @@ render_slide <- function(slide_id, fr) {
       return(widget_shell_doc(
         decision_matrix_page(points = pts, theme_kicker = "", title = "", subtitle = "", show_axis_control = FALSE),
         title = "Priority Matrix",
-        eyebrow = "OHEP Summary",
+        eyebrow = "Your Profile",
         description = NULL,
         controls_html = priority_controls
       ))
@@ -3534,12 +4099,12 @@ render_slide <- function(slide_id, fr) {
         f <- as.character(drv$fundamental[[i]])
         sc <- as.numeric(first_or(fund_now$score[match(f, fund_now$metric_id)], NA_real_))
         pct <- if (is.finite(sc)) round((sc / 5) * 100) else NA_real_
-        status <- if (!is.finite(pct)) "Industry Standard" else if (pct < 40) "Area for Growth" else if (pct < 60) "Industry Standard" else "Above Standard"
+        status <- if (!is.finite(pct)) "Industry Standard" else if (pct < 35) "Area for Growth" else if (pct < 65) "Industry Standard" else if (pct < 90) "Above Standard" else "Industry Leader"
         data.frame(rank = i, fundamental = f, percentile = pct, status_label = status, stringsAsFactors = FALSE)
       })
       drivers_df <- do.call(rbind, drivers)
       return(render_html_obj(enps_page(enps_data = list(
-        summary = data.frame(title = "Employee Net Promoter Score (eNPS)", subtitle = "", score = score, score_delta = if (length(en_prior) > 0L) score - prior_score else 0, delta_label = paste0("vs. ", if (is.finite(prior_year)) prior_year else (report_year - 1L)), stringsAsFactors = FALSE),
+        summary = data.frame(title = "Employee Net Promoter Score (eNPS)", subtitle = "", score = score, score_delta = if (length(en_prior) > 0L) score - prior_score else 0, delta_label = paste0("vs. ", report_year), stringsAsFactors = FALSE),
         distribution = dist,
         drivers = drivers_df
       )), "eNPS"))
@@ -3559,11 +4124,23 @@ render_slide <- function(slide_id, fr) {
       hist <- metric_history_pair(fundamental_history, fid, "fundamental_id", f)
       cur_score <- suppressWarnings(as.numeric(first_or(hist$current$score, dd$fundamental$score[[1]])))
       prev_score <- suppressWarnings(as.numeric(first_or(hist$prior$score, NA_real_)))
+      outcome_pct_lookup <- setNames(
+        suppressWarnings(as.numeric(k_now$percentile[k_now$metric_group == "outcome"])),
+        normalize_outcome_label(as.character(k_now$metric_id[k_now$metric_group == "outcome"]))
+      )
+      if (is.data.frame(dd$outcomes) && nrow(dd$outcomes) > 0L) {
+        dd$outcomes$outcome <- normalize_outcome_label(dd$outcomes$outcome)
+        dd$outcomes$percentile <- vapply(as.character(dd$outcomes$outcome), function(lbl) {
+          pct <- if (lbl %in% names(outcome_pct_lookup)) suppressWarnings(as.numeric(outcome_pct_lookup[[lbl]])) else NA_real_
+          fallback <- suppressWarnings(as.numeric(first_or(dd$outcomes$percentile[dd$outcomes$outcome == lbl], NA_real_)))
+          if (is.finite(pct)) pmax(1, pmin(99, round(pct))) else fallback
+        }, numeric(1))
+      }
       dd$fundamental$fundamental_label <- f
       dd$fundamental$percentile <- pmax(1, pmin(99, round((cur_score / 5) * 100)))
       dd$fundamental$percentile_delta <- if (is.finite(prev_score)) round((cur_score - prev_score) * 20) else 0
       dd$fundamental$score_delta <- if (is.finite(prev_score)) round(cur_score - prev_score, 2) else 0
-      dd$fundamental$delta_label <- paste0("vs. ", if (is.finite(prior_year)) prior_year else (report_year - 1L))
+      dd$fundamental$delta_label <- paste0("vs. ", report_year)
       obj <- render_fundamental_page(dashboard_data = dd)
       return(render_html_obj(obj, paste("Driver", f)))
     }
@@ -3593,7 +4170,7 @@ render_slide <- function(slide_id, fr) {
       return(widget_shell_doc(
         heatmap_page(heatmap_data = hm, show_compare_control = FALSE),
         title = "Heat Map",
-        eyebrow = "OHEP Summary",
+        eyebrow = "Your Profile",
         description = NULL,
         controls_html = segment_controls
       ))
@@ -3712,6 +4289,17 @@ bundle <- list(
   slide_html = slide_html,
   no_data_html = no_data_slide()
 )
+
+minify_embedded_html <- function(x) {
+  if (is.null(x) || !length(x)) return(x)
+  x <- gsub("[\r\n\t]+", " ", x, perl = TRUE)
+  x <- gsub(">\\s+<", "><", x, perl = TRUE)
+  x <- gsub("\\s{2,}", " ", x, perl = TRUE)
+  trimws(x)
+}
+
+bundle$slide_html <- lapply(bundle$slide_html, minify_embedded_html)
+bundle$no_data_html <- minify_embedded_html(bundle$no_data_html)
 
 bundle_json <- jsonlite::toJSON(bundle, auto_unbox = TRUE, pretty = FALSE, null = "null")
 writeLines(paste0("window.OHEP_DEMO_DATA = ", bundle_json, ";"), con = file.path(build_dir, "demo-data.js"), useBytes = TRUE)

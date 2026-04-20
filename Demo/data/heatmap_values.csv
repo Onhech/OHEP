@@ -7,22 +7,22 @@
 "department","Purpose","supply_chain_logistics","Supply Chain & Logistics",4.49
 "department","Purpose","corporate_functions","Corporate Functions",4.43
 "department","Purpose","program_contract_management","Program / Contract Management",4.53
-"department","Strategy","operations","Operations",4.38
-"department","Strategy","engineering_technical","Engineering & Technical",4.29
-"department","Strategy","maintenance_reliability","Maintenance & Reliability",4.17
-"department","Strategy","projects_construction","Projects & Construction",3.96
-"department","Strategy","health_safety_environment_hse","Health, Safety & Environment (HSE)",4.04
-"department","Strategy","supply_chain_logistics","Supply Chain & Logistics",4.18
-"department","Strategy","corporate_functions","Corporate Functions",4.28
+"department","Strategy","operations","Operations",4.34
+"department","Strategy","engineering_technical","Engineering & Technical",4.28
+"department","Strategy","maintenance_reliability","Maintenance & Reliability",4.14
+"department","Strategy","projects_construction","Projects & Construction",3.94
+"department","Strategy","health_safety_environment_hse","Health, Safety & Environment (HSE)",4.02
+"department","Strategy","supply_chain_logistics","Supply Chain & Logistics",4.15
+"department","Strategy","corporate_functions","Corporate Functions",4.26
 "department","Strategy","program_contract_management","Program / Contract Management",4.29
-"department","Leadership","operations","Operations",4.45
-"department","Leadership","engineering_technical","Engineering & Technical",4.48
-"department","Leadership","maintenance_reliability","Maintenance & Reliability",4.36
-"department","Leadership","projects_construction","Projects & Construction",4.15
-"department","Leadership","health_safety_environment_hse","Health, Safety & Environment (HSE)",4.35
-"department","Leadership","supply_chain_logistics","Supply Chain & Logistics",4.34
-"department","Leadership","corporate_functions","Corporate Functions",4.5
-"department","Leadership","program_contract_management","Program / Contract Management",4.46
+"department","Leadership","operations","Operations",4.48
+"department","Leadership","engineering_technical","Engineering & Technical",4.49
+"department","Leadership","maintenance_reliability","Maintenance & Reliability",4.39
+"department","Leadership","projects_construction","Projects & Construction",4.18
+"department","Leadership","health_safety_environment_hse","Health, Safety & Environment (HSE)",4.39
+"department","Leadership","supply_chain_logistics","Supply Chain & Logistics",4.39
+"department","Leadership","corporate_functions","Corporate Functions",4.52
+"department","Leadership","program_contract_management","Program / Contract Management",4.47
 "department","Communication","operations","Operations",4.43
 "department","Communication","engineering_technical","Engineering & Technical",4.34
 "department","Communication","maintenance_reliability","Maintenance & Reliability",4.23
@@ -39,13 +39,13 @@
 "department","Learning & innovation","supply_chain_logistics","Supply Chain & Logistics",4.06
 "department","Learning & innovation","corporate_functions","Corporate Functions",4.14
 "department","Learning & innovation","program_contract_management","Program / Contract Management",4.3
-"department","Respect, care, and trust","operations","Operations",4.47
-"department","Respect, care, and trust","engineering_technical","Engineering & Technical",4.32
-"department","Respect, care, and trust","maintenance_reliability","Maintenance & Reliability",4.3
+"department","Respect, care, and trust","operations","Operations",4.46
+"department","Respect, care, and trust","engineering_technical","Engineering & Technical",4.31
+"department","Respect, care, and trust","maintenance_reliability","Maintenance & Reliability",4.29
 "department","Respect, care, and trust","projects_construction","Projects & Construction",4.13
-"department","Respect, care, and trust","health_safety_environment_hse","Health, Safety & Environment (HSE)",4.37
-"department","Respect, care, and trust","supply_chain_logistics","Supply Chain & Logistics",4.37
-"department","Respect, care, and trust","corporate_functions","Corporate Functions",4.3
+"department","Respect, care, and trust","health_safety_environment_hse","Health, Safety & Environment (HSE)",4.36
+"department","Respect, care, and trust","supply_chain_logistics","Supply Chain & Logistics",4.35
+"department","Respect, care, and trust","corporate_functions","Corporate Functions",4.27
 "department","Respect, care, and trust","program_contract_management","Program / Contract Management",4.41
 "department","Performance development","operations","Operations",4.31
 "department","Performance development","engineering_technical","Engineering & Technical",4.28
