@@ -1944,6 +1944,16 @@ build_participation_profile_page <- function(rows_sub) {
     ((h %% 21L) - 10L) / 10 * scale
   }
 
+  short_label <- function(x) {
+    x <- trimws(as.character(x))
+    x <- gsub("Health, Safety & Environment \\(HSE\\)", "HSE", x, fixed = FALSE)
+    x <- gsub("North Slope \\(Prudhoe Bay / Kuparuk\\)", "North Slope", x, fixed = FALSE)
+    x <- gsub("Corporate / Office", "Corporate", x, fixed = TRUE)
+    x <- gsub("Manager / Supervisor", "Manager", x, fixed = TRUE)
+    if (nchar(x) > 22L) x <- paste0(substr(x, 1L, 19L), "...")
+    x
+  }
+
   build_matrix <- function(row_dim, col_dim) {
     row_col <- dim_columns[[row_dim]]
     col_col <- dim_columns[[col_dim]]
