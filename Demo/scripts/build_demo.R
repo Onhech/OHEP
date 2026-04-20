@@ -1224,25 +1224,15 @@ validate_csv <- function(df, req, name) {
   if (nrow(df) < 1L) stop(sprintf("%s is empty.", name), call. = FALSE)
 }
 
-validate_csv(report_meta, c("report_title", "report_subtitle", "client_label", "reporting_year", "summary_text"), "report_meta.csv")
-validate_csv(segment_options, c("segment_type_id", "segment_value_id", "segment_type_label", "segment_value_label"), "segment_options.csv")
-validate_csv(kpi_scores, c("filter_id", "metric_group", "metric_id", "score"), "kpi_scores.csv")
-validate_csv(kpi_scores_history, c("filter_id", "metric_group", "metric_id", "year", "score", "percentile", "n"), "kpi_scores_history.csv")
-validate_csv(outcome_history, c("filter_id", "outcome_id", "year", "score", "percentile", "n"), "outcome_history.csv")
-validate_csv(fundamental_history, c("filter_id", "fundamental_id", "year", "score", "percentile", "n"), "fundamental_history.csv")
-validate_csv(item_scores, c("filter_id", "fundamental_id", "item_label", "mean"), "item_scores.csv")
-validate_csv(demographics_panels, c("filter_id", "panel_slot", "category", "pct"), "demographics_panels.csv")
-validate_csv(heatmap_values, c("segment_type_id", "row_label", "segment_value_label", "value"), "heatmap_values.csv")
-
-utils::write.csv(report_meta, file.path(data_dir, "report_meta.csv"), row.names = FALSE)
-utils::write.csv(segment_options, file.path(data_dir, "segment_options.csv"), row.names = FALSE)
-utils::write.csv(kpi_scores, file.path(data_dir, "kpi_scores.csv"), row.names = FALSE)
-utils::write.csv(kpi_scores_history, file.path(data_dir, "kpi_scores_history.csv"), row.names = FALSE)
-utils::write.csv(outcome_history, file.path(data_dir, "outcome_history.csv"), row.names = FALSE)
-utils::write.csv(fundamental_history, file.path(data_dir, "fundamental_history.csv"), row.names = FALSE)
-utils::write.csv(item_scores, file.path(data_dir, "item_scores.csv"), row.names = FALSE)
-utils::write.csv(demographics_panels, file.path(data_dir, "demographics_panels.csv"), row.names = FALSE)
-utils::write.csv(heatmap_values, file.path(data_dir, "heatmap_values.csv"), row.names = FALSE)
+validate_csv(report_meta, c("report_title", "report_subtitle", "client_label", "reporting_year", "summary_text"), "report_meta")
+validate_csv(segment_options, c("segment_type_id", "segment_value_id", "segment_type_label", "segment_value_label"), "segment_options")
+validate_csv(kpi_scores, c("filter_id", "metric_group", "metric_id", "score"), "kpi_scores")
+validate_csv(kpi_scores_history, c("filter_id", "metric_group", "metric_id", "year", "score", "percentile", "n"), "kpi_scores_history")
+validate_csv(outcome_history, c("filter_id", "outcome_id", "year", "score", "percentile", "n"), "outcome_history")
+validate_csv(fundamental_history, c("filter_id", "fundamental_id", "year", "score", "percentile", "n"), "fundamental_history")
+validate_csv(item_scores, c("filter_id", "fundamental_id", "item_label", "mean"), "item_scores")
+validate_csv(demographics_panels, c("filter_id", "panel_slot", "category", "pct"), "demographics_panels")
+validate_csv(heatmap_values, c("segment_type_id", "row_label", "segment_value_label", "value"), "heatmap_values")
 
 build_demographics_page <- function(fid) {
   rows_sub <- apply_filter(user_data, filter_grid[filter_grid$filter_id == fid, , drop = FALSE])
@@ -3155,21 +3145,13 @@ section_meta <- data.frame(
   stringsAsFactors = FALSE
 )
 
-validate_csv(open_ended_summary, c("filter_id", "title", "kicker", "narrative"), "open_ended_summary.csv")
-validate_csv(open_ended_takeaways, c("filter_id", "takeaway_id", "title", "narrative"), "open_ended_takeaways.csv")
-validate_csv(open_ended_theme_evidence, c("filter_id", "takeaway_id", "theme_title", "context_text"), "open_ended_theme_evidence.csv")
-validate_csv(open_ended_quotes, c("filter_id", "quote_id", "takeaway_id", "quote_text"), "open_ended_quotes.csv")
-validate_csv(open_ended_verbatim, c("filter_id", "comment_id", "comment_text"), "open_ended_verbatim.csv")
-validate_csv(themes_df, c("theme_id", "theme_label", "summary"), "themes.csv")
-validate_csv(quotes_df, c("quote_id", "quote_text"), "quotes.csv")
-
-utils::write.csv(open_ended_summary, file.path(data_dir, "open_ended_summary.csv"), row.names = FALSE)
-utils::write.csv(open_ended_takeaways, file.path(data_dir, "open_ended_takeaways.csv"), row.names = FALSE)
-utils::write.csv(open_ended_theme_evidence, file.path(data_dir, "open_ended_theme_evidence.csv"), row.names = FALSE)
-utils::write.csv(open_ended_quotes, file.path(data_dir, "open_ended_quotes.csv"), row.names = FALSE)
-utils::write.csv(open_ended_verbatim, file.path(data_dir, "open_ended_verbatim.csv"), row.names = FALSE)
-utils::write.csv(themes_df, file.path(data_dir, "themes.csv"), row.names = FALSE)
-utils::write.csv(quotes_df, file.path(data_dir, "quotes.csv"), row.names = FALSE)
+validate_csv(open_ended_summary, c("filter_id", "title", "kicker", "narrative"), "open_ended_summary")
+validate_csv(open_ended_takeaways, c("filter_id", "takeaway_id", "title", "narrative"), "open_ended_takeaways")
+validate_csv(open_ended_theme_evidence, c("filter_id", "takeaway_id", "theme_title", "context_text"), "open_ended_theme_evidence")
+validate_csv(open_ended_quotes, c("filter_id", "quote_id", "takeaway_id", "quote_text"), "open_ended_quotes")
+validate_csv(open_ended_verbatim, c("filter_id", "comment_id", "comment_text"), "open_ended_verbatim")
+validate_csv(themes_df, c("theme_id", "theme_label", "summary"), "themes")
+validate_csv(quotes_df, c("quote_id", "quote_text"), "quotes")
 
 render_slide <- function(slide_id, fr) {
   fid <- fr$filter_id[[1]]
@@ -4476,7 +4458,7 @@ file.copy(file.path(app_dir, "app.js"), file.path(build_dir, "app.js"), overwrit
 
 build_images_dir <- file.path(build_dir, "images")
 dir.create(build_images_dir, recursive = TRUE, showWarnings = FALSE)
-for (img_name in c("ASRCLogo.jpg", "ClientLogo.jpg", "ClientLogo.webp", "MonarkLogo.jpg", "ohepModel.png")) {
+for (img_name in c("ASRCLogo.jpg", "MonarkLogo.jpg", "ohepModel.png", "profile_mock.webp")) {
   src <- file.path(demo_dir, "images", img_name)
   if (file.exists(src)) file.copy(src, file.path(build_images_dir, img_name), overwrite = TRUE)
 }
