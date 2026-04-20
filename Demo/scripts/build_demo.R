@@ -3297,9 +3297,7 @@ render_slide <- function(slide_id, fr) {
     topic_df$order_key <- seq_len(nrow(topic_df))
 
     get_topic_comments <- function(topic_type, topic_label) {
-      if (identical(topic_type, "All")) {
-        vv
-      } else if (identical(topic_type, "Driver")) {
+      if (identical(topic_type, "Driver")) {
         vv[vv$fundamental == topic_label, , drop = FALSE]
       } else {
         vv[normalize_outcome_label(vv$outcome) == normalize_outcome_label(topic_label), , drop = FALSE]
@@ -3349,15 +3347,29 @@ render_slide <- function(slide_id, fr) {
     topic_comment_lists <- lapply(seq_len(nrow(topic_df)), function(i) {
       t_type <- topic_df$topic_type[[i]]
       t_label <- topic_df$topic_label[[i]]
-      qv <- get_topic_comments(t_type, t_label)
-      comments <- if (nrow(qv) >= 4L) as.character(qv$comment_text) else synth_comments(t_type, t_label, n = 8L)
-      comments <- comments[nzchar(trimws(comments))]
-      if (length(comments) < 1L) comments <- "No comments available for this segment."
-      comments
+      if (identical(t_type, "All")) {
+        character(0)
+      } else {
+        qv <- get_topic_comments(t_type, t_label)
+        comments <- if (nrow(qv) >= 4L) as.character(qv$comment_text) else synth_comments(t_type, t_label, n = 8L)
+        comments <- comments[nzchar(trimws(comments))]
+        if (length(comments) < 1L) comments <- "No comments available for this segment."
+        comments
+      }
     })
 
+    all_comments <- unlist(topic_comment_lists[-1], use.names = FALSE)
+    all_comments <- all_comments[nzchar(trimws(all_comments))]
+    if (length(all_comments) < 1L) {
+      all_comments <- as.character(vv$comment_text)
+      all_comments <- all_comments[nzchar(trimws(all_comments))]
+    }
+    if (length(all_comments) < 1L) {
+      all_comments <- synth_comments("All", "All Comments", n = 12L)
+    }
+
     # Default view should demonstrate sentiment + paging.
-    default_comments <- topic_comment_lists[[1]]
+    default_comments <- all_comments
     has_negative <- any(vapply(default_comments, function(txt) classify_sentiment(txt)$cls == "negative", logical(1)))
     if (!has_negative) {
       default_comments <- c(
@@ -3801,7 +3813,7 @@ render_slide <- function(slide_id, fr) {
           "</svg>",
           "<section class='cc-hero'>",
           "<div class='cc-eyebrow'>Getting Started</div>",
-          "<h1 class='cc-title'>Arctic Slope's Organizational Health &amp; Effectiveness Insights</h1>",
+          "<h1 class='cc-title'><span class='client-name'>Arctic Slope's</span><span class='report-name'>Organizational Health &amp; Effectiveness Insights</span></h1>",
           "<p class='cc-sub'>Welcome to your Workforce Intelligence Hub. This dashboard converts employee feedback into decision-ready insight, combining quantitative scores with curated qualitative themes so leadership can focus on what matters most.</p>",
           "</section>",
           "<section class='cc-insights'>",
@@ -3891,8 +3903,10 @@ render_slide <- function(slide_id, fr) {
           ".cc-wrap{width:100%;max-width:1180px;background:#FFFFFF;border:1px solid #E2E8F0;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px -5px rgba(15,23,42,.06);}",
           ".cc-hero{background:linear-gradient(135deg,#0F766E 0%,#0D9488 100%);padding:52px 44px 92px 44px;color:#FFFFFF;border-radius:0 0 24px 24px;}",
           ".cc-eyebrow{font-size:12px;font-weight:800;color:#CCFBF1;text-transform:uppercase;letter-spacing:1.3px;margin-bottom:12px;}",
-          ".cc-title{font-size:36px;font-weight:900;letter-spacing:-.5px;line-height:1.12;margin:0 0 14px 0;max-width:860px;}",
-          ".cc-sub{font-size:16px;line-height:1.55;color:rgba(255,255,255,.92);margin:0;max-width:760px;}",
+          ".cc-title{display:flex;flex-direction:column;gap:4px;margin:0 0 24px 0;max-width:900px;}",
+          ".client-name{font-size:48px;font-weight:900;color:#FFFFFF;line-height:1.1;letter-spacing:-1px;}",
+          ".report-name{font-size:24px;font-weight:600;color:rgba(255,255,255,.75);letter-spacing:-.5px;line-height:1.2;}",
+          ".cc-sub{font-size:16px;line-height:1.6;color:rgba(255,255,255,.92);margin:0;max-width:900px;}",
           ".cc-insights{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:20px;padding:0 44px;margin-top:-56px;position:relative;z-index:5;}",
           ".cc-card{background:#FFFFFF;border:1px solid #E2E8F0;border-radius:14px;padding:28px;box-shadow:0 10px 25px -5px rgba(15,23,42,.09),0 4px 6px -4px rgba(15,23,42,.06);}",
           ".cc-card-north{border-top:4px solid #0D9488;}",
