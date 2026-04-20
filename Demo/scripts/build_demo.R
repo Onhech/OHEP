@@ -4020,7 +4020,7 @@ render_slide <- function(slide_id, fr) {
           "<p>Organizational health gives leadership a forward-looking view of workforce performance. This dashboard combines quantitative signals with curated qualitative themes so leaders can move from signal to decision-ready action.</p>",
           "<p>The OHEP framework is designed to shift the conversation from reactive reporting to practical execution. It isolates the daily operational inputs (Drivers) that shape the business outputs (Outcomes) leaders care about most.</p>",
           "</div>",
-          "<div class='image-content'><img src='./images/ohepModel.png' alt='OHEP Drivers and Outcomes Framework' class='framework-asset'/></div>",
+          "<div class='image-content'><img src='../images/ohepModel.png' alt='OHEP Drivers and Outcomes Framework' class='framework-asset'/></div>",
           "</div>",
           "<div style='width:100%;height:1px;background:#E2E8F0;margin:32px 0;'></div>",
           "<div class='content-split'>",
@@ -4455,13 +4455,6 @@ writeLines(paste0("window.OHEP_DEMO_DATA = ", bundle_json, ";"), con = file.path
 file.copy(file.path(app_dir, "index.html"), file.path(build_dir, "index.html"), overwrite = TRUE)
 file.copy(file.path(app_dir, "styles.css"), file.path(build_dir, "styles.css"), overwrite = TRUE)
 file.copy(file.path(app_dir, "app.js"), file.path(build_dir, "app.js"), overwrite = TRUE)
-
-build_images_dir <- file.path(build_dir, "images")
-dir.create(build_images_dir, recursive = TRUE, showWarnings = FALSE)
-for (img_name in c("ASRCLogo.jpg", "MonarkLogo.jpg", "ohepModel.png", "profile_mock.webp")) {
-  src <- file.path(demo_dir, "images", img_name)
-  if (file.exists(src)) file.copy(src, file.path(build_images_dir, img_name), overwrite = TRUE)
-}
 
 cat(sprintf("Build complete: %s\n", build_dir))
 cat(sprintf("Workbook: %s (sheet: %s)\n", basename(workbook_path), sheet))
