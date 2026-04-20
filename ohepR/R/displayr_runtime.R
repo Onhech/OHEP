@@ -1435,10 +1435,13 @@ ohepRDisplayr <- function() {
       glue::glue("<div class=\"delta-container {bm$css_class}\"{grid_style}><span class=\"delta-pill {pill}\"{title}>{text}</span></div>")
     }, character(1))
     benchmark_html <- paste(benchmark_html, collapse = "")
+    item_label <- as.character(item_row$label[[1]])
+    item_slide_target <- if ("slide_target" %in% names(item_row)) as.character(item_row$slide_target[[1]]) else NA_character_
+    item_label_html <- env$render_slide_target_label(item_label, item_slide_target, class_name = "item-label")
 
     glue::glue(
       "<div class=\"{row_class}\"{row_grid_style}>
-        <div class=\"item-label\">{env$escape_text(item_row$label[[1]])}</div>
+        <div>{item_label_html}</div>
         <div class=\"cell-score\">{score_text}</div>
         {if (suppress_row) row_overlay else stacked_sentiment}
         {benchmark_html}
@@ -1504,10 +1507,15 @@ ohepRDisplayr <- function() {
     glue::glue("<div class=\"item-column\">{glue::glue_collapse(out, sep = '')}</div>")
   }
 
-  env$build_outcomes_table <- function(outcomes_df, driver_label = "Driver", row_label = "Outcome") {
+  env$build_outcomes_table <- function(outcomes_df, driver_label = "Driver", row_label = "Outcome", card_title = NULL) {
     outcomes_df <- outcomes_df[order(outcomes_df$rank), , drop = FALSE]
     driver_label <- env$escape_text(driver_label)
     row_label <- env$escape_text(row_label)
+    card_title <- if (is.character(card_title) && length(card_title) == 1L && nzchar(card_title)) {
+      env$escape_text(card_title)
+    } else {
+      paste0(driver_label, " drives")
+    }
     row_type <- if (tolower(row_label) == "driver") "driver" else "outcome"
     rows <- vapply(seq_len(nrow(outcomes_df)), function(i) {
       env$build_outcome_row(outcomes_df[i, , drop = FALSE], row_type = row_type)
@@ -1516,7 +1524,7 @@ ohepRDisplayr <- function() {
     glue::glue(
       "<div class=\"card outcomes-card\">
         <div class=\"title-bar\">
-          <h2 class=\"card-title\">{driver_label} drives</h2>
+          <h2 class=\"card-title\">{card_title}</h2>
         </div>
         <table class=\"table-outcomes\">
           <thead>
@@ -4644,6 +4652,11 @@ ohepRDisplayr <- function() {
     } else {
       "Outcome"
     }
+    table_title <- if ("drivers_table_title" %in% names(fundamental)) {
+      as.character(fundamental$drivers_table_title[[1]])
+    } else {
+      NA_character_
+    }
     item_breakdown_title <- if ("item_breakdown_title" %in% names(fundamental)) {
       as.character(fundamental$item_breakdown_title[[1]])
     } else {
@@ -4654,7 +4667,7 @@ ohepRDisplayr <- function() {
     } else {
       "Survey Item"
     }
-    outcomes_table <- env$build_outcomes_table(outcomes, driver_label = driver_label, row_label = row_label)
+    outcomes_table <- env$build_outcomes_table(outcomes, driver_label = driver_label, row_label = row_label, card_title = table_title)
     left_col <- env$build_item_column(items, "left", active_benchmarks = active_benchmarks, item_label_header = item_label_header)
     right_col <- env$build_item_column(items, "right", active_benchmarks = active_benchmarks, item_label_header = item_label_header)
     count_rows <- function(col_name) {

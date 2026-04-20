@@ -2305,7 +2305,7 @@ build_outcome_data <- function(outcome_name, rows_sub, fid) {
 
   pe <- marts$predictive_edges
   d <- pe[normalize_outcome_label(pe$outcome) == outcome_name & tolower(pe$subset) == "all", , drop = FALSE]
-  d <- d[tolower(trimws(as.character(d$fundamental))) != "ohep", , drop = FALSE]
+  d <- d[!tolower(trimws(as.character(d$fundamental))) %in% c("ohep", "drivers", "fundamentals"), , drop = FALSE]
   d <- d[as.character(d$fundamental) %in% fundamentals, , drop = FALSE]
   if (nrow(d) < 1L) {
     d <- data.frame(fundamental = fundamentals[seq_len(min(5, length(fundamentals)))], strength = seq(0.4, 0.2, length.out = min(5, length(fundamentals))), stringsAsFactors = FALSE)
@@ -2362,6 +2362,7 @@ build_outcomes_overview_data <- function(rows_sub, fid) {
 
   pe <- marts$predictive_edges
   pe <- pe[tolower(pe$subset) == "all" & normalize_outcome_label(pe$outcome) %in% normalize_outcome_label(outcome_names), , drop = FALSE]
+  pe <- pe[!tolower(trimws(as.character(pe$fundamental))) %in% c("ohep", "drivers", "fundamentals"), , drop = FALSE]
   if (nrow(pe) > 0L) {
     pe$strength <- suppressWarnings(as.numeric(pe$strength))
     drv <- stats::aggregate(abs(strength) ~ fundamental, data = pe, FUN = function(x) mean(x, na.rm = TRUE))
@@ -2442,11 +2443,21 @@ build_outcomes_overview_data <- function(rows_sub, fid) {
   items_all$section_order <- 1L
   items_all$item_order <- seq_len(nrow(items_all))
   items_all$column <- ifelse(items_all$item_order %% 2L == 1L, "left", "right")
+  items_all$slide_target <- vapply(as.character(items_all$label), function(lbl) {
+    key <- normalize_outcome_label(lbl)
+    if (identical(key, "Engagement")) return("engagement_deep_dive")
+    if (identical(key, "Burnout")) return("burnout_deep_dive")
+    if (identical(key, "Work Satisfaction")) return("work_satisfaction_deep_dive")
+    if (identical(key, "Turnover Intent")) return("turnover_intent_deep_dive")
+    if (identical(key, "eNPS")) return("enps")
+    NA_character_
+  }, character(1))
   items_all$show_section_header <- FALSE
 
   list(
     summary = data.frame(
       outcome = "Outcomes Overview",
+      drivers_table_title = "Top Related Drivers",
       status_label = if (percentile < 35) "Area for Growth" else if (percentile < 65) "Industry Standard" else if (percentile < 90) "Above Standard" else "Industry Leader",
       percentile = percentile,
       percentile_delta = round(score_delta * 20),
@@ -2456,7 +2467,7 @@ build_outcomes_overview_data <- function(rows_sub, fid) {
       stringsAsFactors = FALSE
     ),
     drivers = drivers,
-    items = items_all[, c("column", "section", "section_order", "item_order", "label", "mean", "agree_pct", "neutral_pct", "disagree_pct", "vs_industry", "vs_prior", "show_section_header"), drop = FALSE]
+    items = items_all[, c("column", "section", "section_order", "item_order", "label", "mean", "agree_pct", "neutral_pct", "disagree_pct", "vs_industry", "vs_prior", "slide_target", "show_section_header"), drop = FALSE]
   )
 }
 
@@ -2538,6 +2549,7 @@ build_drivers_overview_data <- function(fid) {
       agree_pct = mean(as.numeric(item_rows$agree_pct), na.rm = TRUE),
       vs_industry = mean(as.numeric(item_rows$vs_industry), na.rm = TRUE),
       vs_prior = mean(as.numeric(item_rows$vs_prior), na.rm = TRUE),
+      slide_target = paste0("fundamental_", slugify(metric_label)),
       show_section_header = FALSE,
       stringsAsFactors = FALSE
     )
@@ -2557,7 +2569,7 @@ build_drivers_overview_data <- function(fid) {
   list(
     fundamental = data.frame(
       fundamental_label = "Drivers Overview",
-      drivers_table_title = "Key Outcomes",
+      drivers_table_title = "Top Related Outcomes",
       drivers_row_label = "Outcome",
       item_breakdown_title = "Driver Sentiment Breakdown",
       item_label_header = "Driver",
@@ -2593,6 +2605,7 @@ outcome_to_dashboard_data <- function(od) {
   if (!"suppress_vs_industry" %in% names(items)) items$suppress_vs_industry <- FALSE
   if (!"suppress_vs_prior" %in% names(items)) items$suppress_vs_prior <- FALSE
   if (!"min_n" %in% names(items)) items$min_n <- 3L
+  if (!"slide_target" %in% names(items)) items$slide_target <- NA_character_
   if (!"show_section_header" %in% names(items)) items$show_section_header <- FALSE
   if (!"item_order" %in% names(items)) items$item_order <- ave(seq_len(nrow(items)), items$column, FUN = seq_along)
   if (!"section_order" %in% names(items)) items$section_order <- 1L
@@ -2600,7 +2613,7 @@ outcome_to_dashboard_data <- function(od) {
   list(
     fundamental = data.frame(
       fundamental_label = as.character(od$summary$outcome[[1]]),
-      drivers_table_title = "Key Drivers",
+      drivers_table_title = as.character(first_or(od$summary$drivers_table_title, "Key Drivers")),
       drivers_row_label = "Driver",
       item_breakdown_title = "Outcome Sentiment Breakdown",
       item_label_header = "Outcome",
@@ -2614,7 +2627,7 @@ outcome_to_dashboard_data <- function(od) {
     outcomes = out_df,
     items = items[, c(
       "column", "section", "section_order", "item_order", "label", "mean",
-      "disagree_pct", "neutral_pct", "agree_pct", "vs_company", "vs_industry", "vs_prior",
+      "disagree_pct", "neutral_pct", "agree_pct", "vs_company", "vs_industry", "vs_prior", "slide_target",
       "item_n", "prior_n", "suppress_row", "suppress_vs_company", "suppress_vs_industry", "suppress_vs_prior", "min_n",
       "show_section_header"
     ), drop = FALSE]
