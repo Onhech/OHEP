@@ -1446,14 +1446,14 @@ ohepRDisplayr <- function() {
     )
   }
 
-  env$build_item_column <- function(items_df, column_name, active_benchmarks = list()) {
+  env$build_item_column <- function(items_df, column_name, active_benchmarks = list(), item_label_header = "Survey Item") {
     col_df <- items_df[items_df$column == column_name, , drop = FALSE]
     col_df <- col_df[order(col_df$section_order, col_df$item_order), , drop = FALSE]
     all_sections <- unique(as.character(items_df$section))
     all_sections <- all_sections[!is.na(all_sections) & nzchar(all_sections)]
     multi_section_layout <- length(all_sections) > 1L
     header_cells <- c(
-      "<div class=\"h-lbl\">Survey Item</div>",
+      glue::glue("<div class=\"h-lbl\">{env$escape_text(item_label_header)}</div>"),
       "<div class=\"h-lbl\">Mean</div>",
       "<div class=\"h-lbl\">Sentiment Distribution</div>"
     )
@@ -4644,9 +4644,19 @@ ohepRDisplayr <- function() {
     } else {
       "Outcome"
     }
+    item_breakdown_title <- if ("item_breakdown_title" %in% names(fundamental)) {
+      as.character(fundamental$item_breakdown_title[[1]])
+    } else {
+      "Item-Level Breakdown"
+    }
+    item_label_header <- if ("item_label_header" %in% names(fundamental)) {
+      as.character(fundamental$item_label_header[[1]])
+    } else {
+      "Survey Item"
+    }
     outcomes_table <- env$build_outcomes_table(outcomes, driver_label = driver_label, row_label = row_label)
-    left_col <- env$build_item_column(items, "left", active_benchmarks = active_benchmarks)
-    right_col <- env$build_item_column(items, "right", active_benchmarks = active_benchmarks)
+    left_col <- env$build_item_column(items, "left", active_benchmarks = active_benchmarks, item_label_header = item_label_header)
+    right_col <- env$build_item_column(items, "right", active_benchmarks = active_benchmarks, item_label_header = item_label_header)
     count_rows <- function(col_name) {
       sub <- items[as.character(items$column) == col_name, , drop = FALSE]
       if (nrow(sub) < 1L) return(0L)
@@ -4672,7 +4682,7 @@ ohepRDisplayr <- function() {
         <div class=\"bottom-row\">
           <div class=\"card item-card\">
             <div class=\"item-title-row\">
-              <h2 class=\"card-title\">Item-Level Breakdown</h2>
+              <h2 class=\"card-title\">{env$escape_text(item_breakdown_title)}</h2>
               <div class=\"legend-group\">
                 <div class=\"leg-item\"><div class=\"leg-dot bg-disagree\"></div> Disagree</div>
                 <div class=\"leg-item\"><div class=\"leg-dot bg-neutral\"></div> Neutral</div>

@@ -2029,13 +2029,13 @@ build_participation_profile_page <- function(rows_sub) {
         ".participation-page{width:100%;}",
         ".participation-page .participation-legend{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-bottom:16px;}",
         ".participation-page .participation-legend-label{font-size:10px;font-weight:800;color:#64748B;text-transform:uppercase;letter-spacing:.5px;}",
-        ".participation-page .participation-legend-gradient{width:140px;height:6px;border-radius:99px;background:linear-gradient(90deg,#EF4444 0%, #FDE047 50%, #16A34A 100%);}",
-        ".participation-page .table-wrapper{border:1px solid #E2E8F0;border-radius:8px;background:#FFFFFF;overflow-x:auto;display:none;}",
+        ".participation-page .participation-legend-gradient{width:120px;height:6px;border-radius:99px;background:linear-gradient(90deg,#EF4444 0%, #FDE047 50%, #16A34A 100%);}",
+        ".participation-page .table-wrapper{width:100%;overflow-x:auto;display:none;}",
         ".participation-page .table-wrapper.active{display:block;}",
-        ".participation-page .heatmap-table{width:100%;min-width:900px;border-collapse:separate;border-spacing:2px;table-layout:fixed;background:#FFFFFF;}",
+        ".participation-page .heatmap-table{width:100%;min-width:900px;border-collapse:separate;border-spacing:4px;table-layout:fixed;}",
         ".participation-page .heatmap-table th{padding:8px 12px 16px 12px;text-align:center;text-transform:uppercase;font-size:10px;font-weight:800;color:#64748B;vertical-align:bottom;min-width:0;line-height:1.35;white-space:normal;word-wrap:break-word;}",
         ".participation-page .heatmap-table th:first-child{text-align:left;width:220px;min-width:220px;padding-left:0;color:#0F172A;}",
-        ".participation-page .heatmap-table td{padding:14px 8px;text-align:center;vertical-align:middle;font-size:14px;font-weight:800;color:#0F172A;border-radius:6px;transition:transform .1s ease,filter .2s ease;}",
+        ".participation-page .heatmap-table td{padding:16px 10px;text-align:center;vertical-align:middle;font-size:14px;font-weight:800;color:#0F172A;border-radius:6px;transition:transform .1s ease,filter .2s ease;}",
         ".participation-page .heatmap-table td:first-child{text-align:left;font-size:13px;font-weight:700;color:#0F172A;background:transparent;padding-left:0;}",
         ".participation-page .heatmap-table td.hm-value:hover{filter:brightness(.95);transform:scale(1.02);cursor:pointer;}",
         ".participation-page .heatmap-table td.hm-na{background:#F8FAFC;color:#94A3B8;border:1px dashed #CBD5E1;font-weight:700;}",
@@ -2385,16 +2385,64 @@ build_outcomes_overview_data <- function(rows_sub, fid) {
     )
   }
 
-  items_all <- do.call(rbind, lapply(seq_along(detail), function(i) {
+  build_overview_sentiment_row <- function(label, mean_val, disagree_pct, neutral_pct, agree_pct, vs_industry = NA_real_, vs_prior = NA_real_) {
+    data.frame(
+      label = label,
+      mean = as.numeric(mean_val),
+      disagree_pct = as.numeric(disagree_pct),
+      neutral_pct = as.numeric(neutral_pct),
+      agree_pct = as.numeric(agree_pct),
+      vs_industry = as.numeric(vs_industry),
+      vs_prior = as.numeric(vs_prior),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  outcome_rows <- lapply(seq_along(detail), function(i) {
     d <- detail[[i]]
     nm <- as.character(d$summary$outcome[[1]])
     items <- d$items
-    items$section <- nm
-    items$section_order <- i
-    items$show_section_header <- TRUE
-    items
-  }))
-  items_all <- items_all[order(items_all$column, items_all$section_order, items_all$item_order), , drop = FALSE]
+    if (!is.data.frame(items) || nrow(items) < 1L) return(NULL)
+    build_overview_sentiment_row(
+      label = nm,
+      mean_val = mean(as.numeric(items$mean), na.rm = TRUE),
+      disagree_pct = mean(as.numeric(items$disagree_pct), na.rm = TRUE),
+      neutral_pct = mean(as.numeric(items$neutral_pct), na.rm = TRUE),
+      agree_pct = mean(as.numeric(items$agree_pct), na.rm = TRUE),
+      vs_industry = mean(as.numeric(items$vs_industry), na.rm = TRUE),
+      vs_prior = mean(as.numeric(items$vs_prior), na.rm = TRUE)
+    )
+  })
+  outcome_rows <- outcome_rows[!vapply(outcome_rows, is.null, logical(1))]
+
+  enps_vals <- suppressWarnings(as.numeric(rows_sub$eNPS[rows_sub$year == report_year]))
+  enps_vals <- enps_vals[is.finite(enps_vals) & enps_vals >= 0 & enps_vals <= 10]
+  enps_prior <- if (is.finite(prior_year)) suppressWarnings(as.numeric(rows_sub$eNPS[rows_sub$year == prior_year])) else numeric(0)
+  enps_prior <- enps_prior[is.finite(enps_prior) & enps_prior >= 0 & enps_prior <= 10]
+  if (length(enps_vals) > 0L) {
+    promoter <- round(100 * sum(enps_vals >= 9) / length(enps_vals))
+    detractor <- round(100 * sum(enps_vals <= 6) / length(enps_vals))
+    passive <- 100 - promoter - detractor
+    enps_score <- round(100 * (sum(enps_vals >= 9) - sum(enps_vals <= 6)) / length(enps_vals))
+    prior_enps_score <- if (length(enps_prior) > 0L) round(100 * (sum(enps_prior >= 9) - sum(enps_prior <= 6)) / length(enps_prior)) else NA_real_
+    outcome_rows[[length(outcome_rows) + 1L]] <- build_overview_sentiment_row(
+      label = "eNPS",
+      mean_val = enps_score,
+      disagree_pct = detractor,
+      neutral_pct = passive,
+      agree_pct = promoter,
+      vs_industry = NA_real_,
+      vs_prior = if (is.finite(prior_enps_score)) enps_score - prior_enps_score else NA_real_
+    )
+  }
+
+  items_all <- do.call(rbind, outcome_rows)
+  if (!is.data.frame(items_all) || nrow(items_all) < 1L) return(NULL)
+  items_all$section <- "Outcomes"
+  items_all$section_order <- 1L
+  items_all$item_order <- seq_len(nrow(items_all))
+  items_all$column <- ifelse(items_all$item_order %% 2L == 1L, "left", "right")
+  items_all$show_section_header <- FALSE
 
   list(
     summary = data.frame(
@@ -2408,7 +2456,7 @@ build_outcomes_overview_data <- function(rows_sub, fid) {
       stringsAsFactors = FALSE
     ),
     drivers = drivers,
-    items = items_all[, c("column", "section", "section_order", "item_order", "label", "mean", "agree_pct", "neutral_pct", "disagree_pct", "vs_industry", "vs_prior"), drop = FALSE]
+    items = items_all[, c("column", "section", "section_order", "item_order", "label", "mean", "agree_pct", "neutral_pct", "disagree_pct", "vs_industry", "vs_prior", "show_section_header"), drop = FALSE]
   )
 }
 
@@ -2477,35 +2525,42 @@ build_drivers_overview_data <- function(fid) {
     )
   }
 
-  items <- item_scores[item_scores$filter_id == fid, , drop = FALSE]
-  items <- items[order(-as.numeric(items$mean)), , drop = FALSE]
-  items <- utils::head(items, 8L)
-  if (nrow(items) < 1L) return(NULL)
-  items$item_order <- seq_len(nrow(items))
-  sentiment_safe <- function(x, fallback) {
-    xx <- suppressWarnings(as.numeric(x))
-    ifelse(is.finite(xx), xx, fallback)
+  build_driver_sentiment_row <- function(metric_id, metric_label, item_rows, item_order) {
+    data.frame(
+      column = ifelse(item_order %% 2L == 1L, "left", "right"),
+      section = "Drivers",
+      section_order = 1L,
+      item_order = item_order,
+      label = metric_label,
+      mean = mean(as.numeric(item_rows$mean), na.rm = TRUE),
+      disagree_pct = mean(as.numeric(item_rows$disagree_pct), na.rm = TRUE),
+      neutral_pct = mean(as.numeric(item_rows$neutral_pct), na.rm = TRUE),
+      agree_pct = mean(as.numeric(item_rows$agree_pct), na.rm = TRUE),
+      vs_industry = mean(as.numeric(item_rows$vs_industry), na.rm = TRUE),
+      vs_prior = mean(as.numeric(item_rows$vs_prior), na.rm = TRUE),
+      show_section_header = FALSE,
+      stringsAsFactors = FALSE
+    )
   }
-  items_df <- data.frame(
-    column = ifelse(items$item_order %% 2L == 1L, "left", "right"),
-    section = "Drivers Overview",
-    section_order = 1L,
-    item_order = items$item_order,
-    label = as.character(items$item_label),
-    mean = as.numeric(items$mean),
-    disagree_pct = sentiment_safe(items$disagree_pct, 33),
-    neutral_pct = sentiment_safe(items$neutral_pct, 34),
-    agree_pct = sentiment_safe(items$agree_pct, 33),
-    vs_industry = as.numeric(items$vs_industry),
-    vs_prior = as.numeric(items$vs_prior),
-    stringsAsFactors = FALSE
-  )
+
+  driver_rows <- lapply(seq_len(nrow(drv)), function(i) {
+    metric_id <- as.character(drv$metric_id[[i]])
+    metric_label <- as.character(drv$metric_label[[i]])
+    item_rows <- item_scores[item_scores$filter_id == fid & item_scores$fundamental_id == metric_id, , drop = FALSE]
+    if (!is.data.frame(item_rows) || nrow(item_rows) < 1L) return(NULL)
+    build_driver_sentiment_row(metric_id, metric_label, item_rows, i)
+  })
+  driver_rows <- driver_rows[!vapply(driver_rows, is.null, logical(1))]
+  if (length(driver_rows) < 1L) return(NULL)
+  items_df <- do.call(rbind, driver_rows)
 
   list(
     fundamental = data.frame(
       fundamental_label = "Drivers Overview",
       drivers_table_title = "Key Outcomes",
       drivers_row_label = "Outcome",
+      item_breakdown_title = "Driver Sentiment Breakdown",
+      item_label_header = "Driver",
       percentile = pct_now,
       percentile_delta = as.integer(round(pct_now - pct_prev)),
       delta_label = paste0("vs. ", report_year),
@@ -2538,12 +2593,17 @@ outcome_to_dashboard_data <- function(od) {
   if (!"suppress_vs_industry" %in% names(items)) items$suppress_vs_industry <- FALSE
   if (!"suppress_vs_prior" %in% names(items)) items$suppress_vs_prior <- FALSE
   if (!"min_n" %in% names(items)) items$min_n <- 3L
+  if (!"show_section_header" %in% names(items)) items$show_section_header <- FALSE
+  if (!"item_order" %in% names(items)) items$item_order <- ave(seq_len(nrow(items)), items$column, FUN = seq_along)
+  if (!"section_order" %in% names(items)) items$section_order <- 1L
 
   list(
     fundamental = data.frame(
       fundamental_label = as.character(od$summary$outcome[[1]]),
       drivers_table_title = "Key Drivers",
       drivers_row_label = "Driver",
+      item_breakdown_title = "Outcome Sentiment Breakdown",
+      item_label_header = "Outcome",
       percentile = as.numeric(od$summary$percentile[[1]]),
       percentile_delta = as.numeric(od$summary$percentile_delta[[1]]),
       delta_label = as.character(od$summary$delta_label[[1]]),
@@ -3211,29 +3271,33 @@ render_slide <- function(slide_id, fr) {
 
     outcome_topics <- c("Engagement", "Burnout", "Work Satisfaction", "Turnover Intent", "eNPS")
     topic_df <- rbind(
-      data.frame(topic_type = "Outcome", topic_label = "Overall", stringsAsFactors = FALSE),
+      data.frame(topic_type = "All", topic_label = "All Comments", stringsAsFactors = FALSE),
       data.frame(topic_type = "Driver", topic_label = fundamentals, stringsAsFactors = FALSE),
       data.frame(topic_type = "Outcome", topic_label = outcome_topics, stringsAsFactors = FALSE)
     )
     topic_df$topic_id <- paste0("topic_", slugify(paste(topic_df$topic_type, topic_df$topic_label)))
-    topic_df$display_label <- paste0(topic_df$topic_type, ": ", topic_df$topic_label)
+    topic_df$display_label <- ifelse(
+      topic_df$topic_type == "All",
+      topic_df$topic_label,
+      paste0(topic_df$topic_type, ": ", topic_df$topic_label)
+    )
     topic_df$order_key <- seq_len(nrow(topic_df))
 
     get_topic_comments <- function(topic_type, topic_label) {
-      if (identical(topic_type, "Driver")) {
-        vv[vv$fundamental == topic_label, , drop = FALSE]
-      } else if (identical(topic_label, "Overall")) {
+      if (identical(topic_type, "All")) {
         vv
+      } else if (identical(topic_type, "Driver")) {
+        vv[vv$fundamental == topic_label, , drop = FALSE]
       } else {
         vv[normalize_outcome_label(vv$outcome) == normalize_outcome_label(topic_label), , drop = FALSE]
       }
     }
 
     synth_comments <- function(topic_type, topic_label, n = 8L) {
-      if (identical(topic_type, "Driver")) {
-        row <- k_now[k_now$metric_group == "fundamental" & tolower(k_now$metric_label) == tolower(topic_label), , drop = FALSE]
-      } else if (identical(topic_label, "Overall")) {
+      if (identical(topic_type, "All")) {
         row <- k_now[k_now$metric_group %in% c("fundamental", "outcome"), , drop = FALSE]
+      } else if (identical(topic_type, "Driver")) {
+        row <- k_now[k_now$metric_group == "fundamental" & tolower(k_now$metric_label) == tolower(topic_label), , drop = FALSE]
       } else {
         row <- k_now[k_now$metric_group == "outcome" & normalize_outcome_label(k_now$metric_label) == normalize_outcome_label(topic_label), , drop = FALSE]
       }
@@ -3352,7 +3416,7 @@ render_slide <- function(slide_id, fr) {
         "</select>",
         "</div>",
         "<div class='sentiment-summary'>",
-        "<div class='summary-label'>Segment Sentiment</div>",
+        "<div class='summary-label'>Comment Sentiment</div>",
         "<div class='inline-bar-wrapper'>",
         "<div class='inline-data-bar'>",
         "<div id='sent-pos-seg' class='bar-segment pos' style='width:0%' title='0% Positive (0)'>0% Pos (0)</div>",
@@ -3363,7 +3427,7 @@ render_slide <- function(slide_id, fr) {
         "<div class='pagination-row' id='comments-pagination'>",
         "<span id='comments-page-status' class='page-status'>Page 1 of 1</span>",
         "<div class='page-actions'>",
-        "<button id='comments-prev-page' class='page-btn' type='button'>Back</button>",
+        "<button id='comments-prev-page' class='page-btn' type='button'>Previous Page</button>",
         "<button id='comments-next-page' class='page-btn' type='button'>Next Page</button>",
         "</div>",
         "</div>",
@@ -3386,7 +3450,7 @@ render_slide <- function(slide_id, fr) {
         "#", page_id, " .search-icon{display:inline-flex;align-items:center;justify-content:center;color:#64748b;width:16px;height:16px;}",
         "#", page_id, " .search-icon svg{width:14px;height:14px;}",
         "#", page_id, " .comments-search{width:100%;border:none;outline:none;padding:8px 8px;font-size:13px;font-weight:600;color:#0f172a;background:transparent;}",
-        "#", page_id, " {--sent-pos-soft:#10B981;--sent-neu-soft:#E2E8F0;--sent-neg-soft:#F43F5E;}",
+        "#", page_id, " {--sent-pos-soft:#6ABF9F;--sent-neu-soft:#E2E8F0;--sent-neg-soft:#E88C9E;}",
         "#", page_id, " .sentiment-summary{display:flex;align-items:center;gap:24px;background:#FFFFFF;border:none;border-radius:8px;padding:16px 24px;margin-bottom:16px;box-shadow:0 2px 4px rgba(15,23,42,0.02);}",
         "#", page_id, " .summary-label{font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}",
         "#", page_id, " .inline-bar-wrapper{flex:1;}",
@@ -3784,7 +3848,7 @@ render_slide <- function(slide_id, fr) {
           "</div>",
           "<div class='cc-mcol'>",
           "<div class='cc-mval cc-mval-dark'>Jun 18 - Jul 11</div>",
-          "<div class='cc-mlbl'>2025 Window</div>",
+          "<div class='cc-mlbl'>2026 Window</div>",
           "<div class='cc-msub'>Data collection period.</div>",
           "</div>",
           "</section>",
@@ -4300,6 +4364,14 @@ minify_embedded_html <- function(x) {
 
 bundle$slide_html <- lapply(bundle$slide_html, minify_embedded_html)
 bundle$no_data_html <- minify_embedded_html(bundle$no_data_html)
+bundle$slide_html <- bundle$slide_html[
+  !vapply(bundle$slide_html, function(x) {
+    is.character(x) &&
+      length(x) == 1L &&
+      grepl("View unavailable", x, fixed = TRUE) &&
+      (grepl("Too few responses", x, fixed = TRUE) || grepl("Insufficient data", x, fixed = TRUE))
+  }, logical(1))
+]
 
 bundle_json <- jsonlite::toJSON(bundle, auto_unbox = TRUE, pretty = FALSE, null = "null")
 writeLines(paste0("window.OHEP_DEMO_DATA = ", bundle_json, ";"), con = file.path(build_dir, "demo-data.js"), useBytes = TRUE)
